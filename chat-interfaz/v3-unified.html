@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PURPUR Agent Control v3</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --bg-panel: #1e293b;
+            --bg-header: #334155;
+            --primary: #8b5cf6;
+            --primary-dim: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #475569;
+            --console-bg: #000000;
+            --console-text: #00ff41;
+            --graph-bg: rgba(30, 41, 59, 0.8);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            height: 100vh; 
+            overflow: hidden; 
+        }
+        
+        /* Layout principal */
+        .agent-control {
+            display: grid;
+            grid-template-columns: 280px 1fr 320px;
+            height: 100vh;
+            gap: 1px;
+            background: var(--border);
+        }
+        
+        /* Panel izquierdo - Agentes y herramientas */
+        .left-panel {
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .brand-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .brand-header h1 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        .section-header {
+            padding: 12px 16px;
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .agent-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+        }
+        
+        .agent-node {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .agent-node:hover {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.1);
+        }
+        
+        .agent-node.active {
+            border-color: var(--primary);
+            background: rgba(139, 92, 246, 0.2);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+        
+        .agent-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary);
+            color: white;
+        }
+        
+        .agent-info {
+            flex: 1;
+        }
+        
+        .agent-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .agent-role {
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+        
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        /* Panel central - Chat y flujo */
+        .center-panel {
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .flow-header {
+            padding: 16px 24px;
+            background: rgba(30, 41, 59, 0.95);
+            /* backdrop-filter: blur(20px); REMOVED - too GPU intensive */
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .flow-visual {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .flow-node {
+            padding: 8px 16px;
+            background: var(--bg-panel);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .flow-node.meta {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+            color: white;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            overflow: hidden;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.4);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.user {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            margin-left: auto;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.agent {
+            background: linear-gradient(135deg, var(--success), #059669);
+            color: white;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-tools {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border-bottom-left-radius: 4px;
+            max-width: 90%;
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .message-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .message-footer {
+            margin-top: 8px;
+            font-size: 11px;
+            opacity: 0.7;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .input-area {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        #input-mensaje {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        
+        #input-mensaje:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .btn-send {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-send:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Panel derecho - Stats y herramientas */
+        .right-panel {
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .stats-widget {
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .stats-cost {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 32px;
+            color: var(--success);
+            margin: 8px 0;
+        }
+        
+        .stats-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        
+        .tools-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .tool-category {
+            margin-bottom: 20px;
+        }
+        
+        .tool-category h3 {
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        
+        .tool-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            border: 1px solid transparent;
+        }
+        
+        .tool-item:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: var(--primary);
+        }
+        
+        .tool-item.active {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px var(--primary);
+        }
+        
+        .graph-container {
+            height: 180px;
+            background: var(--graph-bg);
+            border-top: 1px solid var(--border);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .graph-title {
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        #flow-canvas {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+        }
+        
+        /* Consola */
+        .tool-console {
+            height: 200px;
+            background: var(--console-bg);
+            padding: 12px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .console-line {
+            color: var(--console-text);
+            margin-bottom: 4px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .console-line.info { color: #60a5fa; }
+        .console-line.success { color: #34d399; }
+        .console-line.warning { color: #fbbf24; }
+        .console-line.error { color: #f87171; }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .agent-control {
+                grid-template-columns: 240px 1fr 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="agent-control">
+        <!-- Panel izquierdo: Agentes -->
+        <div class="left-panel">
+            <div class="brand-header">
+                <i class="fas fa-robot"></i>
+                <h1>PURPUR v3</h1>
+            </div>
+            
+            <div class="section-header">Agentes Disponibles</div>
+            <div class="agent-list" id="agent-list">
+                <!-- Los agentes se cargarán dinámicamente -->
+            </div>
+            
+            <div class="section-header">Acciones Rápidas</div>
+            <div style="padding: 16px; display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn-send" onclick="loadAgentsFromSystem()" style="padding: 12px;">
+                    <i class="fas fa-sync-alt"></i> Cargar Agentes
+                </button>
+                <button class="btn-send" onclick="testConnection()" style="padding: 12px; background: linear-gradient(135deg, var(--warning), #d97706);">
+                    <i class="fas fa-plug"></i> Probar Conexión
+                </button>
+            </div>
+        </div>
+        
+        <!-- Panel central: Chat y flujo -->
+        <div class="center-panel">
+            <div class="flow-header">
+                <div class="flow-visual">
+                    <div class="flow-node meta">
+                        <i class="fas fa-crown"></i> Meta-Agent
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                    <div class="flow-node">
+                        <i class="fas fa-cog"></i> <span id="current-agent-name">Selecciona un agente</span>
+                    </div>
+                    <i class="fas fa-arrow-right"></i>
+                    <div class="flow-node">
+                        <i class="fas fa-tools"></i> <span id="current-tools-count">0 tools</span>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span id="connection-status" style="color: var(--success);">
+                        <i class="fas fa-circle"></i> Conectado
+                    </span>
+                    <button class="btn-send" onclick="clearChat()" style="padding: 8px 16px; font-size: 12px;">
+                        <i class="fas fa-trash"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-messages">
+                    <div class="message agent">
+                        <div class="message-header">
+                            <span><i class="fas fa-robot"></i> Sistema</span>
+                            <span>Ahora</span>
+                        </div>
+                        <div class="message-content">
+                            ¡Bienvenido a PURPUR Agent Control v3! Selecciona un agente del panel izquierdo para comenzar.
+                        </div>
+                        <div class="message-footer">
+                            <span>💰 $0.00</span>
+                            <span>⚡ 0 tokens</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="input-area">
+                    <input type="text" id="input-mensaje" placeholder="Escribe tu mensaje o @menciona una herramienta..." onkeypress="handleKeyPress(event)">
+                    <button class="btn-send" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i> Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Panel derecho: Stats y herramientas -->
+        <div class="right-panel">
+            <div class="stats-widget">
+                <div style="font-size: 12px; color: var(--text-dim);">COSTO TOTAL</div>
+                <div class="stats-cost">$<span id="total-cost">0.00</span></div>
+                <div class="stats-details">
+                    <div class="stat-item">
+                        <div>Este mensaje</div>
+                        <div class="stat-value" id="message-cost">$0.000</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Tokens/s</div>
+                        <div class="stat-value" id="tokens-per-second">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Total tokens</div>
+                        <div class="stat-value" id="total-tokens">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div>Tiempo total</div>
+                        <div class="stat-value" id="total-time">0s</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-header">Herramientas Disponibles</div>
+            <div class="tools-panel">
+                <div class="tool-category">
+                    <h3>🛠️ Herramientas Básicas</h3>
+                    <div class="tools-grid" id="basic-tools">
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="read_file">
+                            📄 Leer archivo
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="write_file">
+                            ✏️ Escribir archivo
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="search_files">
+                            🔍 Buscar archivos
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="execute_command">
+                            💻 Ejecutar comando
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="api_call">
+                            🔗 Llamar API
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="web_scrape">
+                            🕸️ Scrapear web
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-category">
+                    <h3>🎨 Herramientas de Diseño</h3>
+                    <div class="tools-grid">
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="generate_image">
+                            🖼️ Generar imagen
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="edit_image">
+                            ✏️ Editar imagen
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="generate_video">
+                            🎥 Generar video
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="generate_audio">
+                            🔊 Generar audio
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tool-category">
+                    <h3>📊 Herramientas de Análisis</h3>
+                    <div class="tools-grid">
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="data_analysis">
+                            📈 Análisis de datos
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="seo_analysis">
+                            🔎 Análisis SEO
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="code_review">
+                            👨‍💻 Revisar código
+                        </div>
+                        <div class="tool-item" onclick="selectTool(this)" data-tool="performance_test">
+                            ⚡ Test de rendimiento
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="graph-container">
+                <div class="graph-title">🕸️ Flujo de Ejecución</div>
+                <canvas id="flow-canvas" width="300" height="120"></canvas>
+            </div>
+            
+            <div class="section-header">Consola de Herramientas</div>
+            <div class="tool-console" id="tool-console">
+                <div class="console-line info">> Sistema inicializado</div>
+                <div class="console-line success">> Listo para recibir comandos</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Estado de la aplicación
+        const state = {
+            selectedAgent: null,
+            selectedTools: new Set(),
+            totalCost: 0,
+            totalTokens: 0,
+            startTime: Date.now(),
+            messages: []
+        };
+        
+        // Agentes predefinidos (se pueden cargar del sistema real)
+        const agents = [
+            { id: 'root', name: 'Purrpur CEO', role: 'Orquestador principal', icon: 'crown', status: 'online' },
+            { id: 'brand', name: 'Brand Manager', role: 'Creación de marcas', icon: 'palette', status: 'online' },
+            { id: 'backend', name: 'Backend Cloud', role: 'Servidores y APIs', icon: 'server', status: 'online' },
+            { id: 'frontend', name: 'Frontend Web', role: 'Desarrollo web', icon: 'code', status: 'online' },
+            { id: 'cmo', name: 'CMO', role: 'Estrategia de marketing', icon: 'chart-line', status: 'online' },
+            { id: 'cto', name: 'CTO Architect', role: 'Arquitectura técnica', icon: 'cogs', status: 'online' }
+        ];
+        
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAgents();
+            updateStats();
+            drawFlowChart();
+            
+            // Cargar agentes del sistema real (simulado)
+            setTimeout(() => {
+                logToConsole('info', '> Conectando al sistema de agentes...');
+                logToConsole('success', '> Sistema de agentes cargado exitosamente');
+            }, 1000);
+        });
+        
+        // Cargar agentes en el panel izquierdo
+        function loadAgents() {
+            const agentList = document.getElementById('agent-list');
+            agentList.innerHTML = '';
+            
+            agents.forEach(agent => {
+                const agentNode = document.createElement('div');
+                agentNode.className = 'agent-node';
+                agentNode.dataset.id = agent.id;
+                agentNode.onclick = () => selectAgent(agent);
+                
+                agentNode.innerHTML = `
+                    <div class="agent-icon">
+                        <i class="fas fa-${agent.icon}"></i>
+                    </div>
+                    <div class="agent-info">
+                        <div class="agent-name">${agent.name}</div>
+                        <div class="agent-role">${agent.role}</div>
+                    </div>
+                    <div class="agent-status"></div>
+                `;
+                
+                agentList.appendChild(agentNode);
+            });
+        }
+        
+        // Seleccionar agente
+        function selectAgent(agent) {
+            // Remover selección anterior
+            document.querySelectorAll('.agent-node').forEach(node => {
+                node.classList.remove('active');
+            });
+            
+            // Seleccionar nuevo
+            const agentNode = document.querySelector(`.agent-node[data-id="${agent.id}"]`);
+            agentNode.classList.add('active');
+            
+            state.selectedAgent = agent;
+            document.getElementById('current-agent-name').textContent = agent.name;
+            
+            logToConsole('info', `> Agente seleccionado: ${agent.name}`);
+            addMessage('agent', `Agente ${agent.name} seleccionado. ¿En qué puedo ayudarte?`);
+        }
+        
+        // Seleccionar herramienta
+        function selectTool(element) {
+            element.classList.toggle('active');
+            const tool = element.dataset.tool;
+            
+            if (state.selectedTools.has(tool)) {
+                state.selectedTools.delete(tool);
+            } else {
+                state.selectedTools.add(tool);
+            }
+            
+            document.getElementById('current-tools-count').textContent = 
+                `${state.selectedTools.size} tools`;
+            
+            logToConsole('info', `> Herramienta ${tool} ${state.selectedTools.has(tool) ? 'activada' : 'desactivada'}`);
+        }
+        
+        // Enviar mensaje
+        function sendMessage() {
+            const input = document.getElementById('input-mensaje');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Agregar mensaje del usuario
+            addMessage('user', message);
+            
+            // Procesar con agente seleccionado
+            processWithAgent(message);
+            
+            input.value = '';
+        }
+        
+        // Procesar mensaje con agente
+        function processWithAgent(message) {
+            if (!state.selectedAgent) {
+                addMessage('agent', 'Por favor, selecciona un agente primero.');
+                return;
+            }
+            
+            // Simular procesamiento
+            setTimeout(() => {
+                let response = '';
+                
+                // Respuesta basada en herramientas seleccionadas
+                if (state.selectedTools.size > 0) {
+                    const toolsList = Array.from(state.selectedTools).join(', ');
+                    response = `🤖 [${state.selectedAgent.name}] Procesando con herramientas: ${toolsList}\n\n`;
+                    response += `He procesado tu solicitud: "${message}"`;
+                    
+                    // Simular uso de herramientas
+                    state.selectedTools.forEach(tool => {
+                        response += `\n• Usando ${tool}: Operación completada`;
+                    });
+                } else {
+                    response = `🤖 [${state.selectedAgent.name}] He procesado tu solicitud: "${message}"`;
+                }
+                
+                // Calcular costo simulado
+                const inputTokens = message.length / 4;
+                const outputTokens = response.length / 4;
+                const cost = (inputTokens * 0.001) + (outputTokens * 0.002);
+                
+                state.totalCost += cost;
+                state.totalTokens += inputTokens + outputTokens;
+                
+                addMessage('agent', response, {
+                    cost: cost.toFixed(4),
+                    inputTokens: Math.round(inputTokens),
+                    outputTokens: Math.round(outputTokens)
+                });
+                
+                updateStats();
+                drawFlowChart();
+                logToConsole('success', `> Mensaje procesado por ${state.selectedAgent.name}`);
+            }, 1000);
+        }
+        
+        // Agregar mensaje al chat
+        function addMessage(type, content, metadata = {}) {
+            const messagesDiv = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.className = `message ${type}`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            let footer = '';
+            if (type === 'agent' && metadata.cost) {
+                footer = `
+                    <div class="message-footer">
+                        <span>💰 $${metadata.cost}</span>
+                        <span>⚡ ${metadata.inputTokens || 0}→${metadata.outputTokens || 0} tokens</span>
+                    </div>
+                `;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-header">
+                    <span><i class="fas fa-${type === 'user' ? 'user' : 'robot'}"></i> ${type === 'user' ? 'Tú' : state.selectedAgent?.name || 'Sistema'}</span>
+                    <span>${timeString}</span>
+                </div>
+                <div class="message-content">${content.replace(/\n/g, '<br>')}</div>
+                ${footer}
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            
+            // Guardar en historial
+            state.messages.push({ type, content, timestamp: now, metadata });
+        }
+        
+        // Actualizar estadísticas
+        function updateStats() {
+            const elapsedSeconds = Math.floor((Date.now() - state.startTime) / 1000);
+            const tokensPerSecond = state.totalTokens > 0 ? 
+                Math.round(state.totalTokens / elapsedSeconds) : 0;
+            
+            document.getElementById('total-cost').textContent = state.totalCost.toFixed(2);
+            document.getElementById('message-cost').textContent = 
+                state.messages.length > 0 ? 
+                `$${state.messages[state.messages.length - 1]?.metadata?.cost || '0.000'}` : 
+                '$0.000';
+            document.getElementById('tokens-per-second').textContent = tokensPerSecond;
+            document.getElementById('total-tokens').textContent = Math.round(state.totalTokens);
+            document.getElementById('total-time').textContent = `${elapsedSeconds}s`;
+        }
+        
+        // Dibujar gráfico de flujo - VERSIÓN OPTIMIZADA
+        let resizeTimeout = null;
+        let lastDrawTime = 0;
+        const DRAW_COOLDOWN = 100; // ms entre redibujados
+        
+        function drawFlowChart() {
+            const now = Date.now();
+            if (now - lastDrawTime < DRAW_COOLDOWN) {
+                // Si se llama demasiado rápido, programar para más tarde
+                if (!resizeTimeout) {
+                    resizeTimeout = setTimeout(drawFlowChart, DRAW_COOLDOWN);
+                }
+                return;
+            }
+            lastDrawTime = now;
+            
+            const canvas = document.getElementById('flow-canvas');
+            if (!canvas) return;
+            
+            try {
+                const ctx = canvas.getContext('2d');
+                
+                // Usar dimensiones fijas basadas en el contenedor, pero no cambiarlas dinámicamente
+                // para evitar bucles con eventos resize
+                const container = canvas.parentElement;
+                const width = container.clientWidth - 32; // 16px padding * 2
+                const height = container.clientHeight - 32;
+                
+                // Solo cambiar dimensiones si son significativamente diferentes
+                if (Math.abs(canvas.width - width) > 2 || Math.abs(canvas.height - height) > 2) {
+                    canvas.width = width;
+                    canvas.height = height;
+                }
+                
+                // Limpiar canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Si no hay dimensiones válidas, salir
+                if (canvas.width <= 0 || canvas.height <= 0) return;
+                
+                // Dibujar nodos
+                const nodes = [
+                    { x: canvas.width * 0.2, y: canvas.height / 2, label: 'Usuario', color: '#3b82f6' },
+                    { x: canvas.width * 0.5, y: canvas.height / 2, label: state.selectedAgent?.name || 'Agente', color: '#10b981' },
+                    { x: canvas.width * 0.8, y: canvas.height / 2, label: 'Resultado', color: '#8b5cf6' }
+                ];
+                
+                // Dibujar conexiones
+                ctx.strokeStyle = '#475569';
+                ctx.lineWidth = 2;
+                
+                for (let i = 0; i < nodes.length - 1; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i].x + 30, nodes[i].y);
+                    ctx.lineTo(nodes[i + 1].x - 30, nodes[i + 1].y);
+                    ctx.stroke();
+                    
+                    // Flecha
+                    ctx.beginPath();
+                    ctx.moveTo(nodes[i + 1].x - 30, nodes[i + 1].y);
+                    ctx.lineTo(nodes[i + 1].x - 40, nodes[i + 1].y - 5);
+                    ctx.lineTo(nodes[i + 1].x - 40, nodes[i + 1].y + 5);
+                    ctx.fillStyle = '#475569';
+                    ctx.fill();
+                }
+                
+                // Dibujar nodos
+                nodes.forEach(node => {
+                    // Círculo
+                    ctx.fillStyle = node.color;
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // Borde
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Texto
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(node.label, node.x, node.y + 40);
+                });
+                
+                // Dibujar herramientas seleccionadas
+                if (state.selectedTools.size > 0) {
+                    ctx.fillStyle = 'rgba(139, 92, 246, 0.3)';
+                    ctx.beginPath();
+                    ctx.arc(canvas.width * 0.5, canvas.height / 2, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = '9px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(`${state.selectedTools.size} tools`, canvas.width * 0.5, canvas.height / 2 + 55);
+                }
+            } catch (error) {
+                console.error('Error en drawFlowChart:', error);
+                logToConsole('error', `> Error dibujando gráfico: ${error.message}`);
+            }
+        }
+        
+        // Log a consola
+        function logToConsole(type, message) {
+            const consoleDiv = document.getElementById('tool-console');
+            const line = document.createElement('div');
+            line.className = `console-line ${type}`;
+            line.textContent = message;
+            consoleDiv.appendChild(line);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+        
+        // Funciones de UI
+        function clearChat() {
+            document.getElementById('chat-messages').innerHTML = '';
+            state.messages = [];
+            logToConsole('info', '> Chat limpiado');
+        }
+        
+        function loadAgentsFromSystem() {
+            logToConsole('info', '> Cargando agentes del sistema...');
+            // Simular carga
+            setTimeout(() => {
+                logToConsole('success', '> 17 agentes principales cargados');
+                logToConsole('success', '> 50+ sub-agentes disponibles');
+            }, 1500);
+        }
+        
+        function testConnection() {
+            logToConsole('info', '> Probando conexión con sistema...');
+            setTimeout(() => {
+                logToConsole('success', '> ✓ Conexión establecida con API');
+                logToConsole('success', '> ✓ Sistema de agentes operativo');
+                logToConsole('success', '> ✓ Todas las herramientas disponibles');
+            }, 1000);
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Redibujar gráfico al cambiar tamaño - CON THROTTLING
+        function handleResize() {
+            if (resizeTimeout) {
+                clearTimeout(resizeTimeout);
+            }
+            resizeTimeout = setTimeout(drawFlowChart, 250); // Solo redibujar después de 250ms sin cambios
+        }
+        
+        window.addEventListener('resize', handleResize);
+    </script>
+</body>
+</html>

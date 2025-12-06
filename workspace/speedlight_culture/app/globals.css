@@ -1,0 +1,204 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Fondos - Tonos café profundos y cálidos */
+  --color-bg-primary: #1A0F08;     /* Café muy oscuro - casi negro */
+  --color-bg-secondary: #2C1810;   /* Café oscuro */
+  --color-bg-tertiary: #3D2418;    /* Café medio oscuro */
+  --color-bg-card: #4A2C1A;        /* Café medio para tarjetas */
+  
+  /* Rojos cálidos - Energía y pasión */
+  --color-red-dark: #8B1A1A;       /* Rojo oscuro profundo */
+  --color-red-medium: #B22222;     /* Rojo fuego */
+  --color-red-bright: #D32F2F;     /* Rojo brillante */
+  --color-red-light: #E57373;      /* Rojo claro */
+  
+  /* Naranjas - Calidez y vitalidad */
+  --color-orange-dark: #CC5500;    /* Naranja oscuro */
+  --color-orange-medium: #FF6F00;  /* Naranja medio */
+  --color-orange-bright: #FF9800;  /* Naranja brillante */
+  --color-orange-light: #FFB74D;   /* Naranja claro */
+  
+  /* Amarillos - Energía y luz */
+  --color-yellow-dark: #F57C00;    /* Amarillo oscuro/ámbar */
+  --color-yellow-medium: #FFA726;  /* Amarillo medio */
+  --color-yellow-bright: #FFEB3B;  /* Amarillo brillante */
+  --color-yellow-light: #FFF59D;   /* Amarillo claro */
+  
+  /* Cafés - Tierra y tradición */
+  --color-brown-dark: #5D4037;     /* Café oscuro */
+  --color-brown-medium: #8D6E63;   /* Café medio */
+  --color-brown-light: #A1887F;    /* Café claro */
+  --color-brown-pale: #BCAAA4;     /* Café muy claro */
+  
+  /* Neutros - Blanco y Negro */
+  --color-white: #FFFFFF;          /* Blanco puro */
+  --color-off-white: #FFF8F0;      /* Blanco cálido */
+  --color-cream: #F5E6D3;          /* Crema */
+  --color-black: #000000;          /* Negro puro */
+  --color-off-black: #0D0907;      /* Negro cálido */
+  
+  /* Textos */
+  --color-text-primary: #FFF8F0;   /* Blanco cálido */
+  --color-text-secondary: #F5E6D3; /* Crema */
+  --color-text-tertiary: #BCAAA4;  /* Café claro */
+  --color-text-muted: #8D6E63;     /* Café medio */
+  
+  /* Estados */
+  --color-success: #66BB6A;        /* Verde cálido */
+  --color-error: #E53935;          /* Rojo error */
+  --color-warning: #FFA726;        /* Naranja advertencia */
+  --color-info: #42A5F5;           /* Azul información */
+}
+
+@layer base {
+  body {
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-feature-settings: "ss01", "ss02", "cv01", "cv02";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    letter-spacing: -0.025em;
+  }
+}
+
+@layer utilities {
+  /* Gradientes cálidos - Rojo a Amarillo */
+  .gradient-fire {
+    background-image: linear-gradient(135deg, var(--color-red-bright) 0%, var(--color-orange-bright) 50%, var(--color-yellow-bright) 100%);
+  }
+  
+  .gradient-sunset {
+    background-image: linear-gradient(135deg, var(--color-red-medium) 0%, var(--color-orange-medium) 100%);
+  }
+  
+  .gradient-warm {
+    background-image: linear-gradient(135deg, var(--color-orange-bright) 0%, var(--color-yellow-medium) 100%);
+  }
+  
+  .gradient-ember {
+    background-image: linear-gradient(135deg, var(--color-red-dark) 0%, var(--color-orange-dark) 100%);
+  }
+  
+  .gradient-coffee {
+    background-image: linear-gradient(135deg, var(--color-brown-dark) 0%, var(--color-brown-medium) 100%);
+  }
+  
+  /* Efectos de texto */
+  .text-shadow-warm {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  
+  .text-glow-fire {
+    text-shadow: 0 0 20px rgba(255, 152, 0, 0.6), 0 0 40px rgba(211, 47, 47, 0.4);
+  }
+  
+  .text-glow-warm {
+    text-shadow: 0 0 15px rgba(255, 167, 38, 0.5);
+  }
+  
+  /* Bordes cálidos */
+  .border-warm {
+    border: 1px solid var(--color-orange-medium);
+  }
+  
+  .border-warm-thick {
+    border: 2px solid var(--color-orange-bright);
+  }
+  
+  .border-fire {
+    border: 2px solid transparent;
+    background-image: linear-gradient(var(--color-bg-secondary), var(--color-bg-secondary)), 
+                      linear-gradient(135deg, var(--color-red-bright), var(--color-orange-bright), var(--color-yellow-bright));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+  }
+  
+  /* Animaciones */
+  @keyframes pulse-fire {
+    0%, 100% { 
+      opacity: 1; 
+      box-shadow: 0 0 20px rgba(255, 152, 0, 0.3);
+    }
+    50% { 
+      opacity: 0.9; 
+      box-shadow: 0 0 30px rgba(211, 47, 47, 0.5);
+    }
+  }
+  
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slide-in-right {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  
+  @keyframes glow-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.2); }
+  }
+  
+  .animate-pulse-fire {
+    animation: pulse-fire 2s ease-in-out infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slide-in-right 0.6s ease-out;
+  }
+  
+  .animate-glow {
+    animation: glow-pulse 3s ease-in-out infinite;
+  }
+  
+  /* Utilidades de scroll */
+  .scrollbar-warm {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-orange-medium) var(--color-bg-secondary);
+  }
+  
+  .scrollbar-warm::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .scrollbar-warm::-webkit-scrollbar-track {
+    background: var(--color-bg-secondary);
+    border-radius: 5px;
+  }
+  
+  .scrollbar-warm::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--color-orange-bright), var(--color-red-medium));
+    border-radius: 5px;
+  }
+  
+  .scrollbar-warm::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--color-yellow-bright), var(--color-orange-bright));
+  }
+}
+
+/* Estilos para modo oscuro por defecto */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

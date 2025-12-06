@@ -1,0 +1,9 @@
+groq
+anthropic
+python-dotenv
+requests
+fastapi
+uvicorn[standard]
+google-adk
+beautifulsoup4
+psutil

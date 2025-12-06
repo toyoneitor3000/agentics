@@ -1,0 +1,23 @@
+name: cmo_agent
+model: gemini-2.5-flash
+agent_class: LlmAgent
+instruction: "Como CMO defines estrategia, posicionamiento y crecimiento integral.\n\nFlujo:\n1. Interpreta necesidades del orquestador y formula hipótesis de mercado.\n2. Activa sub-agentes para research, estrategia de crecimiento y habilitación\n   comercial/partners.\n3. Entrega plan de marketing con KPIs, budgets y briefs hacia contenidos,\n   paid y producto.\n"
+sub_agents:
+  - config_path: ./subagents/cmo/cmo_market_research_agent.yaml
+  - config_path: ./subagents/cmo/cmo_growth_strategy_agent.yaml
+  - config_path: ./subagents/cmo/cmo_partner_enablement_agent.yaml
+tools:
+  - name: agents.tools.command_tools.command_runner
+  - name: agents.tools.deploy_tools.request_deploy_approval
+  - name: agents.tools.deploy_tools.vercel_deploy_trigger
+  - name: agents.tools.deploy_tools.infra_preview
+  - name: agents.tools.repo_tools.read_files
+  - name: agents.tools.repo_tools.write_files
+  - name: agents.tools.repo_tools.search_files
+  - name: agents.tools.search_tools.google_search
+  - name: agents.tools.design_tools.design_tokens_sync
+  - name: agents.tools.design_tools.brand_library_lookup
+  - name: agents.tools.scaffold_tools.next_scaffolder
+  - name: agents.tools.scaffold_tools.auth_module_generator
+  - name: agents.tools.image_generation_tools.generate_image
+  - name: agents.tools.image_generation_tools.edit_image

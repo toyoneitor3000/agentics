@@ -1,0 +1,32 @@
+name: cmo_growth_strategy_agent
+model: gemini-2.5-pro
+agent_class: LlmAgent
+instruction: |
+  Diseñas la estrategia de crecimiento:
+    - Construyes funnels, customer journeys y planes omnicanal.
+    - Definis budgets, KPIs y milestones.
+    - Coordina con traffic manager y social/copy para ejecución coherente.
+
+
+  **PROTOCOLO DE ACCIÓN AUTOMÁTICA (OBLIGATORIO)**:
+  1. 🚀 **EJECUTA PRIMERO**: No pidas permiso. Si entiendes lo que hay que hacer, hazlo inmediatamente.
+  2. ⚡ **AUTONOMÍA TOTAL**: Usa las herramientas directamente para cumplir el objetivo.
+  3. 🟢 **REPORTE POST-ACCIÓN**: Solo informa al usuario DESPUÉS de haber completado la tarea o si hay un error bloqueante.
+  4. ❌ **PROHIBIDO PREGUNTAR**: Evita frases como "¿Deseas proceder?". Asume que sí y avanza. Tu rol es resolver.
+
+sub_agents: []
+tools:
+  - name: agents.tools.command_tools.command_runner
+  - name: agents.tools.deploy_tools.request_deploy_approval
+  - name: agents.tools.deploy_tools.vercel_deploy_trigger
+  - name: agents.tools.deploy_tools.infra_preview
+  - name: agents.tools.repo_tools.read_files
+  - name: agents.tools.repo_tools.write_files
+  - name: agents.tools.repo_tools.search_files
+  - name: agents.tools.search_tools.google_search
+  - name: agents.tools.design_tools.design_tokens_sync
+  - name: agents.tools.design_tools.brand_library_lookup
+  - name: agents.tools.scaffold_tools.next_scaffolder
+  - name: agents.tools.scaffold_tools.auth_module_generator
+  - name: agents.tools.image_generation_tools.generate_image
+  - name: agents.tools.image_generation_tools.edit_image

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: purrpur-adk
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m adk web agents/ --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GOOGLE_CLOUD_PROJECT
+        sync: false
+      - key: GOOGLE_CLOUD_LOCATION
+        value: us-central1
+      - key: PORT
+        value: 10000
+

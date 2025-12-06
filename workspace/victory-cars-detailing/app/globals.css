@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 255, 255, 255;
+  --background-start-rgb: 2, 6, 23;
+  --background-end-rgb: 15, 23, 42;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 0px; /* Sin padding para que cargue desde el inicio */
+  }
+  body {
+    @apply bg-brand-dark-blue text-brand-slate font-sans overflow-x-hidden;
+  }
+  h1, h2, h3, h4 {
+    @apply font-orbitron text-white tracking-wide uppercase;
+  }
+  
+  /* Estilos para glassmorfismo */
+  .glass {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-lg border border-white/5 shadow-2xl;
+  }
+  
+  /* Efectos de scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s ease;
+  }
+  
+  .reveal.active {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-brand-cyan text-brand-dark-blue font-bold py-3 px-8 rounded-full transition-all duration-300 hover:bg-white hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] transform hover:-translate-y-1;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent border border-brand-slate/30 text-white font-bold py-3 px-8 rounded-full text-lg hover:bg-white/5 hover:border-brand-cyan hover:text-brand-cyan transition-all duration-300 backdrop-blur-sm;
+  }
+  
+  .card-gradient {
+    @apply bg-gradient-to-br from-white/5 to-white/0 backdrop-blur-lg border border-white/10 shadow-xl rounded-xl;
+  }
+  
+  .card-glass {
+    @apply bg-gradient-to-br from-brand-petroleum/20 to-brand-black/20 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 5px rgba(6, 182, 212, 0.3);
+  }
+  
+  .text-glow-blue {
+    text-shadow: 0 0 8px rgba(76, 201, 240, 0.4);
+  }
+  
+  .container-glow {
+    box-shadow: 0 0 20px rgba(76, 201, 240, 0.15);
+  }
+  
+  /* Degradados para secciones */
+  .section-gradient-1 {
+    @apply bg-gradient-to-b from-brand-petroleum via-brand-black to-brand-dark-blue;
+  }
+  
+  .section-gradient-2 {
+    @apply bg-gradient-to-b from-brand-black via-brand-light-blue to-brand-dark-blue;
+  }
+  
+  .section-gradient-3 {
+    @apply bg-gradient-to-b from-brand-light-blue via-brand-black to-brand-dark-blue;
+  }
+  
+  /* Efecto de borde luminoso */
+  .border-glow {
+    box-shadow: 0 0 10px rgba(76, 201, 240, 0.2);
+    border: 1px solid rgba(76, 201, 240, 0.15);
+  }
+}
+
+/* Fondo sutil de grilla tecnológica */
+.bg-subtle-grid {
+  background-image: linear-gradient(to right, #1e293b 1px, transparent 1px),
+                    linear-gradient(to bottom, #1e293b 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-mask: radial-gradient(circle at center, black 40%, transparent 100%);
+}
+
+/* Animaciones personalizadas */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes parallax {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-parallax {
+  animation: parallax 10s ease-in-out infinite alternate;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Efecto de partículas sutil */
+.particles {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  background: rgba(76, 201, 240, 0.1);
+  border-radius: 50%;
+  animation: float 6s infinite linear;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #003f5c, #4cc9f0);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #4cc9f0, #003f5c);
+}
+
+/* Estilos para cursor personalizado - Solo en escritorio */
+@media (min-width: 769px) {
+  .custom-cursor {
+    cursor: none !important;
+  }
+
+  .custom-cursor *,
+  .custom-cursor a,
+  .custom-cursor button,
+  .custom-cursor .btn-primary,
+  .custom-cursor .btn-secondary,
+  .custom-cursor input,
+  .custom-cursor textarea {
+    cursor: none !important;
+  }
+}
+
+/* En móvil y tablet, mostrar cursor normal */
+@media (max-width: 768px) {
+  .custom-cursor,
+  .custom-cursor *,
+  .custom-cursor a,
+  .custom-cursor button {
+    cursor: auto !important;
+  }
+}
+
+/* Mejorar la selección de texto */
+.custom-cursor ::selection {
+  background: linear-gradient(45deg, #06b6d4, #4cc9f0);
+  color: #020617;
+}
+
+/* Efecto de brillo en imágenes */
+.image-glow {
+  filter: drop-shadow(0 0 10px rgba(76, 201, 240, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.image-glow:hover {
+  filter: drop-shadow(0 0 20px rgba(76, 201, 240, 0.6));
+}

@@ -1,0 +1,200 @@
+/* Configuración de Tailwind CSS v4 con colores personalizados */
+
+@theme {
+  /* Colores de la paleta Speedlight Culture */
+  --color-speedlight-red: #D32F2F;
+  --color-culture-orange: #FF9800;
+  --color-energy-yellow: #FFEB3B;
+  --color-tradition-ocher: #C17D11;
+  
+  /* Fondos oscuros */
+  --color-dark-primary: #1A1A1A;
+  --color-dark-secondary: #2D2D2D;
+  --color-dark-tertiary: #3D3D3D;
+  
+  /* Textos */
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #B0B0B0;
+  --color-text-tertiary: #808080;
+  
+  /* Estados */
+  --color-success: #4CAF50;
+  --color-error: #F44336;
+  --color-warning: #FF9800;
+  --color-info: #2196F3;
+  
+  /* Gradientes */
+  --gradient-speedlight: linear-gradient(135deg, #D32F2F 0%, #FF9800 100%);
+  --gradient-speedlight-reverse: linear-gradient(135deg, #FF9800 0%, #D32F2F 100%);
+  --gradient-ocher-yellow: linear-gradient(135deg, #C17D11 0%, #FFEB3B 100%);
+  
+  /* Tipografía */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'Roboto Mono', monospace;
+  --font-family-display: 'Oswald', sans-serif;
+  
+  /* Espaciado basado en 8px */
+  --spacing-xs: 0.25rem;  /* 4px */
+  --spacing-sm: 0.5rem;   /* 8px */
+  --spacing-md: 1rem;     /* 16px */
+  --spacing-lg: 1.5rem;   /* 24px */
+  --spacing-xl: 2rem;     /* 32px */
+  --spacing-2xl: 3rem;    /* 48px */
+  --spacing-3xl: 4rem;    /* 64px */
+  
+  /* Breakpoints mobile-first */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
+  /* Border radius */
+  --radius-sm: 0.25rem;   /* 4px */
+  --radius-md: 0.5rem;    /* 8px */
+  --radius-lg: 0.75rem;   /* 12px */
+  --radius-xl: 1rem;      /* 16px */
+  --radius-full: 9999px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --shadow-speedlight: 0 4px 12px rgba(211, 47, 47, 0.3);
+  --shadow-orange: 0 4px 12px rgba(255, 152, 0, 0.3);
+  
+  /* Animaciones */
+  --animation-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animation-slide-up: slide-up 0.5s ease-out;
+  --animation-fade-in: fade-in 0.3s ease-out;
+}
+
+/* Utilidades personalizadas */
+@utility gradient-speedlight {
+  background: linear-gradient(135deg, var(--color-speedlight-red) 0%, var(--color-culture-orange) 100%);
+}
+
+@utility gradient-speedlight-reverse {
+  background: linear-gradient(135deg, var(--color-culture-orange) 0%, var(--color-speedlight-red) 100%);
+}
+
+@utility gradient-ocher-yellow {
+  background: linear-gradient(135deg, var(--color-tradition-ocher) 0%, var(--color-energy-yellow) 100%);
+}
+
+@utility text-glow {
+  text-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+}
+
+@utility text-glow-red {
+  text-shadow: 0 0 10px rgba(211, 47, 47, 0.5);
+}
+
+@utility border-gradient-speedlight {
+  border-image: linear-gradient(90deg, var(--color-speedlight-red), var(--color-culture-orange)) 1;
+}
+
+@utility animate-pulse-glow {
+  animation: var(--animation-pulse-glow);
+}
+
+@utility animate-slide-up {
+  animation: var(--animation-slide-up);
+}
+
+@utility animate-fade-in {
+  animation: var(--animation-fade-in);
+}
+
+/* Clases de componentes */
+@layer components {
+  .btn-primary {
+    @apply gradient-speedlight text-white font-semibold py-3 px-6 rounded-lg 
+           transition-all duration-200 hover:shadow-speedlight hover:-translate-y-0.5 
+           focus:outline-none focus:ring-2 focus:ring-culture-orange focus:ring-offset-2 
+           focus:ring-offset-dark-primary disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-secondary {
+    @apply bg-transparent text-culture-orange font-semibold py-3 px-6 rounded-lg 
+           border-2 border-culture-orange transition-all duration-200 
+           hover:bg-culture-orange/10 hover:shadow-orange hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-culture-orange focus:ring-offset-2 
+           focus:ring-offset-dark-primary disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-ghost {
+    @apply bg-transparent text-text-primary font-semibold py-3 px-6 rounded-lg 
+           transition-all duration-200 hover:bg-dark-tertiary hover:-translate-y-0.5
+           focus:outline-none focus:ring-2 focus:ring-text-secondary focus:ring-offset-2 
+           focus:ring-offset-dark-primary disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .card {
+    @apply bg-dark-secondary border border-dark-tertiary rounded-xl p-6
+           transition-all duration-200 hover:border-culture-orange 
+           hover:shadow-lg hover:-translate-y-1;
+  }
+  
+  .card-elevated {
+    @apply card shadow-xl;
+  }
+  
+  .input-primary {
+    @apply bg-dark-secondary border border-dark-tertiary rounded-lg px-4 py-3
+           text-text-primary placeholder-text-tertiary transition-all duration-200
+           focus:outline-none focus:border-culture-orange focus:ring-2 
+           focus:ring-culture-orange/20 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .badge-primary {
+    @apply gradient-speedlight text-white text-xs font-bold px-3 py-1 rounded-full;
+  }
+  
+  .badge-secondary {
+    @apply bg-dark-tertiary text-text-primary text-xs font-bold px-3 py-1 rounded-full;
+  }
+  
+  .badge-success {
+    @apply bg-success/20 text-success text-xs font-bold px-3 py-1 rounded-full;
+  }
+  
+  .badge-warning {
+    @apply bg-warning/20 text-warning text-xs font-bold px-3 py-1 rounded-full;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold mb-6 relative;
+  }
+  
+  .section-title::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-16 h-1 gradient-speedlight rounded-full;
+  }
+  
+  .hero-section {
+    @apply relative overflow-hidden bg-gradient-to-b from-dark-primary to-dark-secondary;
+  }
+  
+  .hero-section::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-1 gradient-speedlight;
+  }
+}
+
+/* Definiciones de animaciones */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

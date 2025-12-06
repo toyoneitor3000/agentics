@@ -1,0 +1,30 @@
+# Workspace - Archivos generados por agentes
+# Solo ignorar archivos temporales, mantener estructura
+
+# Archivos temporales
+temp/*
+!temp/.gitkeep
+
+# Archivos de sistema
+.DS_Store
+*.log
+*.tmp
+
+# Node modules en proyectos generados
+projects/*/node_modules/
+projects/*/.next/
+projects/*/out/
+projects/*/build/
+projects/*/dist/
+
+# Environment files en proyectos
+projects/*/.env
+projects/*/.env.local
+
+# Mantener estructura de carpetas
+!projects/.gitkeep
+!assets/.gitkeep
+!assets/images/.gitkeep
+!assets/videos/.gitkeep
+!assets/audio/.gitkeep
+!exports/.gitkeep

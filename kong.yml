@@ -1,0 +1,21 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: agentic-builder
+    url: http://agent-builder:7000/build
+
+routes:
+  - name: build
+    paths:
+      - /build
+    methods:
+      - POST
+    service: agentic-builder
+
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 5000
+      policy: local
+  - name: key-auth
