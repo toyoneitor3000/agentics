@@ -2,3 +2,8 @@ node_modules/
 .next/
 .vercel/
 .env
+venv/
+workspace/
+__pycache__/
+*.pyc
+.DS_Store
