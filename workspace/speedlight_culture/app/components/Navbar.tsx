@@ -38,7 +38,7 @@ export default function Navbar() {
             <div className="container mx-auto px-6 relative flex justify-between items-center">
                 {/* Logo */}
                 <div className="flex items-center group cursor-pointer">
-                    <div className="relative">
+                    <Link href="/" className="relative">
                         <div className="absolute inset-0 bg-[#FF9800]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         <Image
                             src="/logonavbar.png"
@@ -48,22 +48,31 @@ export default function Navbar() {
                             className={`w-auto transition-all duration-500 object-contain ${scrolled ? "h-20" : "h-32"
                                 }`}
                         />
-                    </div>
+                    </Link>
                 </div>
 
                 {/* Minimalist Navigation */}
                 <nav className="hidden md:flex items-center space-x-12">
-                    {["Inicio", "Marketplace", "Foro", "Galería", "Talleres"].map((item) => (
-                        <Link
-                            key={item}
-                            href={item === "Galería" ? "/gallery" : "#"}
-                            className="relative text-[#F5E6D3]/80 hover:text-[#FFF8F0] text-sm uppercase tracking-[0.2em] font-medium transition-colors duration-300 group"
-                        >
-                            {item}
-                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out"></span>
-                            <span className="absolute -bottom-2 right-0 w-0 h-[1px] bg-gradient-to-l from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out delay-75"></span>
-                        </Link>
-                    ))}
+                    {["Inicio", "Marketplace", "Foro", "Galería", "Talleres"].map((item) => {
+                        const links: { [key: string]: string } = {
+                            "Inicio": "/",
+                            "Marketplace": "/marketplace",
+                            "Foro": "/forum",
+                            "Galería": "/gallery",
+                            "Talleres": "/workshops"
+                        };
+                        return (
+                            <Link
+                                key={item}
+                                href={links[item]}
+                                className="relative text-[#F5E6D3]/80 hover:text-[#FFF8F0] text-sm uppercase tracking-[0.2em] font-medium transition-colors duration-300 group"
+                            >
+                                {item}
+                                <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out"></span>
+                                <span className="absolute -bottom-2 right-0 w-0 h-[1px] bg-gradient-to-l from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out delay-75"></span>
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* High Class CTA */}

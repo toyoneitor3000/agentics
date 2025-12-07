@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
             <li><a href="https://wa.me/573124730909?text=Hola,%20deseo%20conocer%20más%20sobre%20Victory%20Cars." target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Nosotros</a></li>
             <li><a href="#gallery" className="hover:text-brand-cyan transition-colors">Portafolio</a></li>
             <li><a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Contacto</a></li>
-            <li><a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Política de Privacidad</a></li>
+            <li><a href="/privacy" className="hover:text-brand-cyan transition-colors">Política de Privacidad</a></li>
           </ul>
         </div>
 
@@ -47,13 +47,16 @@ const Footer: React.FC = () => {
               <ArrowRight size={18} />
             </a>
           </div>
+          <p className="text-[10px] text-brand-slate/50 mt-2 font-light">
+            * Al suscribirse será redirigido a WhatsApp para confirmar su registro.
+          </p>
         </div>
 
       </div>
       <div className="container mx-auto px-4 mt-16 pt-8 border-t border-white/5 text-center text-xs text-brand-slate/40">
         &copy; {new Date().getFullYear()} Victory Cars S.A.S. Todos los derechos reservados.
         <div className="mt-2">
-          Diseñado y desarrollado por <a href="https://purrpurr.dev" target="_blank" rel="noopener noreferrer" className="text-brand-cyan hover:text-white transition-colors">purrpurr.dev</a>
+          Diseñado y desarrollado por <a href="https://purrpurr.dev" target="_blank" rel="noopener noreferrer" className="text-brand-cyan hover:text-white transition-colors">purrpurr.dev</a> en Bogotá, Colombia.
         </div>
       </div>
     </footer>

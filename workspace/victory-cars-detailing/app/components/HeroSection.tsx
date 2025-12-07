@@ -88,7 +88,7 @@ const HeroSection: React.FC = () => {
           style={{ opacity: logoOpacity }}
         >
           <Link href="/" className="block">
-            <div className="relative h-24 w-80 md:h-[0px] md:w-96 lg:h-[90px] lg:w-[461px] animate-slide-down">
+            <div className="relative h-16 w-64 md:h-[0px] md:w-96 lg:h-[90px] lg:w-[461px] animate-slide-down">
               <Image
                 src="/logo.png"
                 alt="Victory Cars Detailing"

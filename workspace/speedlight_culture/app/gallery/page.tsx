@@ -1,14 +1,14 @@
 "use client";
 
-import Navbar from "../components/Navbar";
+
 import Link from "next/link";
 
 export default function GalleryPage() {
     return (
-        <main className="min-h-screen bg-[#1A0F08] text-[#FFF8F0] selection:bg-[#FF9800]/30">
-            <Navbar />
+        <main className="min-h-screen">
 
-            <div className="pt-32 pb-20 px-6 container mx-auto">
+
+            <div className="pt-48 pb-20 px-6 container mx-auto">
                 <div className="text-center mb-16 animate-fade-in">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF9800] via-[#FFEB3B] to-[#FF9800] animate-glow">

@@ -67,6 +67,10 @@ export const viewport = {
   maximumScale: 1,
 };
 
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
+import Preloader from "./components/Preloader";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -81,9 +85,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#1A1A1A" />
       </head>
       <body
-        className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased`}
+        className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
+        <Preloader />
+        <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

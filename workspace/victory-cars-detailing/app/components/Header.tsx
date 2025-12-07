@@ -92,7 +92,7 @@ const Header = () => {
 
               {/* Logo centrado */}
               <Link href="/" className="flex-shrink-0">
-                <div className="relative h-12 w-48 sm:h-14 sm:w-56">
+                <div className="relative h-10 w-40 sm:h-12 sm:w-48">
                   <Image
                     src="/logo.png"
                     alt="Victory Cars Detailing"
@@ -181,7 +181,7 @@ const Header = () => {
           <div className="relative flex items-center justify-center mb-12">
             {/* Logo en el menú móvil - CENTRADO */}
             <Link href="/" onClick={handleNavLinkClick}>
-              <div className="relative h-16 w-64 sm:h-20 sm:w-80">
+              <div className="relative h-12 w-48 sm:h-16 sm:w-64">
                 <Image
                   src="/logo.png"
                   alt="Victory Cars Detailing"

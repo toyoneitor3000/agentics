@@ -62,7 +62,7 @@ const Preloader = () => {
       {/* Contenido del preloader */}
       <div className="relative z-10 flex flex-col items-center gap-8">
         {/* Logo con animación */}
-        <div className="relative w-80 h-24 md:w-96 md:h-28 animate-fade-in">
+        <div className="relative w-64 h-16 md:w-96 md:h-28 animate-fade-in">
           <Image
             src="/logo.png"
             alt="Victory Cars Detailing"
@@ -77,7 +77,7 @@ const Preloader = () => {
         {/* Barra de progreso */}
         <div className="w-64 md:w-80">
           <div className="h-1 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
-            <div 
+            <div
               className="h-full bg-gradient-to-r from-brand-cyan via-brand-light-blue to-brand-cyan rounded-full transition-all duration-300 ease-out shadow-[0_0_15px_rgba(6,182,212,0.6)]"
               style={{ width: `${progress}%` }}
             ></div>

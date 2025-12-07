@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import Navbar from "./components/Navbar";
+
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30">
-      <Navbar />
+    <main className="min-h-screen">
+
 
       {/* Hero Section - Galactic Speed */}
       <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center">
@@ -60,28 +60,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Stats Ticker - Glass Strip */}
-      <div className="relative z-20 border-y border-[#FF9800]/10 bg-[#0A0604]/50 backdrop-blur-md">
-        <div className="container mx-auto px-6 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-[#FF9800]/10">
-            {[
-              { label: "Miembros", value: "500+" },
-              { label: "Productos", value: "1K+" },
-              { label: "Talleres", value: "50+" },
-              { label: "Comunidad", value: "24/7" },
-            ].map((stat, i) => (
-              <div key={i} className="flex flex-col items-center group cursor-default">
-                <span className="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] group-hover:scale-110 transition-transform duration-500">
-                  {stat.value}
-                </span>
-                <span className="text-[10px] uppercase tracking-[0.2em] text-[#BCAAA4] mt-2">
-                  {stat.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
 
       {/* Features - The Grid */}
       <section className="py-32 relative">
@@ -104,12 +83,12 @@ export default function Home() {
               { title: "Video", desc: "Contenido exclusivo y reviews.", icon: "V" },
               { title: "AI Agents", desc: "Asistencia inteligente personalizada.", icon: "AI" },
             ].map((feature, i) => (
-              <div 
+              <div
                 key={i}
                 className="group relative p-8 rounded-2xl bg-[#0A0604] border border-[#FF9800]/5 hover:border-[#FF9800]/30 transition-all duration-500 hover:-translate-y-1 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#FF9800]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
+
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="w-12 h-12 mb-6 rounded-lg bg-[#FF9800]/10 flex items-center justify-center text-[#FF9800] font-bold border border-[#FF9800]/20 group-hover:scale-110 transition-transform duration-500">
                     {feature.icon}
@@ -131,7 +110,7 @@ export default function Home() {
       <section className="py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-[#FF9800]/5"></div>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-[#FF9800]/20 to-transparent"></div>
-        
+
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl md:text-6xl font-bold mb-8 tracking-tighter text-[#F5E6D3]">
@@ -155,33 +134,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Minimal Footer */}
-      <footer className="border-t border-[#FF9800]/10 bg-[#050302] py-12">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-4 opacity-50 hover:opacity-100 transition-opacity">
-            <Image
-              src="/logo.png"
-              alt="Speedlight Culture"
-              width={40}
-              height={40}
-              className="w-10 h-auto opacity-80"
-            />
-            <span className="text-xs tracking-[0.2em] uppercase">Speedlight Culture © 2025</span>
-          </div>
-          
-          <div className="flex gap-8">
-            {["Twitter", "Instagram", "Discord"].map((social) => (
-              <a 
-                key={social} 
-                href="#" 
-                className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors"
-              >
-                {social}
-              </a>
-            ))}
-          </div>
-        </div>
-      </footer>
+
     </main>
   );
 }
