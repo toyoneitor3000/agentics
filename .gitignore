@@ -3,7 +3,7 @@ node_modules/
 .vercel/
 .env
 venv/
-workspace/
 __pycache__/
 *.pyc
 .DS_Store
+.vercel
