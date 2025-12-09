@@ -17,7 +17,7 @@ export default function Navbar() {
 
     return (
         <header
-            className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? "py-2" : "py-6"
+            className={`relative w-full transition-all duration-500 ${scrolled ? "py-2" : "py-6"
                 }`}
         >
             {/* Glassmorphic Background Layer with Fade */}

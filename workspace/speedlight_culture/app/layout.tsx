@@ -89,8 +89,10 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
         <Preloader />
-        <EcosystemBanner />
-        <Navbar />
+        <div className="fixed top-0 w-full z-50 flex flex-col">
+          <EcosystemBanner />
+          <Navbar />
+        </div>
         {children}
         <Footer />
       </body>
