@@ -24,6 +24,7 @@ export const metadata: Metadata = {
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import EcosystemBanner from "@/components/layout/EcosystemBanner";
 
 export default function RootLayout({
   children,
@@ -33,6 +34,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable}`}>
+        <EcosystemBanner />
         <Header />
         <main style={{ paddingTop: '70px', minHeight: 'calc(100vh - 300px)' }}>
           {children}

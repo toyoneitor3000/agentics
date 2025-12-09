@@ -1,0 +1,37 @@
+import Link from 'next/link';
+
+export default function EcosystemBanner() {
+    return (
+        <div className="bg-gradient-to-r from-[#D32F2F] to-[#FF9800] text-white py-2 px-4 text-sm font-medium relative z-50">
+            <div className="container mx-auto flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <span className="bg-black/20 px-2 py-0.5 rounded text-xs uppercase tracking-wider">Culture</span>
+                    <p className="hidden sm:block">¿Buscas partes para tus proyectos o inspiración?</p>
+                    <p className="block sm:hidden">Buscas partes?</p>
+                </div>
+
+                <Link
+                    href="https://speedlightculture.com"
+                    className="flex items-center gap-2 hover:bg-black/10 px-3 py-1 rounded transition-colors group"
+                >
+                    <span>Ir a Speedlight Culture</span>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="group-hover:translate-x-1 transition-transform"
+                    >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                    </svg>
+                </Link>
+            </div>
+        </div>
+    );
+}

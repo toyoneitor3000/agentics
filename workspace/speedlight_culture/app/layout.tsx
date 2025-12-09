@@ -70,6 +70,7 @@ export const viewport = {
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Preloader from "./components/Preloader";
+import EcosystemBanner from "./components/EcosystemBanner";
 
 export default function RootLayout({
   children,
@@ -88,6 +89,7 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
         <Preloader />
+        <EcosystemBanner />
         <Navbar />
         {children}
         <Footer />
