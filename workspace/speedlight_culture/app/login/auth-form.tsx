@@ -7,6 +7,7 @@ import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck } from 'lucide-react
 import { createClient } from '@/app/utils/supabase/client'
 
 export default function AuthForm() {
+    // Force new deploy
     const [isLogin, setIsLogin] = useState(true)
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
