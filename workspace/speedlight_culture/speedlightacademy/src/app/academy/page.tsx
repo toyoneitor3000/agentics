@@ -1,6 +1,7 @@
 import React from 'react';
 import { CourseCard } from '@/components/academy/CourseCard';
 import { CTABanner } from '@/components/ui/CTABanner';
+import { AdFeedCard } from '@/components/AdBanners';
 import styles from './academy.module.css';
 
 const COURSES = [
@@ -47,8 +48,16 @@ export default function AcademyPage() {
             </header>
 
             <div className={styles.grid}>
-                {COURSES.map((course) => (
-                    <CourseCard key={course.id} course={course} />
+                {COURSES.map((course, index) => (
+                    <React.Fragment key={course.id}>
+                        <CourseCard course={course} />
+                        {/* Insert Ad after the second course */}
+                        {index === 1 && (
+                            <div className="flex justify-center w-full">
+                                <AdFeedCard />
+                            </div>
+                        )}
+                    </React.Fragment>
                 ))}
             </div>
 

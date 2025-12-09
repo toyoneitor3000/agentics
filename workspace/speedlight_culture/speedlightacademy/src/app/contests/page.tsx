@@ -1,5 +1,6 @@
 import React from 'react';
 import { ContestCard } from '@/components/contests/ContestCard';
+import { AdFeedCard } from '@/components/AdBanners';
 import { CTABanner } from '@/components/ui/CTABanner';
 import styles from './contests.module.css';
 
@@ -52,6 +53,9 @@ export default function ContestsPage() {
                 {CONTESTS.map((contest) => (
                     <ContestCard key={contest.id} contest={contest} />
                 ))}
+                <div style={{ gridColumn: 'span 1' }}>
+                    <AdFeedCard />
+                </div>
             </div>
 
             <CTABanner

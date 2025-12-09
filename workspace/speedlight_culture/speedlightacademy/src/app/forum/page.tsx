@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/Button';
 import { ForumCategoryCard } from '@/components/forum/ForumCategoryCard';
 import { ForumTopicRow } from '@/components/forum/ForumTopicRow';
+import { AdSidebarSpec } from '@/components/AdBanners';
 import styles from './forum.module.css';
 
 const CATEGORIES = [
@@ -109,11 +110,19 @@ export default function ForumPage() {
             <section>
                 <h2 className={styles.sectionTitle}>Discusiones Recientes 🔥</h2>
                 <div className={styles.topicList}>
-                    {RECENT_TOPICS.map((topic) => (
-                        <ForumTopicRow key={topic.id} topic={topic} />
+                    {RECENT_TOPICS.map((topic, index) => (
+                        <React.Fragment key={topic.id}>
+                            <ForumTopicRow topic={topic} />
+                            {index === 1 && (
+                                <div style={{ margin: '1rem 0' }}>
+                                    <AdSidebarSpec />
+                                </div>
+                            )}
+                        </React.Fragment>
                     ))}
                 </div>
             </section>
         </div>
     );
 }
+

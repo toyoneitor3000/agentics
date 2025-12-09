@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { CTABanner } from '@/components/ui/CTABanner';
+import { AdAcademyIntro } from '@/components/AdBanners';
 import styles from './page.module.css';
 
 export default function Home() {
@@ -25,6 +26,11 @@ export default function Home() {
           </Link>
         </div>
       </section>
+
+      {/* Sponsor Highlight */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', marginBottom: '4rem' }}>
+        <AdAcademyIntro />
+      </div>
 
       {/* Features Grid */}
       <section className={styles.features}>

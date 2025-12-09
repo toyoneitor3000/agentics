@@ -25,6 +25,7 @@ const Footer = () => {
                         <Link href="/academy">Academia</Link>
                         <Link href="/contests">Concursos</Link>
                         <Link href="/pricing" style={{ color: 'var(--primary)' }}>Planes y Precios</Link>
+                        <Link href="/advertising">Publicidad</Link>
                     </div>
 
                     <div className={styles.column}>
