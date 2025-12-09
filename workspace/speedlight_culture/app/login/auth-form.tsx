@@ -12,12 +12,31 @@ export default function AuthForm() {
     const [error, setError] = useState<string | null>(null)
     const supabase = createClient()
 
+    function getURL() {
+        let url =
+            process.env.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
+            process.env.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel.
+            'http://localhost:3000/'
+
+        // Make sure to include `https://` when not localhost.
+        url = url.includes('http') ? url : `https://${url}`
+        // Make sure to ignore trailing slash
+        url = url.charAt(url.length - 1) === '/' ? url : `${url}/`
+        return url
+    }
+
     async function handleGoogleLogin() {
         setIsLoading(true)
+
+        // Explicitly define redirect URL logic
+        const callbackUrl = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/auth/callback'
+            : 'https://www.speedlightculture.com/auth/callback'
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: callbackUrl,
                 queryParams: {
                     access_type: 'offline',
                     prompt: 'consent',
