@@ -14,11 +14,16 @@ export async function GET(request: Request) {
     }
 
     if (code) {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+            console.error('Missing Supabase Environment Variables')
+            return NextResponse.redirect(`${origin}/login?error=ConfigurationError&details=MissingEnvVars`)
+        }
+
         const supabase = await createClient()
         const { error } = await supabase.auth.exchangeCodeForSession(code)
 
         if (!error) {
-            const forwardedHost = request.headers.get('x-forwarded-host') // original origin before load balancer
+            const forwardedHost = request.headers.get('x-forwarded-host')
             const isLocalEnv = process.env.NODE_ENV === 'development'
             if (isLocalEnv) {
                 return NextResponse.redirect(`${origin}${next}?welcome=true`)
@@ -29,7 +34,7 @@ export async function GET(request: Request) {
             }
         } else {
             console.error('Supabase Auth Error:', error)
-            return NextResponse.redirect(`${origin}/login?error=AuthExchangeError&details=${error.message}`)
+            return NextResponse.redirect(`${origin}/login?error=AuthExchangeError&details=${encodeURIComponent(error.message)}`)
         }
     }
 
