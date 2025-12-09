@@ -1,12 +1,24 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Image from "next/image";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import Link from "next/link";
+import { createClient } from "@/app/utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 export default function CoursePage({ params }: { params: Promise<{ slug: string }> }) {
     const resolvedParams = use(params);
     const slug = resolvedParams.slug; // In a real app, use this to fetch data
+    const [user, setUser] = useState<User | null>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        getUser();
+    }, [supabase]);
 
     // Mock Data for Detail
     const COURSE = {
@@ -83,21 +95,22 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
                             </div>
 
                             <div className="mt-8">
-                                <SignedIn>
+                                {user ? (
                                     <button className="w-full py-4 rounded-xl bg-[#FF9800] text-black font-bold uppercase tracking-wider hover:bg-[#FFEB3B] transition-colors">
                                         Continuar Alumno
                                     </button>
-                                </SignedIn>
-                                <SignedOut>
-                                    <SignInButton mode="modal">
-                                        <button className="w-full py-4 rounded-xl bg-[#FF9800] text-black font-bold uppercase tracking-wider hover:bg-[#FFEB3B] transition-colors shadow-[0_0_20px_rgba(255,152,0,0.3)] animate-pulse">
-                                            Empezar Gratis
-                                        </button>
-                                    </SignInButton>
-                                    <p className="text-xs text-center mt-3 text-[#8D6E63]">
-                                        Regístrate para acceder al material completo
-                                    </p>
-                                </SignedOut>
+                                ) : (
+                                    <>
+                                        <Link href="/login" className="block w-full">
+                                            <button className="w-full py-4 rounded-xl bg-[#FF9800] text-black font-bold uppercase tracking-wider hover:bg-[#FFEB3B] transition-colors shadow-[0_0_20px_rgba(255,152,0,0.3)] animate-pulse">
+                                                Empezar Gratis
+                                            </button>
+                                        </Link>
+                                        <p className="text-xs text-center mt-3 text-[#8D6E63]">
+                                            Regístrate para acceder al material completo
+                                        </p>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>

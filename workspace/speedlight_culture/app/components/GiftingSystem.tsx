@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { SignedIn, SignedOut, SignInButton } from "@clerk/nextjs";
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { createClient } from "@/app/utils/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 const GIFTS = [
     {
@@ -58,6 +60,16 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
     const [selectedGift, setSelectedGift] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [user, setUser] = useState<User | null>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        getUser();
+    }, [supabase]);
 
     const handleDonate = async () => {
         if (!selectedGift) return;
@@ -122,7 +134,7 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
                             <p className="text-xs text-[#BCAAA4]">{selectedGiftData.description}</p>
                         </div>
 
-                        <SignedIn>
+                        {user ? (
                             <button
                                 onClick={handleDonate}
                                 disabled={isProcessing}
@@ -144,15 +156,18 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
                                     <>Enviar Donación</>
                                 )}
                             </button>
-                        </SignedIn>
-
-                        <SignedOut>
-                            <SignInButton mode="modal">
-                                <button className="w-full py-4 rounded-xl font-bold uppercase tracking-wider bg-[#2C1810] text-[#BCAAA4] border border-[#FF9800]/30 hover:bg-[#FF9800] hover:text-black transition-all">
-                                    Inicia sesión para donar
-                                </button>
-                            </SignInButton>
-                        </SignedOut>
+                        ) : (
+                            <div className="space-y-3">
+                                <Link href="/login" className="block w-full">
+                                    <button className="w-full py-4 rounded-xl font-bold uppercase tracking-wider bg-[#2C1810] text-[#BCAAA4] border border-[#FF9800]/30 hover:bg-[#FF9800] hover:text-black transition-all">
+                                        Inicia sesión para donar
+                                    </button>
+                                </Link>
+                                <p className="text-xs text-center text-[#8D6E63]">
+                                    Necesitas una cuenta Speedlight ID para gestionar tus donaciones.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <div className="text-center p-6 text-[#BCAAA4]/50 text-sm italic border-t border-dashed border-[#BCAAA4]/10">
