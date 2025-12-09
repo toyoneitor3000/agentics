@@ -1,12 +1,10 @@
 "use client";
 
-
+import { AdWorkshopBadge } from "../components/AdBanners";
 
 export default function WorkshopsPage() {
     return (
         <main className="min-h-screen">
-
-
             <div className="pt-48 pb-20 px-6 container mx-auto">
                 <div className="text-center mb-16 animate-fade-in">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">
@@ -19,10 +17,33 @@ export default function WorkshopsPage() {
                     </p>
                 </div>
 
-                <div className="flex justify-center items-center h-[400px] border border-[#FF9800]/10 rounded-2xl bg-[#0A0604]/50 backdrop-blur-sm">
-                    <p className="text-[#FF9800] text-xl tracking-widest uppercase animate-pulse">
-                        Próximamente
-                    </p>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+                    {/* VERIFIED PARTNER (Ad Placement) */}
+                    <div className="transform hover:-translate-y-1 transition-transform duration-300">
+                        <AdWorkshopBadge />
+                    </div>
+
+                    {/* Standard Workshop 1 */}
+                    <div className="p-6 rounded-xl bg-[#0A0604] border border-[#FF9800]/10 hover:border-[#FF9800]/30 transition-all">
+                        <h3 className="text-[#F5E6D3] font-bold text-lg mb-2">Taller Hermanos Gasca</h3>
+                        <p className="text-[#BCAAA4] text-sm mb-4">Mecánica General • Frenos</p>
+                        <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                            <span className="text-xs text-neutral-500">Bogotá, Norte</span>
+                            <span className="text-[#FF9800] text-sm font-bold">4.5 ★</span>
+                        </div>
+                    </div>
+
+                    {/* Standard Workshop 2 */}
+                    <div className="p-6 rounded-xl bg-[#0A0604] border border-[#FF9800]/10 hover:border-[#FF9800]/30 transition-all">
+                        <h3 className="text-[#F5E6D3] font-bold text-lg mb-2">Paint Mods Studio</h3>
+                        <p className="text-[#BCAAA4] text-sm mb-4">Pintura • Latonería</p>
+                        <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                            <span className="text-xs text-neutral-500">Medellín, Poblado</span>
+                            <span className="text-[#FF9800] text-sm font-bold">4.8 ★</span>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </main>

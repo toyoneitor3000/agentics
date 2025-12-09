@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/react";
 import { Inter, Roboto_Mono, Oswald } from "next/font/google";
 import "./globals.css";
 
@@ -95,6 +96,7 @@ export default function RootLayout({
         </div>
         {children}
         <Footer />
+        <Analytics />
       </body>
     </html>
   );

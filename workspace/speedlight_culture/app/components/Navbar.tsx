@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { AdHeroSponsor } from "./AdBanners";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
@@ -36,19 +37,26 @@ export default function Navbar() {
             <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800]/50 to-transparent opacity-50"></div>
 
             <div className="container mx-auto px-6 relative flex justify-between items-center">
-                {/* Logo */}
-                <div className="flex items-center group cursor-pointer">
-                    <Link href="/" className="relative">
-                        <div className="absolute inset-0 bg-[#FF9800]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <Image
-                            src="/logonavbar.png"
-                            alt="Speedlight Culture"
-                            width={240}
-                            height={120}
-                            className={`w-auto transition-all duration-500 object-contain ${scrolled ? "h-20" : "h-32"
-                                }`}
-                        />
-                    </Link>
+                {/* Logo & Sponsor Area */}
+                <div className="flex items-center gap-8">
+                    <div className="flex items-center group cursor-pointer">
+                        <Link href="/" className="relative">
+                            <div className="absolute inset-0 bg-[#FF9800]/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            <Image
+                                src="/logonavbar.png"
+                                alt="Speedlight Culture"
+                                width={240}
+                                height={120}
+                                className={`w-auto transition-all duration-500 object-contain ${scrolled ? "h-20" : "h-32"
+                                    }`}
+                            />
+                        </Link>
+                    </div>
+
+                    {/* Hero Sponsor (Hidden on mobile) */}
+                    <div className="hidden xl:block opacity-0 animate-in fade-in slide-in-from-left duration-1000 delay-500 fill-mode-forwards">
+                        <AdHeroSponsor />
+                    </div>
                 </div>
 
                 {/* Minimalist Navigation */}
