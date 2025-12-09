@@ -1,0 +1,102 @@
+.row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.row:hover {
+    background: var(--surface-hover);
+}
+
+.row:last-child {
+    border-bottom: none;
+}
+
+.pinned {
+    border-left: 3px solid var(--primary);
+    background: rgba(0, 240, 255, 0.02);
+}
+
+.mainInfo {
+    flex: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+}
+
+.pinIcon {
+    font-size: 1rem;
+    margin-top: 2px;
+}
+
+.title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.4rem;
+    cursor: pointer;
+}
+
+.title:hover {
+    color: var(--primary);
+}
+
+.meta {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.categoryBadge {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #ccc;
+}
+
+.author {
+    color: #888;
+}
+
+.stats {
+    display: flex;
+    gap: 2rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.statItem {
+    text-align: center;
+}
+
+.statValue {
+    display: block;
+    font-weight: 600;
+    color: var(--foreground);
+}
+
+.statLabel {
+    font-size: 0.75rem;
+    color: #666;
+}
+
+.activity {
+    flex: 1;
+    text-align: right;
+    font-size: 0.85rem;
+    color: #888;
+}
+
+@media (max-width: 768px) {
+
+    .stats,
+    .activity {
+        display: none;
+    }
+}

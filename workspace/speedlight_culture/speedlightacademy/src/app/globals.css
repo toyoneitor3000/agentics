@@ -1,0 +1,80 @@
+:root {
+  /* Color Palette - Speedlight Academy (Refined) */
+  --background: #020b14;
+  /* Deep dark blue/black base */
+  --foreground: #ededed;
+
+  --primary: #C4F22C;
+  /* Verde Biche (Neon Lime) */
+  --primary-hover: #aadd00;
+
+  --secondary: #0077BE;
+  /* Azul Océano (Ocean Blue) */
+  --secondary-hover: #005f99;
+
+  --surface: rgba(2, 11, 20, 0.85);
+  --surface-hover: rgba(2, 11, 20, 0.95);
+
+  --border: rgba(196, 242, 44, 0.2);
+  /* Sutil borde verde biche */
+
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-serif), "Playfair Display", Georgia, serif;
+  --font-mono: var(--font-geist-mono), monospace;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  /* Background Image with Dark Blue Overlay */
+  background-image:
+    linear-gradient(rgba(2, 11, 20, 0.92), rgba(2, 11, 20, 0.95)),
+    url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80');
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}

@@ -1,0 +1,109 @@
+.main {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 4rem;
+}
+
+.hero {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    background: radial-gradient(circle at center, rgba(0, 240, 255, 0.05) 0%, transparent 70%);
+    margin-top: -70px;
+    /* Compensate for header */
+    padding-top: 140px;
+}
+
+.title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, var(--foreground) 30%, var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.subtitle {
+    font-size: clamp(1.2rem, 3vw, 1.5rem);
+    color: #888;
+    max-width: 700px;
+    margin-bottom: 3rem;
+    line-height: 1.6;
+    animation: fadeInUp 0.8s ease-out 0.2s backwards;
+}
+
+.ctaGroup {
+    display: flex;
+    gap: 1.5rem;
+    animation: fadeInUp 0.8s ease-out 0.4s backwards;
+}
+
+.features {
+    padding: 4rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.cardIcon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+.cardTitle {
+    font-size: 1.5rem;
+    margin-bottom: 0.8rem;
+    color: var(--foreground);
+}
+
+.cardText {
+    color: #888;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 600px) {
+    .ctaGroup {
+        flex-direction: column;
+        width: 100%;
+        max-width: 300px;
+    }
+}

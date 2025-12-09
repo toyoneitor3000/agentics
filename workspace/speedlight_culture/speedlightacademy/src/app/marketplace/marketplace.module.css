@@ -1,0 +1,118 @@
+/* CSS Modules for Marketplace Page */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+.header {
+    margin-bottom: 3rem;
+    text-align: center;
+}
+
+.title {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--foreground), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.description {
+    color: #888;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 3rem;
+    align-items: start;
+}
+
+/* Sidebar Filters */
+.filters {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    position: sticky;
+    top: 90px;
+    /* Below fixed header */
+}
+
+.filterSection {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filterSection:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.filterTitle {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--foreground);
+}
+
+.filterList {
+    list-style: none;
+}
+
+.filterItem {
+    margin-bottom: 0.8rem;
+}
+
+.filterLabel {
+    display: flex;
+    align-items: center;
+    color: #aaa;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.filterLabel:hover {
+    color: var(--primary);
+}
+
+.checkbox {
+    margin-right: 0.8rem;
+    accent-color: var(--primary);
+    width: 16px;
+    height: 16px;
+}
+
+/* Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 4rem;
+    color: #666;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .layout {
+        grid-template-columns: 1fr;
+    }
+
+    .filters {
+        display: none;
+        /* Mobile filter drawer to be implemented */
+    }
+}

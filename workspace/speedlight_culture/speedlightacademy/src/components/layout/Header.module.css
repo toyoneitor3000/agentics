@@ -1,0 +1,215 @@
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+}
+
+/* Pseudo-element for the glass effect background only */
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    background: linear-gradient(to bottom, rgba(2, 11, 20, 0.95) 0%, rgba(2, 11, 20, 0.6) 100%);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    border-bottom: 1px solid rgba(196, 242, 44, 0.05);
+}
+
+.container {
+    max-width: 1400px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+}
+
+/* Mobile Toggle - Hidden on Desktop */
+.mobileToggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 20px;
+    position: relative;
+    z-index: 1002;
+}
+
+.hamburger,
+.hamburgerOpen {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background-color: var(--foreground);
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.hamburger::before,
+.hamburger::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background-color: var(--foreground);
+    transition: all 0.3s ease;
+}
+
+.hamburger::before {
+    top: -8px;
+}
+
+.hamburger::after {
+    bottom: -8px;
+}
+
+/* Hamburger Animation */
+.hamburgerOpen {
+    background-color: transparent;
+}
+
+.hamburgerOpen::before {
+    transform: rotate(45deg);
+    top: 0;
+}
+
+.hamburgerOpen::after {
+    transform: rotate(-45deg);
+    bottom: 0;
+}
+
+
+/* Navigation Desktop */
+.nav {
+    display: flex;
+    gap: 2.5rem;
+    justify-self: start;
+}
+
+.navLink {
+    color: #aaa;
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    position: relative;
+    text-transform: uppercase;
+    font-family: var(--font-sans);
+}
+
+.navLink:hover {
+    color: var(--primary);
+    text-shadow: 0 0 10px rgba(196, 242, 44, 0.4);
+}
+
+.navLink::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: var(--primary);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.navLink:hover::after {
+    width: 100%;
+}
+
+/* Logo */
+.logo {
+    justify-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+    z-index: 1001;
+}
+
+.logoWrapper {
+    position: relative;
+    display: block;
+    width: 90px;
+    height: 90px;
+}
+
+.logo:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 15px rgba(196, 242, 44, 0.3));
+}
+
+/* Actions */
+.actions {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    z-index: 1001;
+}
+
+.loginBtnWrapper button {
+    border-radius: 20px;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .nav {
+        display: none;
+        /* Hide default nav */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: rgba(2, 11, 20, 0.98);
+        backdrop-filter: blur(20px);
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 2.5rem;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    /* Show nav when open */
+    .nav.navMobileOpen {
+        display: flex;
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .navMobileOpen .navLink {
+        font-size: 1.5rem;
+        color: var(--foreground);
+    }
+
+    .mobileToggle {
+        display: block;
+        justify-self: start;
+    }
+
+    .container {
+        padding: 0 1.5rem;
+        /* On mobile, keep logo centered, hamburger left, login right */
+    }
+}
