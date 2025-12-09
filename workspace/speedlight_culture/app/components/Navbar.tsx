@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { AdHeroSponsor } from "./AdBanners";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
@@ -61,13 +62,15 @@ export default function Navbar() {
 
                 {/* Minimalist Navigation */}
                 <nav className="hidden md:flex items-center space-x-12">
-                    {["Inicio", "Marketplace", "Foro", "Galería", "Talleres"].map((item) => {
+                    {["Inicio", "Proyectos", "Academy", "Marketplace", "Foro", "Galería"].map((item) => {
                         const links: { [key: string]: string } = {
                             "Inicio": "/",
+                            "Proyectos": "/projects",
+                            "Academy": "/academy",
                             "Marketplace": "/marketplace",
                             "Foro": "/forum",
                             "Galería": "/gallery",
-                            "Talleres": "/workshops"
+                            "Concursos": "/contests"
                         };
                         return (
                             <Link
@@ -84,13 +87,33 @@ export default function Navbar() {
                 </nav>
 
                 {/* High Class CTA */}
-                <button className="group relative px-8 py-3 overflow-hidden rounded-full bg-transparent border border-[#FF9800]/30 hover:border-[#FF9800]/60 transition-all duration-300">
-                    <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#FF9800]/10 to-[#D32F2F]/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
-                    <span className="relative text-[#F5E6D3] text-xs uppercase tracking-[0.15em] font-bold group-hover:text-white transition-colors">
-                        Acceder
-                    </span>
-                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                </button>
+                {/* Auth & User Area */}
+                <div className="flex items-center gap-4">
+                    <SignedOut>
+                        <Link href="/sign-in">
+                            <button className="group relative px-8 py-3 overflow-hidden rounded-full bg-transparent border border-[#FF9800]/30 hover:border-[#FF9800]/60 transition-all duration-300">
+                                <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#FF9800]/10 to-[#D32F2F]/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
+                                <span className="relative text-[#F5E6D3] text-xs uppercase tracking-[0.15em] font-bold group-hover:text-white transition-colors">
+                                    Acceder
+                                </span>
+                                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                            </button>
+                        </Link>
+                    </SignedOut>
+                    <SignedIn>
+                        <UserButton
+                            appearance={{
+                                elements: {
+                                    avatarBox: "w-10 h-10 border-2 border-[#FF9800]",
+                                    userButtonPopoverCard: "bg-[#1A0F08] border border-[#FF9800]/20 text-[#F5E6D3]",
+                                    userButtonPopoverActionButton: "hover:bg-[#FF9800]/10 text-[#F5E6D3]",
+                                    userButtonPopoverActionButtonText: "text-[#F5E6D3]",
+                                    userButtonPopoverFooter: "hidden"
+                                }
+                            }}
+                        />
+                    </SignedIn>
+                </div>
             </div>
         </header>
     );
