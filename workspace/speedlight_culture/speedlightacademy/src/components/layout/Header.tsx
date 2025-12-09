@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/Button';
+import { AdHeroSponsor } from '../AdBanners';
 import styles from './Header.module.css';
 
 const Header = () => {
@@ -46,6 +47,10 @@ const Header = () => {
 
                 {/* Right: Actions */}
                 <div className={styles.actions}>
+                    {/* Hero Sponsor (Hidden on mobile via Tailwind) */}
+                    <div className="hidden xl:block mr-4">
+                        <AdHeroSponsor />
+                    </div>
                     <Link href="/login">
                         <div className={styles.loginBtnWrapper}>
                             <Button size="sm" variant="outline" className={styles.loginBtn}>Acceder</Button>
