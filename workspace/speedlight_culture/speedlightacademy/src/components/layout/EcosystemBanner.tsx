@@ -12,6 +12,8 @@ export default function EcosystemBanner() {
 
                 <Link
                     href="https://speedlightculture.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="flex items-center gap-2 hover:bg-black/10 px-3 py-1 rounded transition-colors group"
                 >
                     <span>Ir a Speedlight Culture</span>

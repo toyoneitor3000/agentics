@@ -36,7 +36,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable}`}>
         <EcosystemBanner />
         <Header />
-        <main style={{ paddingTop: '70px', minHeight: 'calc(100vh - 300px)' }}>
+        <main style={{ minHeight: 'calc(100vh - 300px)' }}>
           {children}
         </main>
         <Footer />

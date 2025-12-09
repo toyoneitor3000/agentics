@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 :root {
   /* Color Palette - Speedlight Academy (Refined) */
   --background: #020b14;
