@@ -75,7 +75,7 @@
 - [ ] Implementar transcoding de videos
 - [ ] Crear sistema de playlists
 
-### Semana 22-24: Mapa de Talleres
+### Semana 22-24: Mapa de Talleres y Calendario de Eventos
 - [ ] Integrar Mapbox/Google Maps API
 - [ ] Crear sistema de registro de talleres
 - [ ] Implementar búsqueda por ubicación
@@ -83,6 +83,10 @@
 - [ ] Implementar sistema de reservas/citas
 - [ ] Crear sistema de reviews para talleres
 - [ ] Implementar mapa interactivo
+- [ ] Diseñar schema de eventos
+- [ ] Crear vista de calendario (FullCalendar o similar)
+- [ ] Implementar sistema de RSVP
+- [ ] Integrar eventos en mapa global
 
 ## Fase 4: Avanzado y Escalado (Semanas 25-36)
 

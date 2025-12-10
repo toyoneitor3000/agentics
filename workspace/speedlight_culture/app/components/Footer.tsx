@@ -32,6 +32,13 @@ export default function Footer() {
                             </Link>
                         ))}
                         <Link
+                            href="/pricing"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            Planes
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+                        <Link
                             href="/advertising"
                             className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
                         >

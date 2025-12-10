@@ -22,6 +22,7 @@ export default function Navbar() {
         { name: "Marketplace", path: "/marketplace" },
         { name: "Foro", path: "/forum" },
         { name: "Galería", path: "/gallery" },
+        { name: "Planes", path: "/pricing" },
         // { name: "Concursos", path: "/contests" } // Hidden in original, keeping it commented or removing if not needed
     ];
 
@@ -53,7 +54,7 @@ export default function Navbar() {
 
     return (
         <header
-            className={`relative w-full transition-all duration-500 z-50 ${scrolled ? "py-2" : "py-6"
+            className={`fixed top-0 left-0 right-0 w-full transition-all duration-500 z-50 ${scrolled ? "py-2" : "py-4"
                 }`}
         >
             {/* Glassmorphic Background Layer with Fade */}
@@ -80,9 +81,9 @@ export default function Navbar() {
                             <Image
                                 src="/logonavbar.png"
                                 alt="Speedlight Culture"
-                                width={240}
-                                height={120}
-                                className={`w-auto transition-all duration-500 object-contain ${scrolled ? "h-20" : "h-32"
+                                width={180}
+                                height={60}
+                                className={`w-auto transition-all duration-500 object-contain ${scrolled ? "h-8" : "h-12"
                                     }`}
                             />
                         </Link>

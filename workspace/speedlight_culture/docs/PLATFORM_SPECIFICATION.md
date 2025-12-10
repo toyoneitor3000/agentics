@@ -76,6 +76,18 @@ Speedlight Culture es una plataforma virtual web dedicada a la cultura automotri
 - Configuración de privacidad
 - Gestión de suscripción
 
+### 12. Calendario de Eventos Global
+- **Vista Unificada**: Calendario interactivo (mensual/agenda) que consolida actividades.
+- **Tipos de Eventos**:
+    - *Speedlight Culture*: Car Meets, Rodadas, Track Days, Exposiciones.
+    - *Speedlight Academy*: Talleres presenciales, Webinars, Fechas límite de concursos.
+- **Funcionalidades**:
+    - RSVP / Registro de asistencia (Gratis o Pago).
+    - Integración con calendarios personales (Google/Apple).
+    - Geolocalización de eventos.
+    - Filtros por Ciudad/Tipo.
+
+
 ## Arquitectura Técnica
 
 ### Stack Tecnológico
@@ -100,6 +112,8 @@ Speedlight Culture es una plataforma virtual web dedicada a la cultura automotri
 - `videos`, `video_comments`
 - `subscriptions` (planes de suscripción)
 - `advertisements` (anuncios)
+- `events` (calendario de eventos)
+- `event_registrations` (asistentes y tickets)
 - `chat_messages`, `chat_rooms`
 - `ai_agents` (configuración de agentes)
 
@@ -135,6 +149,7 @@ Speedlight Culture es una plataforma virtual web dedicada a la cultura automotri
 2. Plataforma de video (subida, reproducción)
 3. Mapa de talleres básico
 4. Sistema de suscripciones
+5. Calendario de Eventos (MVP)
 
 ### Fase 4: Avanzado y Escalado (10-12 semanas)
 1. Agentes de IA integrados

@@ -72,7 +72,6 @@ export const viewport = {
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Preloader from "./components/Preloader";
-import EcosystemBanner from "./components/EcosystemBanner";
 
 export default function RootLayout({
   children,
@@ -94,13 +93,12 @@ export default function RootLayout({
         <header className="fixed top-0 w-full z-50 flex flex-col pointer-events-none">
           {/* Allow interactions only on children (banner & navbar) */}
           <div className="pointer-events-auto">
-            <EcosystemBanner />
             <Navbar />
           </div>
         </header>
 
-        {/* Main Content Wrapper with global padding for header */}
-        <div className="pt-[140px]">
+        {/* Main Content Wrapper - Removed global padding, pages handle their own spacing */}
+        <div className="min-h-screen">
           {children}
         </div>
 
