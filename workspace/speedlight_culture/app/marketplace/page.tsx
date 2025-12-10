@@ -12,7 +12,7 @@ export default async function MarketplacePage() {
         .order('created_at', { ascending: false });
 
     return (
-        <div className="min-h-screen bg-black text-white pt-40 pb-12">
+        <div className="min-h-screen bg-black text-white py-12">
             <div className="container mx-auto px-6">
 
                 {/* Header */}

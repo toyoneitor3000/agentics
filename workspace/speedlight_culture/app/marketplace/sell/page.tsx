@@ -45,7 +45,7 @@ export default function SellItemPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white pt-40 pb-12">
+        <div className="min-h-screen bg-black text-white py-12">
             <div className="max-w-2xl mx-auto px-4">
                 <div className="bg-[#111] border border-[#222] rounded-2xl p-8 shadow-2xl">
                     <div className="flex items-center gap-4 mb-8">

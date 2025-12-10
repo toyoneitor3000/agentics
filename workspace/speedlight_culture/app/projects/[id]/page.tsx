@@ -1,158 +1,183 @@
-"use client";
+import { createClient } from '@/app/utils/supabase/server';
+import { notFound, redirect } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowLeft, Camera, Edit2, Share2, Trash2 } from 'lucide-react';
+import { UploadGallery } from '@/app/components/UploadGallery'; // We'll create this component next
 
-import Image from "next/image";
-import Link from "next/link";
-import { use } from "react";
-import { GiftingSystem } from "../../components/GiftingSystem";
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params
+    const supabase = await createClient();
+    
+    // 1. Fetch Project
+    const { data: project } = await supabase
+        .from('projects')
+        .select('*, profiles(*)')
+        .eq('id', id)
+        .single();
 
-// Mock Data (In a real app, fetch this based on ID)
-const PROJECTS_DB: Record<string, any> = {
-    "1": {
-        id: "1",
-        title: "Restauración BMW E30 1989",
-        owner: "Juan Pérez",
-        image: "https://images.unsplash.com/photo-1554744512-d6c603f27c54?q=80&w=1000&auto=format&fit=crop",
-        goal: 5000000,
-        current: 1250000,
-        description: "Devolviendo la gloria a este clásico alemán. El proyecto comenzó hace 6 meses cuando lo encontré abandonado en un granero. El motor M20B25 necesita un overhaul completo, y la carrocería requiere trabajo de latonería. Mi sueño es dejarlo como salió de concesionario.",
-        category: "Restauración",
-        mods: ["Swap M20B25", "Suspensión Bilstein", "Rines BBS RS", "Tapicería Original"],
-        gallery: [
-            "https://images.unsplash.com/photo-1580273916550-e323be2ebcc5?q=80&w=1000&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?q=80&w=1000&auto=format&fit=crop"
-        ]
-    },
-    // Fallback for demo
-    "default": {
-        id: "0",
-        title: "Proyecto Demo",
-        owner: "Speedlight User",
-        image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000&auto=format&fit=crop",
-        goal: 10000000,
-        current: 2500000,
-        description: "Proyecto de demostración para el sistema de donaciones.",
-        category: "Demo",
-        mods: ["Demo Mod 1", "Demo Mod 2"],
-        gallery: []
-    }
-};
+    if (!project) return notFound();
 
-export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = use(params);
-    const projectId = resolvedParams.id;
-    const project = PROJECTS_DB[projectId] || PROJECTS_DB["default"];
-    const progress = (project.current / project.goal) * 100;
+    // 2. Check Ownership
+    const { data: { user } } = await supabase.auth.getUser();
+    const isOwner = user?.id === project.user_id;
 
     return (
-        <main className="min-h-screen bg-[#050302]">
-            {/* Hero Section */}
-            <div className="relative h-[60vh] w-full">
-                <Image
-                    src={project.image}
-                    alt={project.title}
-                    fill
-                    className="object-cover"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050302] via-[#050302]/50 to-transparent"></div>
-
-                <div className="absolute bottom-0 left-0 w-full p-6 pb-12 sm:p-12 sm:pb-24 container mx-auto">
-                    <div className="flex flex-col md:flex-row items-end justify-between gap-6">
-                        <div>
-                            <span className="inline-block px-3 py-1 mb-4 rounded-full border border-[#FF9800]/50 bg-black/50 text-[#FF9800] text-sm font-bold uppercase tracking-wider backdrop-blur-md">
-                                {project.category}
-                            </span>
-                            <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-                                {project.title}
-                            </h1>
-                            <p className="text-xl text-[#BCAAA4] font-light">Propietario: {project.owner}</p>
+        <div className="min-h-screen bg-[#050505] text-white py-12">
+            
+            {/* Hero / Cover */}
+            <div className="relative h-[50vh] w-full bg-black overflow-hidden">
+                {project.cover_image ? (
+                    <Image 
+                        src={project.cover_image} 
+                        alt={project.title} 
+                        fill 
+                        className="object-cover opacity-60"
+                        priority
+                    />
+                ) : (
+                    <div className="absolute inset-0 bg-[#111] flex items-center justify-center">
+                        <Camera className="w-20 h-20 text-white/10" />
+                    </div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
+                
+                <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 z-20">
+                    <div className="container mx-auto">
+                        <Link href="/profile" className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-4 text-sm uppercase tracking-widest transition-colors">
+                            <ArrowLeft className="w-4 h-4" /> Volver al Garaje
+                        </Link>
+                        <h1 className="text-4xl md:text-7xl font-oswald font-bold uppercase mb-2 leading-none">
+                            {project.title}
+                        </h1>
+                        <div className="flex flex-wrap items-center gap-4 text-[#FF9800] font-bold uppercase tracking-wider text-sm md:text-base">
+                            <span>{project.make}</span>
+                            <span>•</span>
+                            <span>{project.model}</span>
+                            <span>•</span>
+                            <span>{project.year}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="container mx-auto px-6 -mt-20 relative z-10 pb-20">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Left Column: Details & Story */}
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Stats Card */}
-                        <div className="bg-[#1A0F08] border border-[#2C1810] rounded-2xl p-8 shadow-2xl">
-                            <div className="flex justify-between items-end mb-4">
-                                <div>
-                                    <p className="text-[#8D6E63] text-sm uppercase tracking-wider mb-1">Recaudado</p>
-                                    <p className="text-3xl md:text-4xl font-bold text-[#FF9800] font-mono">
-                                        ${project.current.toLocaleString()}
-                                    </p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-[#8D6E63] text-sm uppercase tracking-wider mb-1">Meta</p>
-                                    <p className="text-xl font-bold text-[#BCAAA4] font-mono">
-                                        ${project.goal.toLocaleString()}
-                                    </p>
-                                </div>
-                            </div>
+            <div className="container mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+                
+                {/* Main Content: Story & Gallery */}
+                <div className="lg:col-span-2 space-y-12">
+                    
+                    {/* Story Section */}
+                    <section>
+                        <h2 className="text-2xl font-oswald font-bold uppercase mb-6 flex items-center gap-3">
+                            <span className="w-8 h-1 bg-[#FF9800]"></span>
+                            La Historia
+                        </h2>
+                        <p className="text-white/70 leading-relaxed text-lg whitespace-pre-line font-light">
+                            {project.description || "El dueño aún no ha contado la historia de este proyecto."}
+                        </p>
+                    </section>
 
-                            <div className="w-full h-4 bg-[#050302] rounded-full overflow-hidden mb-2">
-                                <div
-                                    className="h-full bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] rounded-full relative overflow-hidden"
-                                    style={{ width: `${progress}%` }}
-                                >
-                                    <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"></div>
-                                </div>
-                            </div>
-                            <p className="text-right text-[#8D6E63] text-sm">{progress.toFixed(1)}% financiado</p>
-                        </div>
+                    {/* Gallery Section */}
+                    <section>
+                         <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-2xl font-oswald font-bold uppercase flex items-center gap-3">
+                                <span className="w-8 h-1 bg-[#FF9800]"></span>
+                                Galería
+                            </h2>
+                            {isOwner && (
+                                <span className="text-xs text-[#FF9800] bg-[#FF9800]/10 px-3 py-1 rounded-full animate-pulse">
+                                    Modo Edición Activo
+                                </span>
+                            )}
+                         </div>
 
-                        {/* Story */}
-                        <div className="prose prose-invert max-w-none">
-                            <h3 className="text-2xl font-bold text-[#F5E6D3] mb-4">Historia del Proyecto</h3>
-                            <p className="text-[#BCAAA4] leading-relaxed text-lg">
-                                {project.description}
-                            </p>
-                        </div>
+                         {/* Uploader for Owner */}
+                         {isOwner && (
+                             <div className="mb-8">
+                                <UploadGallery projectId={project.id} />
+                             </div>
+                         )}
 
-                        {/* Mod List */}
-                        <div className="bg-[#1A0F08] rounded-xl p-6 border border-[#2C1810]">
-                            <h3 className="text-xl font-bold text-[#F5E6D3] mb-4">Modificaciones Planeadas</h3>
-                            <ul className="grid sm:grid-cols-2 gap-4">
-                                {project.mods?.map((mod: string, i: number) => (
-                                    <li key={i} className="flex items-center text-[#BCAAA4]">
-                                        <span className="w-2 h-2 rounded-full bg-[#FF9800] mr-3"></span>
-                                        {mod}
-                                    </li>
-                                ))}
-                            </ul>
+                         {/* Image Grid */}
+                         {project.gallery_images && project.gallery_images.length > 0 ? (
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                 {project.gallery_images.map((img: string, idx: number) => (
+                                     <div key={idx} className="relative aspect-video bg-[#111] rounded-xl overflow-hidden group">
+                                         <Image 
+                                             src={img} 
+                                             alt={`Gallery ${idx}`} 
+                                             fill 
+                                             className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                                         />
+                                     </div>
+                                 ))}
+                             </div>
+                         ) : (
+                             <div className="aspect-video bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center text-white/30">
+                                 <p>Aún no hay fotos en la galería.</p>
+                             </div>
+                         )}
+                    </section>
+
+                </div>
+
+                {/* Sidebar: Specs & Owner */}
+                <div className="space-y-8">
+                    
+                    {/* Owner Card */}
+                    <div className="bg-[#111] border border-[#222] p-6 rounded-2xl">
+                        <h3 className="text-white/40 uppercase text-xs font-bold tracking-widest mb-4">Propietario</h3>
+                        <div className="flex items-center gap-4">
+                             <div className="w-16 h-16 rounded-full bg-[#222] overflow-hidden">
+                                 {project.profiles?.avatar_url ? (
+                                     <Image src={project.profiles.avatar_url} alt="Owner" width={64} height={64} className="object-cover" />
+                                 ) : (
+                                     <div className="w-full h-full flex items-center justify-center text-white/20 font-bold text-xl">
+                                         {project.profiles?.full_name?.charAt(0)}
+                                     </div>
+                                 )}
+                             </div>
+                             <div>
+                                 <h4 className="font-bold text-lg">{project.profiles?.full_name}</h4>
+                                 <p className="text-[#FF9800] text-xs uppercase font-bold">{project.profiles?.role || 'Miembro'}</p>
+                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Donation Sidebar */}
-                    <div className="lg:col-span-1">
-                        <div className="sticky top-32">
-                            <GiftingSystem projectTitle={project.title} />
+                    {/* Actions */}
+                    {isOwner ? (
+                        <div className="grid grid-cols-2 gap-4">
+                            <button className="bg-[#222] hover:bg-[#333] text-white py-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 transition-colors">
+                                <Edit2 className="w-4 h-4" /> Editar Info
+                            </button>
+                            <button className="bg-red-900/20 hover:bg-red-900/40 text-red-500 py-4 rounded-xl font-bold uppercase text-xs flex items-center justify-center gap-2 transition-colors border border-red-900/30">
+                                <Trash2 className="w-4 h-4" /> Eliminar
+                            </button>
+                        </div>
+                    ) : (
+                        <button className="w-full bg-[#FF9800] hover:bg-[#F57C00] text-black py-4 rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-colors shadow-[0_0_20px_rgba(255,152,0,0.2)]">
+                            <Share2 className="w-4 h-4" /> Compartir Proyecto
+                        </button>
+                    )}
 
-                            {/* Top Donors (Mock) */}
-                            <div className="mt-8 bg-[#1A0F08] rounded-xl p-6 border border-[#2C1810]">
-                                <h4 className="text-[#F5E6D3] font-bold mb-4 uppercase tracking-wider text-sm flex items-center">
-                                    <span className="text-[#FFEB3B] mr-2">👑</span> Top Donadores
-                                </h4>
-                                <div className="space-y-4">
-                                    {[1, 2, 3].map((i) => (
-                                        <div key={i} className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-[#2C1810] flex items-center justify-center text-xs font-bold text-[#FF9800] border border-[#FF9800]/20">
-                                                {i}
-                                            </div>
-                                            <div className="flex-1">
-                                                <p className="text-[#F5E6D3] text-sm font-medium">Usuario Anónimo</p>
-                                                <p className="text-[#8D6E63] text-xs">Donó 2 Turbos</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                    {/* Specs List (Placeholder for now) */}
+                    <div className="bg-[#111] border border-[#222] p-6 rounded-2xl">
+                        <h3 className="text-white/40 uppercase text-xs font-bold tracking-widest mb-6">Especificaciones</h3>
+                        <div className="space-y-4">
+                            <div className="flex justify-between border-b border-[#222] pb-2">
+                                <span className="text-white/60 text-sm">Motor</span>
+                                <span className="font-bold text-sm">Stock + Stage 1</span>
                             </div>
+                            <div className="flex justify-between border-b border-[#222] pb-2">
+                                <span className="text-white/60 text-sm">Suspensión</span>
+                                <span className="font-bold text-sm">Eibach Pro Kit</span>
+                            </div>
+                            {/* In the future we will map this from project.specs jsonb */}
                         </div>
                     </div>
+
                 </div>
             </div>
-        </main>
+        </div>
     );
 }

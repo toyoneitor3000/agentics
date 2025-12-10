@@ -91,11 +91,19 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
         <Preloader />
-        <div className="fixed top-0 w-full z-50 flex flex-col">
-          <EcosystemBanner />
-          <Navbar />
+        <header className="fixed top-0 w-full z-50 flex flex-col pointer-events-none">
+          {/* Allow interactions only on children (banner & navbar) */}
+          <div className="pointer-events-auto">
+            <EcosystemBanner />
+            <Navbar />
+          </div>
+        </header>
+
+        {/* Main Content Wrapper with global padding for header */}
+        <div className="pt-[140px]">
+          {children}
         </div>
-        {children}
+
         <Footer />
         <Analytics />
       </body>

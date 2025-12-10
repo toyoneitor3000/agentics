@@ -1,6 +1,7 @@
 import { createClient } from '@/app/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
+import Link from 'next/link'
 import { MapPin, Calendar, Trophy, Zap, Settings, Edit3 } from 'lucide-react'
 
 export default async function ProfilePage() {
@@ -34,7 +35,7 @@ export default async function ProfilePage() {
     const joinDate = new Date(user.created_at || Date.now()).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-40 pb-10">
+        <div className="min-h-screen bg-[#050505] text-white pt-0 pb-10">
             {/* Cover Image / Background */}
             <div className="relative h-64 md:h-80 w-full bg-gradient-to-r from-[#1a1a1a] to-[#0a0a0a] overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2694&auto=format&fit=crop')] bg-cover bg-center opacity-30"></div>
@@ -154,19 +155,29 @@ export default async function ProfilePage() {
                     {projects && projects.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {projects.map((project) => (
-                                <div key={project.id} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-[#FF9800]/50 transition-all">
-                                    <div className="h-48 bg-[#1a1a1a] relative">
-                                        {/* Placeholder for no image projects */}
-                                        <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">
-                                            🏎️
+                                <Link key={project.id} href={`/projects/${project.id}`}>
+                                    <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-[#FF9800]/50 transition-all cursor-pointer h-full flex flex-col">
+                                        <div className="h-48 bg-[#1a1a1a] relative">
+                                            {project.cover_image || (project.gallery_images && project.gallery_images[0]) ? (
+                                                <Image
+                                                    src={project.cover_image || project.gallery_images[0]}
+                                                    alt={project.title}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">
+                                                    🏎️
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-5 flex-1">
+                                            <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase truncate">{project.title}</h3>
+                                            <p className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-3">{project.make} {project.model} {project.year}</p>
+                                            <p className="text-white/40 text-sm line-clamp-2">{project.description}</p>
                                         </div>
                                     </div>
-                                    <div className="p-5">
-                                        <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase">{project.title}</h3>
-                                        <p className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-3">{project.make} {project.model} {project.year}</p>
-                                        <p className="text-white/40 text-sm line-clamp-2">{project.description}</p>
-                                    </div>
-                                </div>
+                                </Link>
                             ))}
                             {/* Add New Card */}
                             <a href="/projects/new" className="bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center p-6 hover:bg-[#1a1a1a] transition-all group cursor-pointer min-h-[300px]">
