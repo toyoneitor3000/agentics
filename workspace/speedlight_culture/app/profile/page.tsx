@@ -34,7 +34,7 @@ export default async function ProfilePage() {
     const joinDate = new Date(user.created_at || Date.now()).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-24 pb-10">
+        <div className="min-h-screen bg-[#050505] text-white pt-40 pb-10">
             {/* Cover Image / Background */}
             <div className="relative h-64 md:h-80 w-full bg-gradient-to-r from-[#1a1a1a] to-[#0a0a0a] overflow-hidden">
                 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2694&auto=format&fit=crop')] bg-cover bg-center opacity-30"></div>

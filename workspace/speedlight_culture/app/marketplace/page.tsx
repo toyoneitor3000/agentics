@@ -1,61 +1,77 @@
-"use client";
+import { createClient } from '@/app/utils/supabase/server';
+import Link from 'next/link';
+import { ShoppingBag, Filter, Tag } from 'lucide-react';
 
-import { AdFeedCard } from "../components/AdBanners";
+export default async function MarketplacePage() {
+    const supabase = await createClient();
 
-export default function MarketplacePage() {
+    const { data: items } = await supabase
+        .from('marketplace_items')
+        .select('*, profiles(username, avatar_url)')
+        .eq('status', 'available')
+        .order('created_at', { ascending: false });
+
     return (
-        <main className="min-h-screen">
-            <div className="pt-48 pb-20 px-6 container mx-auto">
-                <div className="text-center mb-16 animate-fade-in">
-                    <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">
-                        <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF9800] via-[#FFEB3B] to-[#FF9800] animate-glow">
-                            MARKETPLACE
-                        </span>
-                    </h1>
-                    <p className="text-xl md:text-2xl text-[#BCAAA4] max-w-2xl mx-auto font-light">
-                        Compra y venta segura de partes y accesorios exclusivos.
-                    </p>
+        <div className="min-h-screen bg-black text-white pt-40 pb-12">
+            <div className="container mx-auto px-6">
+
+                {/* Header */}
+                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-[#333] pb-6">
+                    <div>
+                        <h1 className="text-4xl md:text-5xl font-oswald font-bold uppercase mb-2">Marketplace</h1>
+                        <p className="text-white/40 font-roboto-mono">Compra y vende piezas de alto rendimiento entre entusiastas.</p>
+                    </div>
+                    <Link href="/marketplace/sell">
+                        <button className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-full transition-all flex items-center gap-2">
+                            <Tag className="w-4 h-4" /> Vender Artículo
+                        </button>
+                    </Link>
                 </div>
 
-                {/* Grid Layout containing organic products and AdFeedCards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {/* Organic Product 1 */}
-                    <div className="group rounded-xl bg-[#0A0604] border border-[#FF9800]/10 overflow-hidden hover:border-[#FF9800]/50 transition-all">
-                        <div className="h-64 bg-neutral-900 flex items-center justify-center text-neutral-600">
-                            [Producto 1]
-                        </div>
-                        <div className="p-4">
-                            <h3 className="text-[#F5E6D3] font-bold">Turbo Garrett GT35</h3>
-                            <p className="text-[#FF9800] text-sm mt-1">$1,200 USD</p>
-                        </div>
-                    </div>
-
-                    {/* Organic Product 2 */}
-                    <div className="group rounded-xl bg-[#0A0604] border border-[#FF9800]/10 overflow-hidden hover:border-[#FF9800]/50 transition-all">
-                        <div className="h-64 bg-neutral-900 flex items-center justify-center text-neutral-600">
-                            [Producto 2]
-                        </div>
-                        <div className="p-4">
-                            <h3 className="text-[#F5E6D3] font-bold">Rines Volk TE37</h3>
-                            <p className="text-[#FF9800] text-sm mt-1">$3,500 USD</p>
-                        </div>
-                    </div>
-
-                    {/* NATIVE AD PLACEMENT */}
-                    <AdFeedCard />
-
-                    {/* Organic Product 3 */}
-                    <div className="group rounded-xl bg-[#0A0604] border border-[#FF9800]/10 overflow-hidden hover:border-[#FF9800]/50 transition-all">
-                        <div className="h-64 bg-neutral-900 flex items-center justify-center text-neutral-600">
-                            [Producto 3]
-                        </div>
-                        <div className="p-4">
-                            <h3 className="text-[#F5E6D3] font-bold">Suspensión Öhlins</h3>
-                            <p className="text-[#FF9800] text-sm mt-1">$2,800 USD</p>
-                        </div>
-                    </div>
+                {/* Filters (Mock UI) */}
+                <div className="flex gap-4 overflow-x-auto pb-4 mb-8">
+                    {['Todos', 'Motor', 'Suspensión', 'Rines', 'Interior', 'Electrónica'].map((cat) => (
+                        <button key={cat} className="px-5 py-2 rounded-full border border-[#333] hover:border-green-500 hover:text-green-500 transition-colors text-sm whitespace-nowrap">
+                            {cat}
+                        </button>
+                    ))}
                 </div>
+
+                {/* Items Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {items && items.length > 0 ? (
+                        items.map((item) => (
+                            <div key={item.id} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-green-500/50 transition-all cursor-pointer">
+                                <div className="h-48 bg-[#1a1a1a] relative flex items-center justify-center">
+                                    {/* Placeholder Image because we skipped image upload for now */}
+                                    <ShoppingBag className="w-12 h-12 text-white/10 group-hover:text-green-500 transition-colors" />
+                                    <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-green-400 border border-green-500/20">
+                                        ${item.price.toLocaleString()}
+                                    </div>
+                                </div>
+                                <div className="p-4">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-white group-hover:text-green-500 transition-colors truncate pr-2">{item.title}</h3>
+                                    </div>
+                                    <p className="text-xs text-white/40 uppercase font-bold tracking-wider mb-3">{item.condition} • {item.category}</p>
+
+                                    <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#222]">
+                                        <div className="w-6 h-6 rounded-full bg-[#333] overflow-hidden">
+                                            {/* User Avatar Placeholder */}
+                                        </div>
+                                        <span className="text-xs text-white/60">Vendedor Verificado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="col-span-full py-20 text-center text-white/30">
+                            <p>No hay artículos publicados aún. ¡Sé el primero!</p>
+                        </div>
+                    )}
+                </div>
+
             </div>
-        </main>
+        </div>
     );
 }

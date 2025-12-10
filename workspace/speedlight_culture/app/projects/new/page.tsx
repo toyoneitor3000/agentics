@@ -51,7 +51,7 @@ export default function NewProjectPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white pt-24 pb-12">
+        <div className="min-h-screen bg-black text-white pt-40 pb-12">
             <div className="max-w-2xl mx-auto px-4">
                 <Link href="/profile" className="text-white/40 hover:text-white flex items-center gap-2 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Cancelar y volver
