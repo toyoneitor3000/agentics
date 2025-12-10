@@ -24,6 +24,7 @@ export default function Navbar() {
         { name: "Galería", path: "/gallery" },
         { name: "Eventos", path: "/events" },
         { name: "Planes", path: "/pricing" },
+        { name: "Publicidad", path: "/admin/ads" }
         // { name: "Concursos", path: "/contests" } // Hidden in original, keeping it commented or removing if not needed
     ];
 
