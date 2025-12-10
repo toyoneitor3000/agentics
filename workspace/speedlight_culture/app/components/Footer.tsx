@@ -39,7 +39,7 @@ export default function Footer() {
                             <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
                         </Link>
                         <Link
-                            href="/advertising"
+                            href="/admin/ads"
                             className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
                         >
                             Publicidad

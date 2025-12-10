@@ -22,6 +22,7 @@ export default function Navbar() {
         { name: "Marketplace", path: "/marketplace" },
         { name: "Foro", path: "/forum" },
         { name: "Galería", path: "/gallery" },
+        { name: "Eventos", path: "/events" },
         { name: "Planes", path: "/pricing" },
         // { name: "Concursos", path: "/contests" } // Hidden in original, keeping it commented or removing if not needed
     ];

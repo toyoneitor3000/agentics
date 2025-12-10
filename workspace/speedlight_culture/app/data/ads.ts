@@ -51,7 +51,7 @@ export const activeCampaigns: AdCampaign[] = [
             badgeText: 'Partner Speedlight',
             ctaText: 'Ver Oferta',
             ctaLink: '/marketplace/motul-8100',
-            imageUrl: '/images/ads/motul-bg.jpg', // Placeholder path
+            imageUrl: 'https://images.unsplash.com/photo-1596425121695-1262d5a37466?q=80&w=1000&auto=format&fit=crop', // Engine oil placeholder
         }
     },
     {
@@ -95,6 +95,24 @@ export const activeCampaigns: AdCampaign[] = [
             subtitle: 'Performance Parts',
             badgeText: 'Powered By',
             ctaLink: 'https://toyotech.co'
+        }
+    },
+    {
+        id: 'camp_006',
+        type: 'feed_card',
+        clientName: 'SpeedlightAcademy',
+        isActive: true,
+        content: {
+            brandName: 'Speedlight Academy',
+            title: '¿Te gusta este proyecto?',
+            description: 'Aprende a construir el tuyo desde cero con nuestros profesionales. Mecánica, Pintura y Tuning.',
+            badgeText: 'Education',
+            ctaText: 'Ver Cursos',
+            ctaLink: 'https://speedlightacademy.com',
+            imageUrl: '/images/ads/academy-promo.jpg',
+        },
+        styling: {
+            highlightColor: '#D32F2F' // Red branding for Academy
         }
     }
 ];
