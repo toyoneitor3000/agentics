@@ -11,7 +11,6 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
-    // Force new deploy
     const [isLogin, setIsLogin] = useState(initialView === 'login')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -19,21 +18,16 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
 
     function getURL() {
         let url =
-            process.env.NEXT_PUBLIC_SITE_URL ?? // Set this to your site URL in production env.
-            process.env.NEXT_PUBLIC_VERCEL_URL ?? // Automatically set by Vercel.
+            process.env.NEXT_PUBLIC_SITE_URL ??
+            process.env.NEXT_PUBLIC_VERCEL_URL ??
             'http://localhost:3000/'
-
-        // Make sure to include `https://` when not localhost.
         url = url.includes('http') ? url : `https://${url}`
-        // Make sure to ignore trailing slash
         url = url.charAt(url.length - 1) === '/' ? url : `${url}/`
         return url
     }
 
     async function handleGoogleLogin() {
         setIsLoading(true)
-
-        // Explicitly define redirect URL logic
         const callbackUrl = window.location.hostname === 'localhost'
             ? 'http://localhost:3000/auth/callback'
             : 'https://www.speedlightculture.com/auth/callback'
@@ -73,25 +67,26 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
     }
 
     return (
-        <div className="w-full max-w-md bg-[#111111] border border-[#333] rounded-2xl overflow-hidden shadow-2xl relative">
-            {/* Glow Effect */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-[#FF9800] blur-[4px]"></div>
+        <div className="w-full max-w-md mx-auto relative z-10">
+            {/* Header Text */}
+            <div className="text-center mb-10">
+                <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wider text-white mb-3">
+                    {isLogin ? 'Bienvenido a Pits' : 'Únete al Crew'}
+                </h2>
+                <p className="text-gray-400 text-sm md:text-base font-light">
+                    {isLogin ? 'Tu garaje digital te espera. Inicia motores.' : 'Empieza tu legado en la cultura automotriz.'}
+                </p>
+            </div>
 
-            <div className="p-8">
-                <div className="text-center mb-8">
-                    <h2 className="text-2xl font-oswald font-bold uppercase tracking-wide text-white mb-2">
-                        {isLogin ? 'Bienvenido a Pits' : 'Únete al Crew'}
-                    </h2>
-                    <p className="text-white/60 text-sm font-roboto-mono">
-                        {isLogin ? 'Accede a tu Speedlight ID' : 'Crea tu Speedlight ID universal'}
-                    </p>
-                </div>
+            <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
+                {/* Subtle Gradient Bloom */}
+                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-[#FF9800]/5 via-transparent to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
 
                 {/* Google Login Button */}
                 <button
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="w-full bg-white text-black font-medium py-3 rounded-xl transition-all flex items-center justify-center gap-3 mb-6 hover:bg-gray-100 disabled:opacity-50"
+                    className="relative z-10 w-full bg-white hover:bg-gray-50 text-black font-bold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 mb-8 shadow-[0_4px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.2)] transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -99,77 +94,77 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    Continuar con Google
+                    <span>Continuar con Google</span>
                 </button>
 
-                <div className="relative mb-6">
+                <div className="relative mb-8">
                     <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-[#333]"></div>
+                        <div className="w-full border-t border-white/10"></div>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-[#111111] px-2 text-white/40">O usa tu correo</span>
+                    <div className="relative flex justify-center text-xs uppercase tracking-widest font-medium">
+                        <span className="bg-[#101010] px-3 text-gray-500">O usa tu correo</span>
                     </div>
                 </div>
 
-                {/* Toggle */}
-                <div className="flex bg-[#0A0A0A] p-1 rounded-lg mb-8 relative">
+                {/* Toggle Tabs */}
+                <div className="flex bg-black/40 p-1.5 rounded-xl mb-8 relative border border-white/5">
                     <div
-                        className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[#1F1F1F] border border-[#333] rounded-md transition-all duration-300 ease-out ${isLogin ? 'left-1' : 'left-[calc(50%+0px)]'}`}
+                        className={`absolute top-1.5 bottom-1.5 w-[calc(50%-6px)] bg-[#1F1F1F] border border-white/10 rounded-lg shadow-lg transition-all duration-300 ease-out ${isLogin ? 'left-1.5' : 'left-[calc(50%+3px)]'}`}
                     ></div>
                     <button
                         onClick={() => { setIsLogin(true); setError(null); }}
-                        className={`flex-1 relative z-10 text-sm font-medium py-2 text-center transition-colors ${isLogin ? 'text-white' : 'text-white/40 hover:text-white/60'}`}
+                        className={`flex-1 relative z-10 text-sm font-bold uppercase tracking-wider py-2.5 text-center transition-colors duration-300 ${isLogin ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         Ingresar
                     </button>
                     <button
                         onClick={() => { setIsLogin(false); setError(null); }}
-                        className={`flex-1 relative z-10 text-sm font-medium py-2 text-center transition-colors ${!isLogin ? 'text-white' : 'text-white/40 hover:text-white/60'}`}
+                        className={`flex-1 relative z-10 text-sm font-bold uppercase tracking-wider py-2.5 text-center transition-colors duration-300 ${!isLogin ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         Registrarse
                     </button>
                 </div>
 
-                <form action={handleSubmit} className="space-y-4">
+                <form action={handleSubmit} className="space-y-5">
 
                     {!isLogin && (
-                        <div className="relative group">
-                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 group-focus-within:text-[#FF9800] transition-colors" />
+                        <div className="relative group/input">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within/input:text-[#FF9800] transition-colors duration-300" />
                             <input
                                 name="fullName"
                                 type="text"
                                 placeholder="Nombre Completo / Apodo"
                                 required={!isLogin}
-                                className="w-full bg-[#0A0A0A] border border-[#333] rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition-all"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                             />
                         </div>
                     )}
 
-                    <div className="relative group">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 group-focus-within:text-[#FF9800] transition-colors" />
+                    <div className="relative group/input">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within/input:text-[#FF9800] transition-colors duration-300" />
                         <input
                             name="email"
                             type="email"
-                            placeholder="Correo Electrónico"
+                            placeholder="tucorreo@ejemplo.com"
                             required
-                            className="w-full bg-[#0A0A0A] border border-[#333] rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition-all"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                         />
                     </div>
 
-                    <div className="relative group">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30 group-focus-within:text-[#FF9800] transition-colors" />
+                    <div className="relative group/input">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within/input:text-[#FF9800] transition-colors duration-300" />
                         <input
                             name="password"
                             type="password"
-                            placeholder="Contraseña"
+                            placeholder="contraseña_segura"
                             required
-                            className="w-full bg-[#0A0A0A] border border-[#333] rounded-xl py-3 pl-10 pr-4 text-white text-sm placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] focus:ring-1 focus:ring-[#FF9800] transition-all"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                         />
                     </div>
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs p-3 rounded-lg flex items-center gap-2">
-                            <ShieldCheck className="w-4 h-4" />
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                            <ShieldCheck className="w-4 h-4 flex-shrink-0" />
                             {error}
                         </div>
                     )}
@@ -177,22 +172,24 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full bg-[#FF9800] hover:bg-[#F57C00] text-black font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-gradient-to-r from-[#FF9800] to-[#F57C00] hover:from-[#FFA726] hover:to-[#FB8C00] text-black font-bold text-lg py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 mt-4 shadow-[0_4px_20px_rgba(255,152,0,0.2)] hover:shadow-[0_4px_30px_rgba(255,152,0,0.4)] disabled:opacity-50 disabled:cursor-not-allowed group/btn"
                     >
                         {isLoading ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
                             <>
-                                {isLogin ? 'Arrancar Motores' : 'Unirse al Club'}
-                                <ArrowRight className="w-5 h-5" />
+                                {isLogin ? 'ARRANCAR MOTORES' : 'UNIRSE AL CLUB'}
+                                <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                             </>
                         )}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center">
-                    <p className="text-white/30 text-xs">
-                        Protegido por Speedlight Secure. Al continuar aceptas nuestros términos.
+                <div className="mt-8 text-center border-t border-white/5 pt-6">
+                    <p className="text-gray-500 text-xs">
+                        Protegido por Speedlight Secure. <br className="md:hidden" />
+                        <span className="hidden md:inline"> | </span>
+                        Al continuar aceptas nuestros <a href="#" className="underline hover:text-[#FF9800]">Términos</a> y <a href="#" className="underline hover:text-[#FF9800]">Privacidad</a>.
                     </p>
                 </div>
             </div>

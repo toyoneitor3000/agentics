@@ -21,16 +21,41 @@ export default function Footer() {
                     </div>
 
                     <div className="flex gap-8">
-                        {["Twitter", "Instagram", "Discord"].map((social) => (
-                            <Link
-                                key={social}
-                                href="#"
-                                className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
-                            >
-                                {social}
-                                <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
-                            </Link>
-                        ))}
+                        <Link
+                            href="https://facebook.com/speedlightautostudio"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            Facebook
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+                        <Link
+                            href="https://instagram.com/speedlight.culture"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            Instagram
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+                        <Link
+                            href="https://tiktok.com/@speedlight.culture"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            TikTok
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+                        <Link
+                            href="mailto:speedlightculture@gmail.com"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            Email
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
+                        <Link
+                            href="https://wa.me/573102957754"
+                            className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
+                        >
+                            WhatsApp
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
+                        </Link>
                         <Link
                             href="/pricing"
                             className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
