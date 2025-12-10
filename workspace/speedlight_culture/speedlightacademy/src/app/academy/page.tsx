@@ -4,9 +4,12 @@ import { CTABanner } from '@/components/ui/CTABanner';
 import { AdFeedCard } from '@/components/AdBanners';
 import styles from './academy.module.css';
 
+import { createClient } from '@/app/utils/supabase/server';
+
 const COURSES = [
     {
         id: '1',
+        slug: 'foto-automotriz',
         title: 'Fotografía Automotriz: De la Calle al Estudio',
         instructor: 'Speedlight Team',
         level: 'Principiante' as const,
@@ -17,6 +20,7 @@ const COURSES = [
     },
     {
         id: '2',
+        slug: 'retoque-photoshop',
         title: 'Retoque Digital High-End con Photoshop',
         instructor: 'Master Editor',
         level: 'Avanzado' as const,
@@ -27,6 +31,7 @@ const COURSES = [
     },
     {
         id: '3',
+        slug: 'portafolio-web',
         title: 'Creación de Portafolios Web para Fotógrafos',
         instructor: 'Purrpurr.dev',
         level: 'Intermedio' as const,
@@ -37,7 +42,23 @@ const COURSES = [
     }
 ];
 
-export default function AcademyPage() {
+export default async function AcademyPage() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    let enrolledCourses: string[] = [];
+
+    if (user) {
+        const { data } = await supabase
+            .from('enrollments')
+            .select('course_slug')
+            .eq('user_id', user.id);
+
+        if (data) {
+            enrolledCourses = data.map(e => e.course_slug);
+        }
+    }
+
     return (
         <div className={styles.container}>
             <header className={styles.hero}>
@@ -50,10 +71,13 @@ export default function AcademyPage() {
             <div className={styles.grid}>
                 {COURSES.map((course, index) => (
                     <React.Fragment key={course.id}>
-                        <CourseCard course={course} />
+                        <CourseCard
+                            course={course}
+                            isEnrolled={enrolledCourses.includes(course.slug)}
+                        />
                         {/* Insert Ad after the second course */}
                         {index === 1 && (
-                            <div className="flex justify-center w-full">
+                            <div className="center-flex w-full" style={{ display: 'flex', justifyContent: 'center' }}>
                                 <AdFeedCard />
                             </div>
                         )}

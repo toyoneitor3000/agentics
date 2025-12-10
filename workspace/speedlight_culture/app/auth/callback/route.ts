@@ -30,7 +30,7 @@ export async function GET(request: Request) {
             }
         } else {
             console.error('Supabase Auth Error:', error)
-            return NextResponse.redirect(`${origin}/login?error=AuthExchangeError`)
+            return NextResponse.redirect(`${origin}/login?error=AuthExchangeError&details=${encodeURIComponent(error.message)}`)
         }
     }
 

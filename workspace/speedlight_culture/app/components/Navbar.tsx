@@ -149,6 +149,14 @@ export default function Navbar() {
                                     <div className="px-4 py-2 text-xs text-[#8D6E63] border-b border-[#333] mb-1">
                                         {user.user_metadata?.full_name || user.email}
                                     </div>
+                                    <Link
+                                        href="/profile"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <UserIcon className="w-4 h-4" />
+                                        Mi Perfil
+                                    </Link>
                                     <button
                                         onClick={handleSignOut}
                                         className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"

@@ -12,9 +12,10 @@ interface CourseProps {
     students: number;
     image: string;
     price: number;
+    slug?: string;
 }
 
-export const CourseCard = ({ course }: { course: CourseProps }) => {
+export const CourseCard = ({ course, isEnrolled = false }: { course: CourseProps; isEnrolled?: boolean }) => {
     return (
         <div className={styles.card}>
             <div className={styles.imageContainer}>
@@ -35,10 +36,16 @@ export const CourseCard = ({ course }: { course: CourseProps }) => {
 
                 <div className={styles.footer}>
                     <div className={styles.price}>
-                        {course.price === 0 ? 'GRATIS' : `$${course.price} USD`}
+                        {isEnrolled ? (
+                            <span style={{ color: '#4CAF50', fontWeight: 'bold' }}>ADQUIRIDO</span>
+                        ) : (
+                            course.price === 0 ? 'GRATIS' : `$${course.price} USD`
+                        )}
                     </div>
                     <Link href={`/academy/course/${course.id}`} style={{ width: '100%' }}>
-                        <Button size="sm" fullWidth>Ver Curso</Button>
+                        <Button size="sm" fullWidth style={isEnrolled ? { backgroundColor: '#FF9800', color: 'black' } : {}}>
+                            {isEnrolled ? 'Ver Clase' : 'Inscribirse'}
+                        </Button>
                     </Link>
                 </div>
             </div>
