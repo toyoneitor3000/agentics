@@ -35,20 +35,28 @@ export const UploadGallery = ({ projectId }: { projectId: string }) => {
                 uploadedUrls.push(publicUrl);
             }
 
-            // Update database with new images (appending to array)
-            // First fetch current images to not overwrite them
+            // First fetch current images and cover status
             const { data: currentProject } = await supabase
                 .from('projects')
-                .select('gallery_images')
+                .select('gallery_images, cover_image')
                 .eq('id', projectId)
                 .single();
 
             const currentImages = currentProject?.gallery_images || [];
             const newGallery = [...currentImages, ...uploadedUrls];
 
+            // Prepare update payload
+            const updates: any = { gallery_images: newGallery };
+
+            // AUTO-SET COVER IMAGE logic
+            // If no cover exists, use the first uploaded image
+            if (!currentProject?.cover_image && uploadedUrls.length > 0) {
+                updates.cover_image = uploadedUrls[0];
+            }
+
             const { error: dbError } = await supabase
                 .from('projects')
-                .update({ gallery_images: newGallery })
+                .update(updates)
                 .eq('id', projectId);
 
             if (dbError) throw dbError;

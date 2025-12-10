@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { HeroBackground } from "@/app/components/HeroBackground";
 
 
 export default function Home() {
@@ -10,18 +11,11 @@ export default function Home() {
 
       {/* Hero Section - Galactic Speed */}
       <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center">
-        {/* Background Layers */}
-        <div className="absolute inset-0 z-0">
-          <Image
-            src="/hero-bg.png"
-            alt="Speedlight Culture Hero"
-            fill
-            className="object-cover opacity-40 scale-105 animate-pulse-slow"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#050302] via-transparent to-[#050302]"></div>
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#050302_100%)] opacity-80"></div>
-        </div>
+        {/* Dynamic Background */}
+        <HeroBackground />
+
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/40 z-0 pointer-events-none"></div>
 
         {/* Content */}
         <div className="relative z-10 container mx-auto px-6 flex flex-col items-center text-center">

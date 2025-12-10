@@ -125,3 +125,66 @@ $$ language plpgsql security definer;
 create trigger on_comment_posted
   after insert on comments
   for each row execute procedure reward_comment_xp();
+
+-- 6. GALLERY SYSTEM (New Robust Implementation)
+
+create table gallery_albums (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  description text,
+  cover_url text, -- Auto-set to first photo
+  is_official boolean default false, -- For "Speedlight" curated albums
+  created_at timestamptz default now()
+);
+
+create table gallery_photos (
+  id uuid default gen_random_uuid() primary key,
+  album_id uuid references gallery_albums(id) on delete cascade not null,
+  url text not null,
+  width int, -- Optional, for future masonry layout
+  height int,
+  created_at timestamptz default now()
+);
+
+-- RLS for Gallery
+alter table gallery_albums enable row level security;
+alter table gallery_photos enable row level security;
+
+-- Albums: Anyone views, Users create their own
+create policy "Albums are viewable by everyone" on gallery_albums for select using (true);
+create policy "Users can insert their own albums" on gallery_albums for insert with check (auth.uid() = user_id);
+create policy "Users can update their own albums" on gallery_albums for update using (auth.uid() = user_id);
+
+-- Photos: Anyone views, Users insert if they own the album
+create policy "Photos are viewable by everyone" on gallery_photos for select using (true);
+create policy "Users can insert photos to own album" on gallery_photos for insert with check (
+  exists (select 1 from gallery_albums where id = album_id and user_id = auth.uid())
+);
+
+-- 7. VOTING SYSTEM (For Speedlight HD Curation)
+
+create table photo_likes (
+  user_id uuid references auth.users(id) on delete cascade not null,
+  photo_url text not null, -- Links to ANY photo in the system
+  created_at timestamptz default now(),
+  primary key (user_id, photo_url)
+);
+
+alter table photo_likes enable row level security;
+
+-- Anyone can see likes, Authenticated users can vote
+create policy "Likes are public" on photo_likes for select using (true);
+create policy "Users can vote" on photo_likes for insert with check (auth.uid() = user_id);
+create policy "Users can unvote" on photo_likes for delete using (auth.uid() = user_id);
+
+-- Helper View to get Top Photos efficiently
+create or replace view top_photos as
+select photo_url, count(*) as like_count
+from photo_likes
+group by photo_url
+order by like_count desc;
+
+
+-- Add category column to gallery_albums
+ALTER TABLE gallery_albums ADD COLUMN IF NOT EXISTS category text DEFAULT 'Eventos';
