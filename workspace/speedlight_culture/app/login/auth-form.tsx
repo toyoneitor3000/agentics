@@ -6,9 +6,13 @@ import { login, signup } from './actions'
 import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/app/utils/supabase/client'
 
-export default function AuthForm() {
+interface AuthFormProps {
+    initialView?: 'login' | 'register';
+}
+
+export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
     // Force new deploy
-    const [isLogin, setIsLogin] = useState(true)
+    const [isLogin, setIsLogin] = useState(initialView === 'login')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const supabase = createClient()
