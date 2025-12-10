@@ -52,7 +52,7 @@ export default function GalleryRow({ title, items = [], isPoster = false }: Gall
                     style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
                 >
                     {items.map((item) => (
-                        <Link key={item.id} href={item.link} className="flex-none snap-start">
+                        <Link key={item.id} href={item.link || '#'} className="flex-none snap-start">
                             <div
                                 className={`
                                     relative transition-all duration-300 ease-out hover:scale-105 hover:z-10 origin-center

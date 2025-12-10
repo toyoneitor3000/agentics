@@ -119,6 +119,9 @@ export default function NewAlbumPage() {
 
             await Promise.all(uploadPromises);
 
+            // Force refresh of server components (Profile, Gallery)
+            router.refresh();
+
             // Redirect to the new album
             router.push(`/gallery/${album.id}`);
 

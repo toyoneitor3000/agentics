@@ -6,13 +6,24 @@ import { useState, useEffect } from "react";
 import { AdHeroSponsor } from "./AdBanners";
 import { createClient } from "@/app/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
-import { User as UserIcon, LogOut } from "lucide-react";
+import { User as UserIcon, LogOut, Menu, X } from "lucide-react";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const supabase = createClient();
+
+    const navLinks = [
+        { name: "Inicio", path: "/" },
+        { name: "Proyectos", path: "/projects" },
+        { name: "Academy", path: "/academy" },
+        { name: "Marketplace", path: "/marketplace" },
+        { name: "Foro", path: "/forum" },
+        { name: "Galería", path: "/gallery" },
+        // { name: "Concursos", path: "/contests" } // Hidden in original, keeping it commented or removing if not needed
+    ];
 
     useEffect(() => {
         const handleScroll = () => {
@@ -83,93 +94,175 @@ export default function Navbar() {
                     </div>
                 </div>
 
-                {/* Minimalist Navigation */}
+                {/* Minimalist Navigation (Desktop) */}
                 <nav className="hidden md:flex items-center space-x-12">
-                    {["Inicio", "Proyectos", "Academy", "Marketplace", "Foro", "Galería"].map((item) => {
-                        const links: { [key: string]: string } = {
-                            "Inicio": "/",
-                            "Proyectos": "/projects",
-                            "Academy": "/academy",
-                            "Marketplace": "/marketplace",
-                            "Foro": "/forum",
-                            "Galería": "/gallery",
-                            "Concursos": "/contests"
-                        };
-                        return (
-                            <Link
-                                key={item}
-                                href={links[item]}
-                                className="relative text-[#F5E6D3]/80 hover:text-[#FFF8F0] text-sm uppercase tracking-[0.2em] font-medium transition-colors duration-300 group"
-                            >
-                                {item}
-                                <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out"></span>
-                                <span className="absolute -bottom-2 right-0 w-0 h-[1px] bg-gradient-to-l from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out delay-75"></span>
-                            </Link>
-                        );
-                    })}
+                    {navLinks.map((item) => (
+                        <Link
+                            key={item.name}
+                            href={item.path}
+                            className="relative text-[#F5E6D3]/80 hover:text-[#FFF8F0] text-sm uppercase tracking-[0.2em] font-medium transition-colors duration-300 group"
+                        >
+                            {item.name}
+                            <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-gradient-to-r from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out"></span>
+                            <span className="absolute -bottom-2 right-0 w-0 h-[1px] bg-gradient-to-l from-[#FF9800] to-[#FFEB3B] group-hover:w-full transition-all duration-300 ease-out delay-75"></span>
+                        </Link>
+                    ))}
                 </nav>
 
-                {/* High Class CTA */}
-                {/* Auth & User Area */}
+                {/* Auth & User Area & Mobile Toggle */}
                 <div className="flex items-center gap-4">
-                    {!user ? (
-                        <Link href="/login">
-                            <button className="group relative px-8 py-3 overflow-hidden rounded-full bg-transparent border border-[#FF9800]/30 hover:border-[#FF9800]/60 transition-all duration-300">
-                                <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#FF9800]/10 to-[#D32F2F]/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
-                                <span className="relative text-[#F5E6D3] text-xs uppercase tracking-[0.15em] font-bold group-hover:text-white transition-colors">
-                                    Acceder
-                                </span>
-                                <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                            </button>
-                        </Link>
-                    ) : (
-                        <div className="relative">
-                            <button
-                                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                                className="flex items-center gap-2 group"
-                            >
-                                <div className="w-10 h-10 rounded-full border-2 border-[#FF9800] overflow-hidden bg-[#1A0F08] flex items-center justify-center">
-                                    {user.user_metadata?.avatar_url ? (
-                                        <Image
-                                            src={user.user_metadata.avatar_url}
-                                            alt="Avatar"
-                                            width={40}
-                                            height={40}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : (
-                                        <UserIcon className="w-5 h-5 text-[#F5E6D3]" />
-                                    )}
-                                </div>
-                            </button>
+                    {/* Desktop Auth */}
+                    <div className="hidden md:block">
+                        {!user ? (
+                            <Link href="/login">
+                                <button className="group relative px-8 py-3 overflow-hidden rounded-full bg-transparent border border-[#FF9800]/30 hover:border-[#FF9800]/60 transition-all duration-300">
+                                    <div className="absolute inset-0 w-0 bg-gradient-to-r from-[#FF9800]/10 to-[#D32F2F]/10 transition-all duration-[250ms] ease-out group-hover:w-full"></div>
+                                    <span className="relative text-[#F5E6D3] text-xs uppercase tracking-[0.15em] font-bold group-hover:text-white transition-colors">
+                                        Acceder
+                                    </span>
+                                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                </button>
+                            </Link>
+                        ) : (
+                            <div className="relative">
+                                <button
+                                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                                    className="flex items-center gap-2 group"
+                                >
+                                    <div className="w-10 h-10 rounded-full border-2 border-[#FF9800] overflow-hidden bg-[#1A0F08] flex items-center justify-center">
+                                        {user.user_metadata?.avatar_url ? (
+                                            <Image
+                                                src={user.user_metadata.avatar_url}
+                                                alt="Avatar"
+                                                width={40}
+                                                height={40}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <UserIcon className="w-5 h-5 text-[#F5E6D3]" />
+                                        )}
+                                    </div>
+                                </button>
 
-                            {/* Dropdown Menu */}
-                            {isMenuOpen && (
-                                <div className="absolute right-0 top-12 w-48 bg-[#1A0F08] border border-[#FF9800]/20 rounded-xl shadow-2xl p-2 flex flex-col gap-1 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="px-4 py-2 text-xs text-[#8D6E63] border-b border-[#333] mb-1">
-                                        {user.user_metadata?.full_name || user.email}
+                                {/* Desktop Dropdown Menu */}
+                                {isMenuOpen && (
+                                    <div className="absolute right-0 top-12 w-48 bg-[#1A0F08] border border-[#FF9800]/20 rounded-xl shadow-2xl p-2 flex flex-col gap-1 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200">
+                                        <div className="px-4 py-2 text-xs text-[#8D6E63] border-b border-[#333] mb-1">
+                                            {user.user_metadata?.full_name || user.email}
+                                        </div>
+                                        <Link
+                                            href="/profile"
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            <UserIcon className="w-4 h-4" />
+                                            Mi Perfil
+                                        </Link>
+                                        <button
+                                            onClick={handleSignOut}
+                                            className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            Cerrar Sesión
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="md:hidden text-[#F5E6D3] hover:text-[#FF9800] transition-colors p-2"
+                        onClick={() => setIsMobileNavOpen(true)}
+                    >
+                        <Menu className="w-8 h-8" />
+                    </button>
+                </div>
+            </div>
+
+            {/* Mobile Menu Overlay */}
+            {isMobileNavOpen && (
+                <div className="fixed inset-0 z-[60] bg-[#0D0907] md:hidden flex flex-col animate-in fade-in slide-in-from-right duration-300">
+                    {/* Header */}
+                    <div className="flex justify-between items-center p-6 border-b border-[#FF9800]/10">
+                        <Link href="/" onClick={() => setIsMobileNavOpen(false)}>
+                            <span className="text-[#FF9800] text-xl font-bold tracking-widest">SPEEDLIGHT</span>
+                        </Link>
+                        <button
+                            onClick={() => setIsMobileNavOpen(false)}
+                            className="text-[#F5E6D3] hover:text-[#FF9800] transition-colors bg-[#FF9800]/10 rounded-full p-2"
+                        >
+                            <X className="w-6 h-6" />
+                        </button>
+                    </div>
+
+                    {/* Navigation Links */}
+                    <div className="flex flex-col p-8 space-y-6 overflow-y-auto">
+                        {navLinks.map((item) => (
+                            <Link
+                                key={item.name}
+                                href={item.path}
+                                onClick={() => setIsMobileNavOpen(false)}
+                                className="text-2xl text-[#F5E6D3] uppercase tracking-widest hover:text-[#FF9800] transition-colors border-b border-[#FF9800]/5 pb-4"
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+
+                        {/* Mobile Auth/Profile Actions */}
+                        <div className="pt-8 mt-4 border-t border-[#FF9800]/20">
+                            {!user ? (
+                                <Link
+                                    href="/login"
+                                    onClick={() => setIsMobileNavOpen(false)}
+                                    className="flex items-center gap-3 text-[#F5E6D3] text-lg uppercase tracking-wider hover:text-[#FF9800] transition-colors"
+                                >
+                                    <UserIcon className="w-6 h-6" />
+                                    Acceder / Registrarse
+                                </Link>
+                            ) : (
+                                <div className="space-y-6">
+                                    <div className="flex items-center gap-4 text-[#8D6E63] text-sm pb-4 border-b border-[#FF9800]/5">
+                                        <div className="w-10 h-10 rounded-full border border-[#FF9800]/30 overflow-hidden bg-[#1A0F08] flex items-center justify-center">
+                                            {user.user_metadata?.avatar_url ? (
+                                                <Image
+                                                    src={user.user_metadata.avatar_url}
+                                                    alt="Avatar"
+                                                    width={40}
+                                                    height={40}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <UserIcon className="w-5 h-5 text-[#F5E6D3]" />
+                                            )}
+                                        </div>
+                                        <span className="truncate max-w-[200px]">{user.user_metadata?.full_name || user.email}</span>
                                     </div>
                                     <Link
                                         href="/profile"
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"
-                                        onClick={() => setIsMenuOpen(false)}
+                                        onClick={() => setIsMobileNavOpen(false)}
+                                        className="flex items-center gap-3 text-[#F5E6D3] text-lg uppercase tracking-wider hover:text-[#FF9800] transition-colors"
                                     >
-                                        <UserIcon className="w-4 h-4" />
+                                        <UserIcon className="w-6 h-6" />
                                         Mi Perfil
                                     </Link>
                                     <button
-                                        onClick={handleSignOut}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 rounded-lg transition-colors w-full text-left"
+                                        onClick={() => {
+                                            handleSignOut();
+                                            setIsMobileNavOpen(false);
+                                        }}
+                                        className="flex items-center gap-3 text-red-400 text-lg uppercase tracking-wider hover:text-red-300 transition-colors w-full text-left"
                                     >
-                                        <LogOut className="w-4 h-4" />
+                                        <LogOut className="w-6 h-6" />
                                         Cerrar Sesión
                                     </button>
                                 </div>
                             )}
                         </div>
-                    )}
+                    </div>
                 </div>
-            </div>
+            )}
         </header>
     );
 }

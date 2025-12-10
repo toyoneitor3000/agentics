@@ -4,6 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { MapPin, Calendar, Trophy, Zap, Settings, Edit3 } from 'lucide-react'
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfilePage() {
     const supabase = await createClient()
 
@@ -27,7 +29,14 @@ export default async function ProfilePage() {
         .select('*')
         .eq('user_id', user.id);
 
-    // Default values if fields are empty (while you update the DB)
+    // Fetch User Albums (NEW)
+    const { data: albums } = await supabase
+        .from('gallery_albums')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+    // Default values
     const role = profile?.role || 'Rookie'
     const level = profile?.level || 1
     const xp = profile?.xp || 0
@@ -122,10 +131,10 @@ export default async function ProfilePage() {
                     <div className="bg-[#111] border border-[#222] p-5 rounded-2xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-bl-full transition-all group-hover:bg-purple-500/10"></div>
                         <div className="relative z-10">
-                            <p className="text-white/40 text-xs uppercase tracking-wider font-medium mb-1">Cursos</p>
-                            <h3 className="text-2xl font-bold font-oswald text-white">0</h3>
+                            <p className="text-white/40 text-xs uppercase tracking-wider font-medium mb-1">Álbumes</p>
+                            <h3 className="text-2xl font-bold font-oswald text-white">{albums?.length || 0}</h3>
                         </div>
-                        <div className="absolute bottom-4 right-4 w-5 h-5 text-purple-500/20">🎓</div>
+                        <div className="absolute bottom-4 right-4 w-5 h-5 text-purple-500/20">📸</div>
                     </div>
 
                     <div className="bg-[#111] border border-[#222] p-5 rounded-2xl relative overflow-hidden group">
@@ -137,72 +146,101 @@ export default async function ProfilePage() {
                     </div>
                 </div>
 
-                {/* Content Tabs Area */}
-                <div className="border-t border-[#222] pt-8">
-                    <div className="flex items-center gap-8 mb-8 border-b border-[#222] pb-1">
-                        <button className="text-[#FF9800] border-b-2 border-[#FF9800] pb-4 px-2 text-sm font-bold uppercase tracking-wide">
-                            Mis Proyectos
-                        </button>
-                        <button className="text-white/40 hover:text-white pb-4 px-2 text-sm font-bold uppercase tracking-wide transition-colors">
-                            Speedlight Academy
-                        </button>
-                        <button className="text-white/40 hover:text-white pb-4 px-2 text-sm font-bold uppercase tracking-wide transition-colors">
-                            Inventario
-                        </button>
+                {/* Content Area */}
+                <div className="border-t border-[#222] pt-8 mt-12 pb-20">
+
+                    {/* SECTION 1: PROYECTOS (TALLER) */}
+                    <div className="mb-16">
+                        <h2 className="text-2xl font-oswald font-bold uppercase text-white mb-6 flex items-center gap-2">
+                            <span className="text-[#FF9800]">///</span> Mi Taller (Proyectos)
+                        </h2>
+
+                        {projects && projects.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {projects.map((project) => (
+                                    <Link key={project.id} href={`/projects/${project.id}`}>
+                                        <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-[#FF9800]/50 transition-all cursor-pointer h-full flex flex-col">
+                                            <div className="h-48 bg-[#1a1a1a] relative">
+                                                {project.cover_image || (project.gallery_images && project.gallery_images[0]) ? (
+                                                    <Image
+                                                        src={project.cover_image || project.gallery_images[0]}
+                                                        alt={project.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">🏎️</div>
+                                                )}
+                                            </div>
+                                            <div className="p-5 flex-1">
+                                                <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase truncate">{project.title}</h3>
+                                                <p className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-3">{project.make} {project.model}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                                <Link href="/projects/new" className="bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center p-6 hover:bg-[#1a1a1a] transition-all group cursor-pointer min-h-[300px]">
+                                    <div className="w-12 h-12 rounded-full bg-[#222] flex items-center justify-center text-white/50 group-hover:text-[#FF9800] group-hover:scale-110 transition-all mb-4">+</div>
+                                    <span className="text-sm font-bold text-white/50 group-hover:text-white uppercase tracking-wide">Nuevo Proyecto</span>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="bg-[#111] border border-[#222] border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-sm mb-4">No tienes proyectos de restauración o build log.</p>
+                                <Link href="/projects/new"><button className="text-[#FF9800] text-sm font-bold hover:underline">Crear Proyecto</button></Link>
+                            </div>
+                        )}
                     </div>
 
-                    {/* Projects Grid */}
-                    {projects && projects.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {projects.map((project) => (
-                                <Link key={project.id} href={`/projects/${project.id}`}>
-                                    <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-[#FF9800]/50 transition-all cursor-pointer h-full flex flex-col">
-                                        <div className="h-48 bg-[#1a1a1a] relative">
-                                            {project.cover_image || (project.gallery_images && project.gallery_images[0]) ? (
-                                                <Image
-                                                    src={project.cover_image || project.gallery_images[0]}
-                                                    alt={project.title}
-                                                    fill
-                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                                                />
-                                            ) : (
-                                                <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">
-                                                    🏎️
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div className="p-5 flex-1">
-                                            <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase truncate">{project.title}</h3>
-                                            <p className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-3">{project.make} {project.model} {project.year}</p>
-                                            <p className="text-white/40 text-sm line-clamp-2">{project.description}</p>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                            {/* Add New Card */}
-                            <a href="/projects/new" className="bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center p-6 hover:bg-[#1a1a1a] transition-all group cursor-pointer min-h-[300px]">
-                                <div className="w-12 h-12 rounded-full bg-[#222] flex items-center justify-center text-white/50 group-hover:text-[#FF9800] group-hover:scale-110 transition-all mb-4">
-                                    +
-                                </div>
-                                <span className="text-sm font-bold text-white/50 group-hover:text-white uppercase tracking-wide">Agregar Otro Proyecto</span>
-                            </a>
-                        </div>
-                    ) : (
-                        <div className="bg-[#111] border border-[#222] border-dashed rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[300px]">
-                            <div className="w-16 h-16 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-4 text-3xl">
-                                📸
-                            </div>
-                            <h3 className="text-xl font-bold text-white mb-2">Tu garaje está vacío</h3>
-                            <p className="text-white/40 max-w-sm mx-auto mb-6 text-sm">
-                                Comparte tu proyecto con la comunidad. Sube fotos, especificaciones y cuenta tu historia.
-                            </p>
-                            <a href="/projects/new" className="bg-[#FF9800] hover:bg-[#F57C00] text-black font-bold py-3 px-8 rounded-xl transition-all flex items-center gap-2">
-                                + Nuevo Proyecto
-                            </a>
-                        </div>
-                    )}
-                </div>
+                    {/* SECTION 2: GALERÍAS (ALBUMS) */}
+                    <div>
+                        <h2 className="text-2xl font-oswald font-bold uppercase text-white mb-6 flex items-center gap-2">
+                            <span className="text-blue-500">///</span> Mis Álbumes de Fotos
+                        </h2>
 
+                        {albums && albums.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {albums.map((album) => (
+                                    <Link key={album.id} href={`/gallery/${album.id}`}>
+                                        <div className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-blue-500/50 transition-all cursor-pointer h-full flex flex-col">
+                                            <div className="h-48 bg-[#1a1a1a] relative">
+                                                {album.cover_url ? (
+                                                    <Image
+                                                        src={album.cover_url}
+                                                        alt={album.title}
+                                                        fill
+                                                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">📸</div>
+                                                )}
+                                                {album.category && (
+                                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider text-white">
+                                                        {album.category}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="p-5 flex-1">
+                                                <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase truncate">{album.title}</h3>
+                                                <p className="text-white/40 text-xs mb-3">{new Date(album.created_at).toLocaleDateString()}</p>
+                                            </div>
+                                        </div>
+                                    </Link>
+                                ))}
+                                <Link href="/gallery/new" className="bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center p-6 hover:bg-[#1a1a1a] transition-all group cursor-pointer min-h-[250px]">
+                                    <div className="w-12 h-12 rounded-full bg-[#222] flex items-center justify-center text-white/50 group-hover:text-blue-500 group-hover:scale-110 transition-all mb-4">+</div>
+                                    <span className="text-sm font-bold text-white/50 group-hover:text-white uppercase tracking-wide">Subir Álbum</span>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="bg-[#111] border border-[#222] border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-sm mb-4">No has compartido fotos de eventos o track days.</p>
+                                <Link href="/gallery/new"><button className="text-blue-500 text-sm font-bold hover:underline">Subir Fotos</button></Link>
+                            </div>
+                        )}
+                    </div>
+
+                </div>
             </div>
         </div>
     )

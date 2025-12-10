@@ -7,17 +7,80 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Plus, Camera } from 'lucide-react';
 
+export const dynamic = 'force-dynamic';
+
 export default function GalleryPage() {
     const supabase = createClient();
+
+    // Data State
     const [hdPhotos, setHdPhotos] = useState<any[]>([]);
-    const [albums, setAlbums] = useState<any[]>([]); // Deprecated/Fallback
+    const [albums, setAlbums] = useState<any[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
 
-    // Categorized Albums
+    // Categorized Albums State
     const [events, setEvents] = useState<any[]>([]);
     const [trackDays, setTrackDays] = useState<any[]>([]);
     const [sessions, setSessions] = useState<any[]>([]);
 
+    // Hero Slideshow State
+    const [heroItems, setHeroItems] = useState<any[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    // Hero Slideshow Logic: Combine Top Content (Albums + Projects)
+    useEffect(() => {
+        const slides = [
+            // 1. Top Recent Albums (The User wants to see these!)
+            ...albums.slice(0, 5).map(a => ({
+                id: a.id,
+                type: 'Álbum Reciente',
+                subtitle: a.category || 'Evento Speedlight',
+                title: a.title,
+                desc: `Explora las mejores capturas de ${a.title}. Una colección exclusiva de Speedlight Culture.`,
+                link: `/gallery/${a.id}`,
+                image: a.cover_url || '/placeholder.png'
+            })),
+            // 2. Featured Projects
+            ...projects.slice(0, 3).map(p => ({
+                id: p.id,
+                type: 'Proyecto Destacado',
+                subtitle: (p.make && p.model) ? `${p.make} ${p.model}` : 'Proyecto de Garaje',
+                title: p.title,
+                desc: p.description || "Historias de garaje que inspiran. Mira la transformación completa.",
+                link: `/projects/${p.id}`,
+                image: p.cover_image || (p.gallery_images && p.gallery_images[0]) || '/placeholder.png'
+            })),
+            // 3. HD Photos (if any)
+            ...hdPhotos.slice(0, 2).map(i => ({
+                ...i,
+                type: 'Tendencia #1',
+                subtitle: "Comunidad Speedlight",
+                desc: "La comunidad ha hablado. Esta es la foto más votada del momento.",
+                link: `/gallery/${i.id}`
+            }))
+        ];
+
+        // Filter valid slides
+        const validSlides = slides.filter(s => s.id && s.image && s.image !== '/placeholder.png');
+
+        if (validSlides.length > 0) {
+            setHeroItems(validSlides);
+        } else if (albums.length > 0) {
+            // Fallback if images are failing validation but albums exist
+            setHeroItems(slides);
+        }
+    }, [hdPhotos, projects, albums]);
+
+    // Hero Auto-rotate
+    useEffect(() => {
+        if (heroItems.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentIndex(prev => (prev + 1) % heroItems.length);
+        }, 6000);
+        return () => clearInterval(interval);
+    }, [heroItems]);
+
+
+    // Data Fetching
     useEffect(() => {
         const fetchAllData = async () => {
             // 1. Fetch "Speedlight HD" (Top Rated Photos) - Mocked for now until View works perfectly or populated
@@ -40,28 +103,49 @@ export default function GalleryPage() {
             })) || [];
             setHdPhotos(hdItems);
 
-            // 2. Fetch ALL Recent Albums (Robust Schema Handling)
-            let rawAlbums = [];
+            // 2. Fetch ALL Recent Albums (Robust & Decoupled)
+            let rawAlbums: any[] = [];
 
-            // Attempt A: Try with 'category'
-            const { data: dataWithCat, error: errorWithCat } = await supabase
+            // Step A: Try Fetching with 'category'
+            const { data: albumData, error: albumError } = await supabase
                 .from('gallery_albums')
-                .select('id, title, cover_url, category, created_at, profiles(full_name)')
+                .select('id, title, cover_url, category, created_at, user_id')
                 .order('created_at', { ascending: false })
                 .limit(50);
 
-            if (!errorWithCat) {
-                rawAlbums = dataWithCat || [];
+            if (albumData && !albumError) {
+                // Success with Category
+                const userIds = Array.from(new Set(albumData.map(a => a.user_id).filter(Boolean)));
+                const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+                const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+
+                rawAlbums = albumData.map(a => ({
+                    ...a,
+                    author_name: profileMap.get(a.user_id) || 'Fotógrafo Speedlight'
+                }));
             } else {
-                console.warn("Retrying fetch without category column...");
-                // Attempt B: Fallback if 'category' column missing
-                const { data: dataFallback } = await supabase
+                console.warn("Fetch with category failed, retrying fallback...", albumError);
+
+                // Step B: Fallback (No category column)
+                const { data: fallbackData, error: fallbackError } = await supabase
                     .from('gallery_albums')
-                    .select('id, title, cover_url, created_at, profiles(full_name)')
+                    .select('id, title, cover_url, created_at, user_id')
                     .order('created_at', { ascending: false })
                     .limit(50);
 
-                rawAlbums = (dataFallback || []).map(a => ({ ...a, category: 'Eventos' }));
+                if (fallbackData) {
+                    const userIds = Array.from(new Set(fallbackData.map(a => a.user_id).filter(Boolean)));
+                    const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
+                    const profileMap = new Map(profiles?.map(p => [p.id, p.full_name]) || []);
+
+                    rawAlbums = fallbackData.map(a => ({
+                        ...a,
+                        category: 'Eventos', // Forced Default
+                        author_name: profileMap.get(a.user_id) || 'Fotógrafo Speedlight'
+                    }));
+                } else {
+                    console.error("Fallback fetch also failed:", fallbackError);
+                }
             }
 
             const mapAlbumToItem = (a: any) => ({
@@ -69,11 +153,12 @@ export default function GalleryPage() {
                 image: a.cover_url || '/placeholder.png',
                 title: a.title,
                 subtitle: new Date(a.created_at).toLocaleDateString(),
-                author: (a.profiles as any)?.full_name || 'Fotógrafo Anónimo',
+                author: a.author_name,
                 link: `/gallery/${a.id}`
             });
 
             const allAlbums = rawAlbums;
+            setAlbums(allAlbums); // <--- CRITICAL FIX: Save albums to state so Hero can use them
 
             const createPlaceholder = (category: string, title: string) => [{
                 id: `cta-${category}`,
@@ -117,42 +202,42 @@ export default function GalleryPage() {
         fetchAllData();
     }, []);
 
-    // Determine Hero Content: HD Photo OR First Album OR First Project
-    const heroContent = hdPhotos.length > 0 ? hdPhotos[0] : (albums.length > 0 ? albums[0] : (projects.length > 0 ? projects[0] : null));
+    const currentHero = heroItems[currentIndex];
 
     return (
         <div className="min-h-screen bg-[#141414] text-white">
 
-            {/* IMMERSIVE HERO SECTION */}
-            <div className="relative w-full h-[85vh] group">
+            {/* IMMERSIVE HERO SLIDESHOW */}
+            <div className="relative w-full h-[85vh] group overflow-hidden">
 
-                {/* 1. HERO BACKGROUND IMAGE */}
-                {heroContent ? (
-                    <div className="absolute inset-0">
+                {/* Background Images with Fade Transition */}
+                {heroItems.map((item, index) => (
+                    <div
+                        key={item.id}
+                        className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100' : 'opacity-0'}`}
+                    >
                         <Image
-                            src={heroContent.image}
+                            src={item.image}
                             fill
                             className="object-cover"
                             alt="Hero Background"
-                            priority
+                            priority={index === 0}
                         />
                         {/* Cinematic Gradients */}
                         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-[#141414]"></div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent"></div>
                     </div>
-                ) : (
-                    /* Fallback Empty State Background */
+                ))}
+
+                {/* Fallback if no content */}
+                {heroItems.length === 0 && (
                     <div className="absolute inset-0 bg-[#0a0a0a] flex items-center justify-center">
-                        <div className="text-center opacity-20">
-                            <Camera className="w-24 h-24 mx-auto mb-4" />
-                            <h1 className="text-4xl font-oswald uppercase">Galería Speedlight</h1>
-                        </div>
+                        <Camera className="w-24 h-24 text-white/10" />
                     </div>
                 )}
 
                 {/* 2. TOP BAR (Overlaid) */}
                 <div className="absolute top-0 left-0 w-full p-6 pt-[120px] z-20 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-                    {/* Page Branding */}
                     <div>
                         <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-[0.2em] mb-1 drop-shadow-lg">
                             Ecosistema Visual
@@ -161,8 +246,6 @@ export default function GalleryPage() {
                             Galería Speedlight
                         </h1>
                     </div>
-
-                    {/* Action Button */}
                     <Link href="/gallery/new">
                         <button className="bg-white/10 hover:bg-[#FF9800] backdrop-blur-md border border-white/20 text-white hover:text-black px-8 py-3 rounded-full font-bold uppercase text-xs tracking-widest flex items-center gap-3 transition-all duration-300">
                             <Plus className="w-5 h-5" />
@@ -171,36 +254,33 @@ export default function GalleryPage() {
                     </Link>
                 </div>
 
-                {/* 3. FEATURED CONTENT INFO (Bottom Left) */}
-                {heroContent && (
-                    <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 z-20 pb-24">
-                        <div className="max-w-3xl">
+                {/* 3. FEATURED CONTENT INFO (Dynamic) */}
+                {currentHero && (
+                    <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 z-20 pb-24 flex items-end justify-between">
+                        <div className="max-w-3xl animate-in fade-in slide-in-from-left-10 duration-700" key={currentIndex}>
                             {/* Tags or Badge */}
                             <div className="flex items-center gap-3 mb-4">
                                 <span className="bg-[#E50914] text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm">
-                                    {hdPhotos.length > 0 ? '#1 Tendencias' : 'Estreno'}
+                                    {currentHero.type}
                                 </span>
-                                <span className="text-white/80 text-sm font-medium drop-shadow-md">
-                                    {heroContent.subtitle || "Original de Speedlight Culture"}
+                                <span className="text-white/80 text-sm font-medium drop-shadow-md border-l pl-3 border-white/30">
+                                    {currentHero.subtitle || "Original de Speedlight Culture"}
                                 </span>
                             </div>
 
                             {/* Main Title */}
                             <h2 className="text-5xl md:text-7xl font-oswald font-bold uppercase mb-6 leading-[0.9] text-white drop-shadow-2xl">
-                                {heroContent.title}
+                                {currentHero.title}
                             </h2>
 
-                            {/* Description / Inspirational Text */}
+                            {/* Description */}
                             <p className="text-white/90 text-lg md:text-xl font-light mb-8 max-w-xl leading-relaxed drop-shadow-md text-balance">
-                                {heroContent.id === projects[0]?.id
-                                    ? "Proyectos destacados de la comunidad. Mira cómo las leyendas se construyen desde el chasis."
-                                    : "Explora esta colección exclusiva. Vota por tus favoritos para llevarlos a la cima del ranking HD."
-                                }
+                                {currentHero.desc}
                             </p>
 
                             {/* CTA */}
                             <div className="flex items-center gap-4">
-                                <Link href={heroContent.link}>
+                                <Link href={currentHero.link}>
                                     <button className="bg-white text-black hover:bg-[#FF9800] px-8 py-4 rounded-md font-bold text-lg transition-colors flex items-center gap-3 shadow-[0_0_20px_rgba(255,255,255,0.2)]">
                                         <Camera className="w-5 h-5" />
                                         Ver Galería
@@ -210,6 +290,17 @@ export default function GalleryPage() {
                                     ℹ️ Más Info
                                 </button>
                             </div>
+                        </div>
+
+                        {/* Indicators / Progress */}
+                        <div className="hidden md:flex gap-2 mb-4">
+                            {heroItems.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setCurrentIndex(idx)}
+                                    className={`h-1 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-8 bg-[#FF9800]' : 'w-4 bg-white/30 hover:bg-white'}`}
+                                />
+                            ))}
                         </div>
                     </div>
                 )}
