@@ -2,6 +2,7 @@ import { createClient } from '@/app/utils/supabase/server';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Camera, Zap } from 'lucide-react';
+import PageHero from '@/app/components/PageHero';
 
 export default async function ProjectsPage() {
     const supabase = await createClient();
@@ -13,25 +14,18 @@ export default async function ProjectsPage() {
         .order('created_at', { ascending: false });
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-[140px] pb-12">
-            <div className="container mx-auto px-6">
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-[#222] pb-6">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-oswald font-bold uppercase mb-2">
-                            Speedlight Projects
-                        </h1>
-                        <p className="text-white/40 font-roboto-mono">
-                            La colección definitiva de builds de la comunidad.
-                        </p>
-                    </div>
-                    <Link href="/projects/new">
-                        <button className="bg-[#FF9800] hover:bg-[#F57C00] text-black font-bold px-8 py-3 rounded-xl transition-all flex items-center gap-2 uppercase tracking-wide">
-                            <Camera className="w-4 h-4" /> Subir mi Proyecto
-                        </button>
-                    </Link>
-                </div>
+        <div className="min-h-screen bg-[#050505] text-white pb-12">
+            <PageHero
+                title="Speedlight Projects"
+                subtitle="El Garaje Virtual"
+                description="La colección definitiva de builds de la comunidad. Inspírate, comparte y documenta tu proceso."
+                image="/images/projects-hero.jpg" // Need a real placeholder or random image, can use Unsplash
+                action={{
+                    label: "Subir mi Proyecto",
+                    href: "/projects/new"
+                }}
+            />
+            <div className="container mx-auto px-6 mt-12">
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

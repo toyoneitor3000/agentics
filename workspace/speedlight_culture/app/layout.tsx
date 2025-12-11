@@ -69,8 +69,7 @@ export const viewport = {
   maximumScale: 1,
 };
 
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import NavigationLayout from "./components/layout/NavigationLayout";
 import Preloader from "./components/Preloader";
 
 export default function RootLayout({
@@ -90,19 +89,9 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
         <Preloader />
-        <header className="fixed top-0 w-full z-50 flex flex-col pointer-events-none">
-          {/* Allow interactions only on children (banner & navbar) */}
-          <div className="pointer-events-auto">
-            <Navbar />
-          </div>
-        </header>
-
-        {/* Main Content Wrapper - Removed global padding, pages handle their own spacing */}
-        <div className="min-h-screen">
+        <NavigationLayout>
           {children}
-        </div>
-
-        <Footer />
+        </NavigationLayout>
         <Analytics />
       </body>
     </html>

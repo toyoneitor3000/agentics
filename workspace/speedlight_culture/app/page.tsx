@@ -1,246 +1,299 @@
+
 "use client";
 
-
 import Image from "next/image";
-import { HeroBackground } from "@/app/components/HeroBackground";
-import {
-  AdHeroSponsor,
-  AdFeedCard,
-  AdWorkshopBadge,
-  AdAcademyIntro,
-  AdSidebarSpec
-} from "@/app/components/AdBanners";
-import { getAdByType } from "@/app/data/ads";
 import Link from "next/link";
-import { ArrowRight, Zap, Shield, Camera, Wrench, Play } from "lucide-react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/app/utils/supabase/client";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Camera, Wrench, ShoppingBag, Loader2 } from "lucide-react";
+import { AdFeedCard } from "@/app/components/AdBanners";
+import { getAdByType } from "@/app/data/ads";
+
+// Sub-components for Feed
+const FeedPostHeader = ({ user, time, action }: { user: any, time: string, action?: string }) => (
+  <div className="flex items-center justify-between p-4 pb-2">
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden border border-[#FF9800]/20 relative">
+        {user.avatar ? (
+          <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-xs text-[#F5E6D3] font-bold">{user.name.charAt(0)}</div>
+        )}
+      </div>
+      <div>
+        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-[#F5E6D3] hover:underline decoration-[#FF9800] underline-offset-2">{user.name}</Link>
+        <p className="text-xs text-[#BCAAA4]">{action} • {time}</p>
+      </div>
+    </div>
+    <button className="text-[#BCAAA4] hover:text-white">
+      <MoreHorizontal className="w-5 h-5" />
+    </button>
+  </div>
+);
+
+const FeedPostActions = ({ likes, comments }: { likes: number, comments: number }) => (
+  <div className="p-4 pt-2">
+    <div className="flex items-center gap-6 mb-3">
+      <button className="flex items-center gap-2 group">
+        <Heart className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
+      </button>
+      <button className="flex items-center gap-2 group">
+        <MessageCircle className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
+      </button>
+      <button className="flex items-center gap-2 group">
+        <Share2 className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
+      </button>
+    </div>
+    <p className="text-sm font-bold text-[#F5E6D3]">{likes} Me gusta</p>
+    <p className="text-sm text-[#BCAAA4] mt-1 cursor-pointer hover:text-white">Ver los {comments} comentarios</p>
+  </div>
+);
 
 export default function Home() {
-  // Fetch 'Real' Ads
-  // In a real app, this might be a server component fetching from a DB, or a client hook.
-  // For now, we simulate the "Database" call with getAdByType.
-  const heroAd = getAdByType('hero_sponsor');
+  const supabase = createClient();
+  const [feedItems, setFeedItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const feedAd = getAdByType('feed_card');
-  const academyAd = getAdByType('academy_intro');
-  const workshopAd = getAdByType('workshop_badge');
-  const specAd = getAdByType('sidebar_spec');
+
+  useEffect(() => {
+    async function fetchFeed() {
+      try {
+        setLoading(true);
+
+        // 1. Fetch Projects
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('id, title, description, cover_image, created_at, profiles(id, full_name, avatar_url)')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        // 2. Fetch Albums
+        const { data: albums } = await supabase
+          .from('gallery_albums')
+          .select('id, title, cover_url, created_at, user_id') // User might need separate fetch if strict FK not set, but assuming it works or fallback
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        // Fetch profiles for albums if relation missing in query
+        let albumWithAuthors: any[] = [];
+        if (albums) {
+          const userIds = [...new Set(albums.map(a => a.user_id).filter(Boolean))];
+          const { data: users } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
+          const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+          albumWithAuthors = albums.map(a => ({
+            ...a,
+            profiles: userMap.get(a.user_id) || { full_name: 'Speedlight User', avatar_url: null, id: null }
+          }));
+        }
+
+        // 3. Fetch Marketplace
+        const { data: market } = await supabase
+          .from('marketplace_listings')
+          .select('id, title, description, images, price, created_at, profile_id') // Assuming table structure
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        // Fetch profiles for market
+        let marketWithAuthors: any[] = [];
+        if (market) {
+          // Logic similar to albums if direct relation query fails
+          const userIds = [...new Set(market.map(m => m.profile_id).filter(Boolean))]; // Assuming profile_id column
+          const { data: users } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
+          const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+          marketWithAuthors = market.map(m => ({
+            ...m,
+            profiles: userMap.get(m.profile_id) || { full_name: 'Vendedor', avatar_url: null, id: null }
+          }));
+        }
+
+
+        // 4. Transform & Mix
+        const items: any[] = [];
+
+        // Project Items
+        projects?.forEach(p => {
+          items.push({
+            id: `proj_${p.id}`,
+            type: 'project',
+            date: new Date(p.created_at),
+            user: {
+              id: (p.profiles as any)?.id,
+              name: (p.profiles as any)?.full_name || 'Constructor',
+              avatar: (p.profiles as any)?.avatar_url
+            },
+            content: {
+              title: p.title,
+              text: p.description,
+              image: p.cover_image
+            },
+            stats: { likes: Math.floor(Math.random() * 50) + 5, comments: Math.floor(Math.random() * 10) } // Mock stats for now
+          });
+        });
+
+        // Album Items
+        albumWithAuthors.forEach(a => {
+          items.push({
+            id: `album_${a.id}`,
+            type: 'gallery',
+            date: new Date(a.created_at),
+            user: {
+              id: a.profiles?.id,
+              name: a.profiles?.full_name || 'Fotógrafo',
+              avatar: a.profiles?.avatar_url
+            },
+            content: {
+              title: `Nuevo Álbum: ${a.title}`,
+              text: 'Ha subido nuevas fotos a la galería.',
+              image: a.cover_url
+            },
+            stats: { likes: Math.floor(Math.random() * 100) + 20, comments: Math.floor(Math.random() * 20) }
+          });
+        });
+
+        // Market Items
+        marketWithAuthors?.forEach(m => {
+          items.push({
+            id: `market_${m.id}`,
+            type: 'marketplace',
+            date: new Date(m.created_at),
+            user: {
+              id: m.profiles?.id,
+              name: m.profiles?.full_name || 'Vendedor',
+              avatar: m.profiles?.avatar_url
+            },
+            content: {
+              title: `VENDO: ${m.title}`,
+              text: `${m.description?.substring(0, 100)}... Precio: $${m.price}`,
+              image: m.images && m.images.length > 0 ? m.images[0] : null
+            },
+            stats: { likes: Math.floor(Math.random() * 20), comments: Math.floor(Math.random() * 5) }
+          });
+        });
+
+        // Insert Ads periodically (every 5 items)
+        // Sort by date desc
+        items.sort((a, b) => b.date.getTime() - a.date.getTime());
+
+        // Insert Ad at index 2
+        if (items.length > 2 && feedAd) {
+          items.splice(2, 0, { id: 'native_ad_1', type: 'ad', data: feedAd, date: new Date() });
+        }
+
+        setFeedItems(items);
+
+      } catch (error) {
+        console.error("Error loading feed:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchFeed();
+  }, []);
+
+  // Time Formatter
+  const timeAgo = (date: Date) => {
+    const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+    let interval = seconds / 31536000;
+    if (interval > 1) return Math.floor(interval) + " años";
+    interval = seconds / 2592000;
+    if (interval > 1) return Math.floor(interval) + " meses";
+    interval = seconds / 86400;
+    if (interval > 1) return Math.floor(interval) + " días";
+    interval = seconds / 3600;
+    if (interval > 1) return Math.floor(interval) + " horas";
+    interval = seconds / 60;
+    if (interval > 1) return Math.floor(interval) + " min";
+    return Math.floor(seconds) + " seg";
+  };
 
   return (
-    <main className="min-h-screen bg-[#050505] text-[#F5E6D3]">
+    <div className="max-w-[600px] mx-auto min-h-screen">
 
-      {/* Hero Section - Galactic Speed */}
-      <section className="relative h-screen w-full overflow-hidden flex flex-col justify-center items-center">
-        {/* Dynamic Background */}
-        <HeroBackground />
+      {/* Feed Header */}
+      <div className="md:hidden sticky top-[60px] z-40 bg-[#050302]/90 backdrop-blur-md px-4 py-3 border-b border-[#FF9800]/10">
+        <p className="font-bold text-lg text-[#F5E6D3]">Speedlight Feed</p>
+      </div>
 
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none"></div>
-
-
-
-        {/* Content */}
-        <div className="relative z-10 container mx-auto px-6 flex flex-col items-center text-center">
-          <div className="mb-8 relative group">
-            <div className="absolute -inset-10 bg-gradient-to-r from-[#D32F2F]/20 via-[#FF9800]/20 to-[#FFEB3B]/20 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
-            <Image
-              src="/logo.png"
-              alt="Speedlight Culture"
-              width={800}
-              height={300}
-              className="w-full max-w-4xl h-auto drop-shadow-2xl"
-              priority
-            />
-          </div>
-
-          <p className="text-[#F5E6D3] text-lg md:text-2xl font-light tracking-[0.3em] uppercase mb-10 max-w-3xl mx-auto opacity-80 leading-relaxed">
-            El garaje digital para la <span className="text-[#FF9800] font-bold">cultura automotriz</span>
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-6 items-center w-full justify-center">
-            <Link href="/gallery" className="group relative px-10 py-4 overflow-hidden rounded-full bg-[#FF9800] text-black font-bold tracking-widest uppercase text-sm hover:scale-105 transition-transform duration-300 shadow-[0_0_20px_rgba(255,152,0,0.4)]">
-              <span className="relative z-10 flex items-center gap-2">
-                Explorar Galería <ArrowRight className="w-4 h-4" />
-              </span>
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-            </Link>
-            <Link href="/pricing" className="group relative px-10 py-4 overflow-hidden rounded-full bg-transparent border border-[#F5E6D3]/20 text-[#F5E6D3] font-bold tracking-widest uppercase text-sm hover:border-[#FF9800]/50 transition-colors duration-300 backdrop-blur-sm">
-              <span className="relative z-10">Unirse Ahora</span>
-              <div className="absolute inset-0 bg-[#FF9800]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </Link>
-          </div>
+      {/* Create Post Input Placeholder */}
+      <div className="p-4 border-b border-[#FF9800]/10 flex gap-4 items-center">
+        <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#FF9800]/30 flex items-center justify-center">
+          <span className="text-[#FF9800] font-bold">Yo</span>
         </div>
+        <input
+          type="text"
+          placeholder="¿Qué estás construyendo hoy?"
+          className="bg-transparent text-[#F5E6D3] placeholder-[#BCAAA4] flex-1 outline-none text-sm"
+        />
+        <button className="text-[#FF9800] font-bold text-sm uppercase">Publicar</button>
+      </div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce cursor-pointer">
-          <span className="text-[10px] uppercase tracking-[0.2em] hover:text-[#FF9800] transition-colors">Scroll</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-[#FF9800] to-transparent"></div>
+      {loading && (
+        <div className="flex justify-center p-12">
+          <Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" />
         </div>
-      </section>
+      )}
 
-      {/* NEW SECTION: Academy Teaser (Powered by AdAcademyIntro) */}
-      <section className="relative py-20 bg-[#0A0604] border-b border-white/5">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center justify-between mb-12 gap-6">
-            <div className="max-w-xl">
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-[#F5E6D3]">MASTER THE <span className="text-[#FF9800]">MACHINE</span></h2>
-              <p className="text-[#BCAAA4] font-light">Cursos exclusivos, tutoriales mecánicos y masterclasses de conducción.</p>
-            </div>
-            <Link href="/academy" className="text-[#FF9800] uppercase text-xs font-bold tracking-widest hover:underline decoration-[#FF9800] underline-offset-4">
-              Ver Todos los Cursos
-            </Link>
+      {/* Feed Items */}
+      <div className="pb-20">
+        {!loading && feedItems.length === 0 && (
+          <div className="p-8 text-center text-[#BCAAA4]">
+            <p>No hay actividad reciente. Sé el primero en publicar algo.</p>
           </div>
+        )}
 
-          {/* Native Ad Integration as Hero Content for Section */}
-          <div className="w-full max-w-5xl mx-auto shadow-2xl shadow-orange-900/10 rounded-xl overflow-hidden">
-            <AdAcademyIntro data={academyAd} />
-          </div>
-        </div>
-      </section>
-
-      {/* Features - The Grid: Bento Layout */}
-      <section className="py-24 relative bg-[#050505]">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col items-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-center mb-4 tracking-tight">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#F5E6D3] via-[#FF9800] to-[#F5E6D3]">
-                ECOSISTEMA DIGITAL
-              </span>
-            </h2>
-            <div className="w-24 h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent"></div>
-            <p className="mt-4 text-[#BCAAA4] text-center max-w-2xl">
-              Todo lo que necesitas para tu proyecto automotriz en un solo lugar.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-4 gap-6 auto-rows-[minmax(180px,auto)]">
-
-            {/* 1. Galería HD - Large Featured Tile */}
-            <Link href="/gallery" className="group relative md:col-span-6 lg:col-span-2 row-span-2 rounded-3xl overflow-hidden border border-white/10 bg-[#0A0604]">
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
-              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493238792015-80984815433f?q=80&w=2670')] bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-80"></div>
-              <div className="relative z-20 p-8 h-full flex flex-col justify-end">
-                <div className="w-12 h-12 mb-4 rounded-xl bg-[#FF9800]/20 backdrop-blur-md flex items-center justify-center text-[#FF9800] border border-[#FF9800]/30">
-                  <Camera className="w-6 h-6" />
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-2">Galería HD</h3>
-                <p className="text-[#BCAAA4] text-sm max-w-sm">Fotografía automotriz de alto nivel. Inspírate con los mejores builds y sube tu álbum.</p>
+        {feedItems.map((item) => {
+          if (item.type === 'ad') {
+            return (
+              <div key={item.id} className="py-4 border-b border-[#FF9800]/10">
+                <AdFeedCard data={item.data} />
               </div>
-            </Link>
+            );
+          }
 
-            {/* 2. Marketplace - Wide Tile */}
-            <Link href="/marketplace" className="group relative md:col-span-3 lg:col-span-2 row-span-1 rounded-3xl overflow-hidden border border-white/10 bg-[#0F0A08] hover:border-[#FF9800]/30 transition-colors">
-              <div className="absolute top-0 right-0 p-32 bg-[#FF9800]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#FF9800]/10 transition-colors"></div>
-              <div className="p-8 h-full flex flex-col justify-center relative z-10">
-                <div className="flex items-center gap-4 mb-3">
-                  <div className="p-2 rounded-lg bg-[#FF9800]/10 text-[#FF9800]"><Zap className="w-5 h-5" /></div>
-                  <h3 className="text-xl font-bold text-[#F5E6D3]">Marketplace</h3>
-                </div>
-                <p className="text-[#BCAAA4] text-sm">Compra y venta segura de partes y accesorios verified.</p>
-              </div>
-            </Link>
-
-            {/* 3. Foro Técnico - Standard Tile */}
-            <Link href="/forum" className="group relative md:col-span-3 lg:col-span-1 row-span-1 rounded-3xl overflow-hidden border border-white/10 bg-[#0F0A08] hover:border-[#FF9800]/30 transition-colors">
-              <div className="p-6 h-full flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center mb-4"><Shield className="w-5 h-5" /></div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F5E6D3] mb-1">Foro Técnico</h3>
-                  <p className="text-xs text-[#BCAAA4]">Debate y conocimiento experto.</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* 4. Native Ad Integration - Fits naturally into grid */}
-            <div className="md:col-span-3 lg:col-span-1 row-span-1 rounded-3xl overflow-hidden shadow-lg border border-white/5">
-              <div className="h-full w-full transform hover:scale-[1.02] transition-transform duration-500">
-                <AdFeedCard data={feedAd} />
-              </div>
-            </div>
-
-            {/* 5. Talleres - Standard Tile */}
-            <Link href="/workshops" className="group relative md:col-span-3 lg:col-span-1 row-span-1 rounded-3xl overflow-hidden border border-white/10 bg-[#0F0A08] hover:border-[#FF9800]/30 transition-colors">
-              <div className="p-6 h-full flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-lg bg-green-500/10 text-green-400 flex items-center justify-center mb-4"><Wrench className="w-5 h-5" /></div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F5E6D3] mb-1">Talleres</h3>
-                  <p className="text-xs text-[#BCAAA4]">Especialistas certificados.</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* 6. Project Builds - Standard Tile */}
-            <Link href="/projects" className="group relative md:col-span-3 lg:col-span-1 row-span-1 rounded-3xl overflow-hidden border border-white/10 bg-[#0F0A08] hover:border-[#FF9800]/30 transition-colors">
-              <div className="p-6 h-full flex flex-col justify-between">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center mb-4"><Play className="w-5 h-5" /></div>
-                <div>
-                  <h3 className="text-lg font-bold text-[#F5E6D3] mb-1">Builds</h3>
-                  <p className="text-xs text-[#BCAAA4]">Documenta tu transformación.</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* 7. Partner Spotlight - Wide Tile features AdWorkshopBadge */}
-            <div className="md:col-span-6 lg:col-span-2 row-span-1 rounded-3xl overflow-hidden border border-white/5 bg-[#0A0604] p-6 flex flex-col md:flex-row items-center gap-6">
-              <div className="flex-shrink-0">
-                <span className="text-[10px] uppercase tracking-widest text-[#FF9800]/70 font-bold mb-2 block">Partner Destacado</span>
-                <h3 className="text-lg font-bold text-white max-w-[150px]">Calidad Certificada</h3>
-              </div>
-              <div className="flex-grow w-full">
-                <AdWorkshopBadge data={workshopAd} />
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* Technical Corner - Showing off the Tech Spec component */}
-      <section className="py-20 bg-[#080504] border-y border-white/5">
-        <div className="container mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <h3 className="text-[#FF9800] font-bold uppercase tracking-widest text-sm mb-2">Recomendación Técnica</h3>
-            <h2 className="text-3xl font-bold text-white mb-6">OPTIMIZA TU RENDIMIENTO</h2>
-            <p className="text-[#BCAAA4] mb-8 leading-relaxed">
-              En Speedlight no solo mostramos autos, analizamos la ingeniería detrás de ellos. Descubre nuestras fichas técnicas interactivas y recomendaciones de expertos basadas en data real.
-            </p>
-            <Link href="/forum" className="inline-flex items-center gap-2 text-white border-b border-[#FF9800] pb-1 hover:text-[#FF9800] transition-colors">
-              Ir al Foro Técnico <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-          <div className="transform rotate-1 hover:rotate-0 transition-transform duration-500">
-            <AdSidebarSpec data={specAd} />
-          </div>
-        </div>
-      </section>
-
-      {/* CTA - Speed of Light */}
-      <section className="py-32 relative overflow-hidden bg-black">
-        <div className="absolute inset-0 bg-[#FF9800]/5"></div>
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-[#FF9800]/20 to-transparent"></div>
-
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-4xl md:text-6xl font-bold mb-8 tracking-tighter text-[#F5E6D3]">
-              ÚNETE A LA <span className="text-[#FF9800]">VELOCIDAD</span>
-            </h2>
-            <p className="text-[#BCAAA4] text-lg mb-12 font-light tracking-wide">
-              Acceso anticipado para fundadores. Sé parte de la historia.
-            </p>
-
-            <form className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto relative">
-              <input
-                type="email"
-                placeholder="CORREO ELECTRÓNICO"
-                className="flex-grow bg-[#0A0604] border border-[#FF9800]/20 rounded-full px-8 py-4 text-[#F5E6D3] placeholder-[#BCAAA4]/50 focus:outline-none focus:border-[#FF9800] transition-colors text-sm tracking-wider text-center sm:text-left"
+          return (
+            <div key={item.id} className="border-b border-[#FF9800]/10 bg-[#050302]">
+              <FeedPostHeader
+                user={item.user}
+                time={timeAgo(item.date)}
+                action={
+                  item.type === 'project' ? 'actualizó proyecto' :
+                    item.type === 'gallery' ? 'subió álbum' :
+                      'publicó venta'
+                }
               />
-              <button className="bg-[#FF9800] text-black font-bold rounded-full px-8 py-4 uppercase tracking-wider text-sm hover:bg-[#FFB74D] transition-colors shadow-[0_0_20px_rgba(255,152,0,0.3)] hover:shadow-[0_0_30px_rgba(255,152,0,0.5)]">
-                Unirse
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
 
+              {/* Content Text */}
+              <div className="px-4 mb-3">
+                {item.content?.title && <h3 className="font-bold text-[#F5E6D3] mb-1">{item.content.title}</h3>}
+                {item.content?.text && <p className="text-sm text-[#E0E0E0] line-clamp-3">{item.content.text}</p>}
+              </div>
 
-    </main>
+              {/* Content Image */}
+              {item.content?.image && (
+                <div className="w-full aspect-square md:aspect-[4/3] relative bg-[#1A1A1A]">
+                  <Image
+                    src={item.content.image}
+                    alt="Content"
+                    fill
+                    className="object-cover"
+                  />
+                  {/* Type Badge */}
+                  <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/10 flex items-center gap-2">
+                    {item.type === 'project' && <><Wrench className="w-3 h-3 text-[#FF9800]" /> PROJECT</>}
+                    {item.type === 'gallery' && <><Camera className="w-3 h-3 text-[#FF9800]" /> GALLERY</>}
+                    {item.type === 'marketplace' && <><ShoppingBag className="w-3 h-3 text-[#FF9800]" /> MARKET</>}
+                  </div>
+                </div>
+              )}
+
+              <FeedPostActions likes={item.stats!.likes} comments={item.stats!.comments} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Calendar, MapPin, Users, Ticket, Clock, Map as MapIcon, Filter, List, Plus } from 'lucide-react';
 import CalendarView from '../components/CalendarView';
 import { createClient } from '@/app/utils/supabase/client';
+import PageHero from '@/app/components/PageHero';
 
 export default function EventsPage() {
     const [view, setView] = useState<'list' | 'calendar'>('list');
@@ -12,12 +13,14 @@ export default function EventsPage() {
     const supabase = createClient();
 
     useEffect(() => {
+        // ... (fetch logic same)
         const fetchEvents = async () => {
             const { data, error } = await supabase
                 .from('events')
                 .select('*')
                 .order('created_at', { ascending: false });
 
+            // ... (rest of logic) 
             if (data && !error) {
                 const mappedEvents = data.map(e => ({
                     id: e.id,
@@ -27,13 +30,12 @@ export default function EventsPage() {
                     location: e.location || 'Ubicación secreta',
                     type: e.type || 'social',
                     typeLabel: e.type_label || 'Community Event',
-                    attendees: Math.floor(Math.random() * 100) + 10, // Mock for now
-                    price: 'Gratis', // Mock for now
+                    attendees: Math.floor(Math.random() * 100) + 10,
+                    price: 'Gratis',
                     image: e.image || "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1000&auto=format&fit=crop"
                 }));
                 setEvents(mappedEvents);
             } else {
-                // Fallback to mock if no DB or empty (Optional: remove this if you want strict real data)
                 setEvents([
                     {
                         id: 1,
@@ -62,45 +64,42 @@ export default function EventsPage() {
                 ]);
             }
         };
-
         fetchEvents();
     }, []);
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-[#050302]">
-            <div className="container mx-auto px-4">
+        <div className="min-h-screen pb-12 bg-[#050302]">
+            <PageHero
+                title="Calendario Global"
+                subtitle="Eventos & Meets"
+                description="La única fuente de verdad. Encuentra Car Meets, Talleres y Track Days en un solo lugar."
+                image="/images/events-hero.jpg" // Placeholder
+                action={{
+                    label: "Publicar Evento",
+                    href: "/events/new",
+                    icon: Plus
+                }}
+            />
 
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-bold mb-2 font-display uppercase italic tracking-wider">
-                            Calendario <span className="text-[#D32F2F]">Global</span>
-                        </h1>
-                        <p className="text-gray-400 max-w-xl">
-                            La única fuente de verdad. Encuentra Car Meets, Talleres y Track Days en un solo lugar.
-                        </p>
-                    </div>
-                    <div className="flex flex-wrap gap-3">
-                        <Link href="/events/new" className="flex items-center gap-2 px-4 py-2 bg-[#D32F2F] border border-[#D32F2F] rounded-lg text-sm font-bold text-white hover:bg-[#B71C1C] transition-colors">
-                            <Plus className="w-4 h-4" />
-                            Publicar Evento
-                        </Link>
-                        <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-white/10">
-                            <button
-                                onClick={() => setView('list')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all ${view === 'list' ? 'bg-[#FF9800] text-black shadow-md' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                <List className="w-4 h-4" />
-                                Lista
-                            </button>
-                            <button
-                                onClick={() => setView('calendar')}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all ${view === 'calendar' ? 'bg-[#FF9800] text-black shadow-md' : 'text-gray-400 hover:text-white'}`}
-                            >
-                                <Calendar className="w-4 h-4" />
-                                Calendario
-                            </button>
-                        </div>
+            <div className="container mx-auto px-4 mt-8">
+
+                {/* View Toggles */}
+                <div className="flex justify-end mb-8">
+                    <div className="flex bg-[#1A1A1A] p-1 rounded-lg border border-white/10">
+                        <button
+                            onClick={() => setView('list')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all ${view === 'list' ? 'bg-[#FF9800] text-black shadow-md' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <List className="w-4 h-4" />
+                            Lista
+                        </button>
+                        <button
+                            onClick={() => setView('calendar')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-bold transition-all ${view === 'calendar' ? 'bg-[#FF9800] text-black shadow-md' : 'text-gray-400 hover:text-white'}`}
+                        >
+                            <Calendar className="w-4 h-4" />
+                            Calendario
+                        </button>
                     </div>
                 </div>
 

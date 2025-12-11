@@ -106,9 +106,9 @@ export default async function ProfilePage() {
                             <Edit3 className="w-4 h-4" />
                             Editar Perfil
                         </button>
-                        <button className="bg-[#1a1a1a] hover:bg-[#252525] border border-[#333] text-white p-2 rounded-xl transition-all">
+                        <Link href="/settings" className="bg-[#1a1a1a] hover:bg-[#252525] border border-[#333] text-white p-2 rounded-xl transition-all">
                             <Settings className="w-5 h-5" />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 

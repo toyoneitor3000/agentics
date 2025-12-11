@@ -1,6 +1,7 @@
 import { createClient } from '@/app/utils/supabase/server';
 import Link from 'next/link';
 import { ShoppingBag, Filter, Tag } from 'lucide-react';
+import PageHero from '@/app/components/PageHero';
 
 export default async function MarketplacePage() {
     const supabase = await createClient();
@@ -12,21 +13,18 @@ export default async function MarketplacePage() {
         .order('created_at', { ascending: false });
 
     return (
-        <div className="min-h-screen bg-black text-white pt-32 pb-12">
-            <div className="container mx-auto px-6">
-
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-[#333] pb-6">
-                    <div>
-                        <h1 className="text-4xl md:text-5xl font-oswald font-bold uppercase mb-2">Marketplace</h1>
-                        <p className="text-white/40 font-roboto-mono">Compra y vende piezas de alto rendimiento entre entusiastas.</p>
-                    </div>
-                    <Link href="/marketplace/sell">
-                        <button className="bg-green-600 hover:bg-green-700 text-white font-bold px-8 py-3 rounded-full transition-all flex items-center gap-2">
-                            <Tag className="w-4 h-4" /> Vender Artículo
-                        </button>
-                    </Link>
-                </div>
+        <div className="min-h-screen bg-black text-white pb-12">
+            <PageHero
+                title="Marketplace"
+                subtitle="Compra & Venta"
+                description="Piezas de alto rendimiento, vehículos de proyecto y servicios especializados. Directo de la comunidad."
+                image="/images/marketplace-hero.jpg" // Placeholder
+                action={{
+                    label: "Vender Artículo",
+                    href: "/marketplace/sell"
+                }}
+            />
+            <div className="container mx-auto px-6 mt-12">
 
                 {/* Filters (Mock UI) */}
                 <div className="flex gap-4 overflow-x-auto pb-4 mb-8">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { AdFeedCard } from "../components/AdBanners";
+import PageHero from '@/app/components/PageHero';
 
 const COURSES = [
     {
@@ -37,37 +38,24 @@ const COURSES = [
     }
 ];
 
+
+
 export default function AcademyPage() {
     return (
-        <main className="min-h-screen bg-[#050302]">
-            {/* Hero Section */}
-            <div className="relative pt-48 pb-20 px-6 overflow-hidden">
-                <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-[#FF9800]/10 to-transparent pointer-events-none"></div>
-
-                <div className="container mx-auto relative z-10 text-center">
-                    <h1 className="text-5xl md:text-8xl font-bold mb-6 tracking-tighter">
-                        SPEEDLIGHT <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9800] to-[#FFEB3B]">ACADEMY</span>
-                    </h1>
-                    <p className="text-xl text-[#BCAAA4] max-w-2xl mx-auto font-light mb-12">
-                        La primera plataforma educativa dedicada exclusivamente a la cultura automotriz en Latinoamérica.
-                        Aprende, construye y corre.
-                    </p>
-
-                    <div className="flex flex-wrap justify-center gap-4">
-                        <button className="px-8 py-4 bg-[#FF9800] text-black font-bold uppercase tracking-wider rounded-lg hover:bg-[#FFEB3B] transition-colors">
-                            Ver Todos los Cursos
-                        </button>
-                        <Link href="/contests">
-                            <button className="px-8 py-4 border border-[#FF9800]/30 text-[#FF9800] font-bold uppercase tracking-wider rounded-lg hover:bg-[#FF9800]/10 transition-colors">
-                                Arena de Concursos
-                            </button>
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
+        <main className="min-h-screen bg-[#050302] pb-24">
+            <PageHero
+                title="Speedlight Academy"
+                subtitle="Aprende. Construye. Corre."
+                description="La primera plataforma educativa dedicada exclusivamente a la cultura automotriz en Latinoamérica."
+                image="/images/academy-hero.jpg" // Placeholder
+                action={{
+                    label: "Ver Todos los Cursos",
+                    href: "#courses",
+                    icon: undefined
+                }}
+            />
             {/* Courses Grid */}
-            <div className="container mx-auto px-6 pb-24">
+            <div id="courses" className="container mx-auto px-6 mt-12 pb-24">
                 <div className="flex items-center justify-between mb-8">
                     <h2 className="text-3xl font-bold text-[#F5E6D3]">Cursos Destacados</h2>
                     <div className="flex gap-2">

@@ -230,5 +230,41 @@ Romper la barrera digital.
 *   **Mecánica:** Presencia física en los Car Meets y carreras existentes (no crear nuevos, ir a los que ya existen). Un stand simple con un código QR gigante: "Escanea y sube la mejor foto del evento HOY para ganar [Premio Inmediato/Merch]".
 *   **Objetivo:** Captura masiva de usuarios en el momento de máxima euforia del nicho.
 
+---
 
+## 7. Estrategia de UI/UX: "Social Network First" (Bespoke Redesign)
 
+Para maximizar la retención y la familiaridad del usuario, adoptamos una arquitectura de **Red Social Nativa**, similar a los líderes del mercado (Instagram/Threads), dejando atrás el diseño de "Sitio Web Corporativo".
+
+### Arquitectura de Navegación (The "Bespoke" Layout)
+
+#### Móvil (Mobile-First Experience)
+La navegación se mueve a la parte inferior ("Thumb Zone") para acceso inmediato.
+*   **Bottom Bar:**
+    1.  **Home:** Feed unificado de actividad.
+    2.  **Explore:** Búsqueda, Marketplace destacados, Top Projects.
+    3.  **Create (+) / Middle:** Subir foto, nuevo proyecto, post en foro.
+    4.  **Notifications:** Actividad reciente.
+    5.  **Profile:** Mi garaje, configuración de cuenta, seguridad.
+*   **Top Bar:** Minimalista. Logo (izquierda) y Mensajes Directos (derecha).
+
+#### Desktop (Bespoke Desktop)
+Adaptación del diseño móvil a pantallas grandes sin perder la esencia. Uso de **Sidebar Lateral Izquierdo** (Estándar de la industria).
+*   **Sidebar Izquierdo:** Contiene los mismos elementos del Bottom Bar pero expandidos con etiquetas de texto.
+*   **Main Feed (Centro):** Columna central con el contenido infinito.
+*   **Sidebar Derecho (Sugestiones - Opcional):** Publicidad, "A quién seguir", Eventos destacados.
+
+### El "Unified Feed" (Home)
+El Landing Page deja de ser estático. Se convierte en un **Feed Dinámico de Actividad** que centraliza todo el ecosistema:
+1.  **Nuevos Proyectos:** "Juan acaba de publicar 'Restauración BMW E30'".
+2.  **Actividad del Foro:** Hilos trending.
+3.  **Galería:** Fotos subidas recientemente.
+4.  **Marketplace:** Productos recomendados ("Piezas que podrían interesarte").
+5.  **Academy:** "Nuevo curso disponible: Detailing Avanzado".
+6.  **Publicidad:** Banners nativos integrados en el flujo.
+
+### Gestión de Cuenta (Profile Hub)
+Toda la gestión de seguridad y configuración se centraliza en el ícono de Perfil.
+*   **Autenticación y Seguridad:** Cambio de contraseña, 2FA, sesiones activas.
+*   **Suscripción:** Gestión del Tier (Rookie, Builder, etc.).
+*   **Ajustes:** Preferencias de notificación, privacidad.
