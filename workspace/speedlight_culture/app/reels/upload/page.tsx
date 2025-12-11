@@ -89,35 +89,35 @@ export default function UploadReelPage() {
                         <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-[#FF9800]/20 sticky top-4">
                             <h3 className="font-oswald font-bold text-lg uppercase mb-4 flex items-center gap-2">
                                 <MonitorPlay className="w-5 h-5 text-[#FF9800]" />
-                                Estándares de Envío
+                                Guía para Creadores
                             </h3>
 
                             <p className="text-sm text-white/70 mb-6 leading-relaxed">
-                                Speedlight Cinema es una galería curada de arte automovilístico. Para asegurar la calidad, todos los envíos deben cumplir estos criterios:
+                                Speedlight Cinema es el espacio para que los creadores compartan su pasión. Buscamos contenido auténtico y de alta calidad que aporte valor a la comunidad.
                             </p>
 
                             <div className="space-y-4">
                                 <div className="flex gap-3">
                                     <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                                     <div>
-                                        <h4 className="font-bold text-sm">Enfoque Automotriz</h4>
-                                        <p className="text-xs text-white/50">Solo Autos o Motos. No vlogs, no gaming, no contenido irrelevante.</p>
+                                        <h4 className="font-bold text-sm">Contenido de Valor</h4>
+                                        <p className="text-xs text-white/50">Autos, Motos, Vlogs narrativos, Builds y Documentales. Si tienes una buena historia que contar, queremos verla.</p>
                                     </div>
                                 </div>
 
                                 <div className="flex gap-3">
                                     <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
                                     <div>
-                                        <h4 className="font-bold text-sm">Alta Fidelidad</h4>
-                                        <p className="text-xs text-white/50">Mínimo 1080p60. Preferible 4K. No 'shaky footage' de mano sin estabilización.</p>
+                                        <h4 className="font-bold text-sm">Buena Calidad</h4>
+                                        <p className="text-xs text-white/50">Video nítido (1080p mínimo), buena iluminación y audio claro. No necesita ser una película de Hollywood, solo verse bien.</p>
                                     </div>
                                 </div>
 
                                 <div className="flex gap-3">
                                     <Ban className="w-5 h-5 text-red-500 shrink-0" />
                                     <div>
-                                        <h4 className="font-bold text-sm">Estrictamente Prohibido</h4>
-                                        <p className="text-xs text-white/50">Piques ilegales, conducción temeraria, o reposts de TikTok/Reels de bajo esfuerzo con marcas de agua.</p>
+                                        <h4 className="font-bold text-sm">Lo que evitamos</h4>
+                                        <p className="text-xs text-white/50">Piques ilegales, conducción peligrosa en vías públicas, o resubidas de baja calidad con marcas de agua.</p>
                                     </div>
                                 </div>
                             </div>
@@ -126,7 +126,7 @@ export default function UploadReelPage() {
                                 <div className="flex items-start gap-3 bg-[#FF9800]/10 p-3 rounded-lg">
                                     <AlertTriangle className="w-5 h-5 text-[#FF9800] shrink-0" />
                                     <p className="text-[10px] text-[#FF9800] font-bold leading-tight">
-                                        Todos los envíos pasan por revisión manual. Videos que no cumplan el estándar "Cinemático" serán rechazados.
+                                        Cada video es revisado manualmente. Nuestro objetivo es destacar el mejor talento de latam, ¡incluido el tuyo!
                                     </p>
                                 </div>
                             </div>
