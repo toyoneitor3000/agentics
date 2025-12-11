@@ -3,7 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Home, Compass, ShoppingBag, GraduationCap, MessageCircle, Heart, PlusSquare, User, Menu, Camera, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Compass, ShoppingBag, GraduationCap, MessageCircle, Heart, PlusSquare, User, Menu, Camera, Calendar, ChevronLeft, ChevronRight, Play, Wrench, MessageSquare } from "lucide-react";
+import { useLanguage } from "@/app/context/LanguageContext";
+import LanguageSwitcher from "../LanguageSwitcher";
 
 interface DesktopSidebarProps {
     isCollapsed: boolean;
@@ -12,20 +14,59 @@ interface DesktopSidebarProps {
 
 export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSidebarProps) {
     const pathname = usePathname();
+    const { language } = useLanguage();
+
+    const t_nav = {
+        es: {
+            home: "Inicio",
+            cinema: "Cinema",
+            explore: "Explorar",
+            gallery: "Galería",
+            academy: "Academy",
+            marketplace: "Marketplace",
+            autostudio: "AutoStudio",
+            workshops: "Talleres",
+            events: "Eventos",
+            messages: "Mensajes",
+            notifications: "Notificaciones",
+            create: "Crear",
+            profile: "Perfil"
+        },
+        en: {
+            home: "Home",
+            cinema: "Cinema",
+            explore: "Explore",
+            gallery: "Gallery",
+            academy: "Academy",
+            marketplace: "Marketplace",
+            autostudio: "AutoStudio",
+            workshops: "Workshops",
+            events: "Events",
+            messages: "Messages",
+            notifications: "Notifications",
+            create: "Create",
+            profile: "Profile"
+        }
+    };
+
+    const labels = t_nav[language];
 
     const isActive = (path: string) => pathname === path;
 
     const navItems = [
-        { name: "Inicio", path: "/", icon: Home },
-        { name: "Explorar", path: "/projects", icon: Compass },
-        { name: "Galería", path: "/gallery", icon: Camera },
-        { name: "Academy", path: "/academy", icon: GraduationCap },
-        { name: "Marketplace", path: "/marketplace", icon: ShoppingBag },
-        { name: "Eventos", path: "/events", icon: Calendar },
-        { name: "Mensajes", path: "/messages", icon: MessageCircle },
-        { name: "Notificaciones", path: "/notifications", icon: Heart },
-        { name: "Crear", path: "/create", icon: PlusSquare },
-        { name: "Perfil", path: "/profile", icon: User },
+        { name: labels.home, path: "/", icon: Home },
+        { name: labels.cinema, path: "/reels", icon: Play },
+        { name: labels.explore, path: "/projects", icon: Compass },
+        { name: labels.gallery, path: "/gallery", icon: Camera },
+        { name: labels.academy, path: "/academy", icon: GraduationCap },
+        { name: labels.marketplace, path: "/marketplace", icon: ShoppingBag },
+        { name: labels.autostudio, path: "/autostudio", icon: MessageSquare },
+        { name: labels.workshops, path: "/workshops", icon: Wrench },
+        { name: labels.events, path: "/events", icon: Calendar },
+        { name: labels.messages, path: "/messages", icon: MessageCircle },
+        { name: labels.notifications, path: "/notifications", icon: Heart },
+        { name: labels.create, path: "/create", icon: PlusSquare },
+        { name: labels.profile, path: "/profile", icon: User },
     ];
 
     return (
@@ -91,7 +132,9 @@ export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSi
             </nav>
 
             {/* Collapse Toggle (Bottom) */}
-            <div className="px-3 mt-auto">
+            <div className="px-3 mt-auto space-y-2">
+                <LanguageSwitcher collapsed={isCollapsed} />
+
                 {!isCollapsed && (
                     <button className="flex items-center gap-4 text-[#F5E6D3] hover:text-white transition-colors w-full p-3 rounded-xl hover:bg-white/5">
                         <Menu className="w-6 h-6" />

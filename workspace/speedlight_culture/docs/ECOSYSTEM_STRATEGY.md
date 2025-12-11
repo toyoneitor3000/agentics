@@ -259,9 +259,24 @@ El Landing Page deja de ser estático. Se convierte en un **Feed Dinámico de Ac
 1.  **Nuevos Proyectos:** "Juan acaba de publicar 'Restauración BMW E30'".
 2.  **Actividad del Foro:** Hilos trending.
 3.  **Galería:** Fotos subidas recientemente.
-4.  **Marketplace:** Productos recomendados ("Piezas que podrían interesarte").
-5.  **Academy:** "Nuevo curso disponible: Detailing Avanzado".
-6.  **Publicidad:** Banners nativos integrados en el flujo.
+4.  **Cinema (Reels):** Contenido de video de alta calidad ("Vimeo-style").
+5.  **Marketplace:** Productos recomendados ("Piezas que podrían interesarte").
+6.  **AutoStudio:** Sugerencias personalizadas de modificaciones.
+7.  **Academy:** "Nuevo curso disponible: Detailing Avanzado".
+8.  **Publicidad:** Banners nativos integrados en el flujo.
+
+### Nuevos Verticales de Servicio "High-End"
+
+#### Talleres (Curated Workshops)
+Un directorio exclusivo de talleres certificados.
+*   **Filosofía:** No es una lista amarilla masiva. Es una selección curada de los mejores especialistas en cada ciudad.
+*   **Categorías:** Performance, Pintura/Estética, Car Audio, Mecánica General.
+*   **Monetización:** Los talleres pagan la suscripción "Sponsor" para aparecer destacados.
+
+#### AutoStudio (AI Personalization Chat)
+Un asistente inteligente para guiar al usuario en la modificación de su vehículo.
+*   **Función:** Chatbot interactivo que sugiere modificaciones y talleres basados en el modelo del auto y la ubicación del usuario.
+*   **Mecánica:** "Quiero rines para mi Mazda 3" -> AutoStudio sugiere estilos y conecta con el taller aliado "Rines de Lujo Bogotá".
 
 ### Gestión de Cuenta (Profile Hub)
 Toda la gestión de seguridad y configuración se centraliza en el ícono de Perfil.

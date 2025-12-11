@@ -19,7 +19,7 @@ export default async function ProjectsPage() {
                 title="Speedlight Projects"
                 subtitle="El Garaje Virtual"
                 description="La colección definitiva de builds de la comunidad. Inspírate, comparte y documenta tu proceso."
-                image="/images/projects-hero.jpg" // Need a real placeholder or random image, can use Unsplash
+                image="https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop" // Garage Build
                 action={{
                     label: "Subir mi Proyecto",
                     href: "/projects/new"

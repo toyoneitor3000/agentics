@@ -5,16 +5,63 @@ import { useState } from 'react'
 import { login, signup } from './actions'
 import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/app/utils/supabase/client'
+import { useLanguage } from '@/app/context/LanguageContext'
 
 interface AuthFormProps {
     initialView?: 'login' | 'register';
 }
 
 export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
+    const { language } = useLanguage();
     const [isLogin, setIsLogin] = useState(initialView === 'login')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const supabase = createClient()
+
+    const t_form = {
+        es: {
+            welcome: "Bienvenido a Pits",
+            join: "Únete al Crew",
+            welcomeDesc: "Tu garaje digital te espera. Inicia motores.",
+            joinDesc: "Empieza tu legado en la cultura automotriz.",
+            google: "Continuar con Google",
+            orEmail: "O usa tu correo",
+            login: "Ingresar",
+            register: "Registrarse",
+            nameHolder: "Nombre Completo / Apodo",
+            emailHolder: "tucorreo@ejemplo.com",
+            passHolder: "contraseña_segura",
+            startEngines: "ARRANCAR MOTORES",
+            joinClub: "UNIRSE AL CLUB",
+            protected: "Protegido por Speedlight Secure.",
+            terms: "Términos",
+            privacy: "Privacidad",
+            accept: "Al continuar aceptas nuestros"
+        },
+        en: {
+            welcome: "Welcome to the Pits",
+            join: "Join the Crew",
+            welcomeDesc: "Your digital garage awaits. Start your engines.",
+            joinDesc: "Start your legacy in automotive culture.",
+            google: "Continue with Google",
+            orEmail: "Or use your email",
+            login: "Login",
+            register: "Register",
+            nameHolder: "Full Name / Nickname",
+            emailHolder: "youremail@example.com",
+            passHolder: "secure_password",
+            startEngines: "START ENGINES",
+            joinClub: "JOIN THE CLUB",
+            protected: "Protected by Speedlight Secure.",
+            terms: "Terms",
+            privacy: "Privacy",
+            accept: "By continuing you accept our"
+        }
+    };
+
+    const strings = t_form[language || 'es']; // Fallback
+
+    // ... existing functions (getURL, handleGoogleLogin, handleSubmit) ...
 
     function getURL() {
         let url =
@@ -71,15 +118,16 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
             {/* Header Text */}
             <div className="text-center mb-10">
                 <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wider text-white mb-3">
-                    {isLogin ? 'Bienvenido a Pits' : 'Únete al Crew'}
+                    {isLogin ? strings.welcome : strings.join}
                 </h2>
                 <p className="text-gray-400 text-sm md:text-base font-light">
-                    {isLogin ? 'Tu garaje digital te espera. Inicia motores.' : 'Empieza tu legado en la cultura automotriz.'}
+                    {isLogin ? strings.welcomeDesc : strings.joinDesc}
                 </p>
             </div>
 
             <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
-                {/* Subtle Gradient Bloom */}
+
+                {/* ... Gradient Bloom ... */}
                 <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-[#FF9800]/5 via-transparent to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
 
                 {/* Google Login Button */}
@@ -94,7 +142,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    <span>Continuar con Google</span>
+                    <span>{strings.google}</span>
                 </button>
 
                 <div className="relative mb-8">
@@ -102,7 +150,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         <div className="w-full border-t border-white/10"></div>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase tracking-widest font-medium">
-                        <span className="bg-[#101010] px-3 text-gray-500">O usa tu correo</span>
+                        <span className="bg-[#101010] px-3 text-gray-500">{strings.orEmail}</span>
                     </div>
                 </div>
 
@@ -115,13 +163,13 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         onClick={() => { setIsLogin(true); setError(null); }}
                         className={`flex-1 relative z-10 text-sm font-bold uppercase tracking-wider py-2.5 text-center transition-colors duration-300 ${isLogin ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >
-                        Ingresar
+                        {strings.login}
                     </button>
                     <button
                         onClick={() => { setIsLogin(false); setError(null); }}
                         className={`flex-1 relative z-10 text-sm font-bold uppercase tracking-wider py-2.5 text-center transition-colors duration-300 ${!isLogin ? 'text-white' : 'text-gray-500 hover:text-gray-300'}`}
                     >
-                        Registrarse
+                        {strings.register}
                     </button>
                 </div>
 
@@ -133,7 +181,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                             <input
                                 name="fullName"
                                 type="text"
-                                placeholder="Nombre Completo / Apodo"
+                                placeholder={strings.nameHolder}
                                 required={!isLogin}
                                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                             />
@@ -145,7 +193,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         <input
                             name="email"
                             type="email"
-                            placeholder="tucorreo@ejemplo.com"
+                            placeholder={strings.emailHolder}
                             required
                             className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                         />
@@ -156,7 +204,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                         <input
                             name="password"
                             type="password"
-                            placeholder="contraseña_segura"
+                            placeholder={strings.passHolder}
                             required
                             className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-[#FF9800]/50 focus:ring-1 focus:ring-[#FF9800]/50 focus:bg-black/60 transition-all duration-300"
                         />
@@ -178,7 +226,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                             <Loader2 className="w-6 h-6 animate-spin" />
                         ) : (
                             <>
-                                {isLogin ? 'ARRANCAR MOTORES' : 'UNIRSE AL CLUB'}
+                                {isLogin ? strings.startEngines : strings.joinClub}
                                 <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                             </>
                         )}
@@ -187,9 +235,9 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
 
                 <div className="mt-8 text-center border-t border-white/5 pt-6">
                     <p className="text-gray-500 text-xs">
-                        Protegido por Speedlight Secure. <br className="md:hidden" />
+                        {strings.protected} <br className="md:hidden" />
                         <span className="hidden md:inline"> | </span>
-                        Al continuar aceptas nuestros <a href="#" className="underline hover:text-[#FF9800]">Términos</a> y <a href="#" className="underline hover:text-[#FF9800]">Privacidad</a>.
+                        {strings.accept} <a href="#" className="underline hover:text-[#FF9800]">{strings.terms}</a> y <a href="#" className="underline hover:text-[#FF9800]">{strings.privacy}</a>.
                     </p>
                 </div>
             </div>

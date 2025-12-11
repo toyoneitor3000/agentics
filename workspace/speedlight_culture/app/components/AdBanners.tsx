@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AdCampaign } from "@/app/data/ads";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 /* 
   Estrategia de Publicidad "Non-Intrusive Premium"
@@ -22,17 +23,63 @@ interface AdComponentProps {
     data?: AdCampaign;
 }
 
+const t_ads = {
+    es: {
+        presentedBy: "Presentado por",
+        partner: "Partner Speedlight",
+        offer: "Oferta Especial",
+        desc: "Descubre los beneficios exclusivos para miembros de nuestra comunidad.",
+        seeDetails: "Ver Detalles",
+        techRec: "Recomendación Tech",
+        spec: "ESPECIFICACIÓN",
+        highPerf: "Alto Rendimiento",
+        seeSpec: "Ver Ficha",
+        vipWorkshop: "Taller VIP",
+        verified: "Verificado",
+        certService: "Servicio Certificado",
+        poweredBy: "Impulsado por",
+        official: "Partner Oficial",
+        skip: "Omitir en 5s",
+        eduBadge: "Educación",
+        learn: "Aprende en la Academia",
+        goTo: "Ir a Speedlight Academy"
+    },
+    en: {
+        presentedBy: "Presented By",
+        partner: "Speedlight Partner",
+        offer: "Special Offer",
+        desc: "Discover exclusive benefits for our community members.",
+        seeDetails: "See Details",
+        techRec: "Tech Recommendation",
+        spec: "SPEC",
+        highPerf: "High Performance",
+        seeSpec: "View Spec",
+        vipWorkshop: "VIP Workshop",
+        verified: "Verified",
+        certService: "Certified Service",
+        poweredBy: "Powered By",
+        official: "Official Partner",
+        skip: "Skip in 5s",
+        eduBadge: "Education",
+        learn: "Learn at the Academy",
+        goTo: "Go to Speedlight Academy"
+    }
+};
+
 // ==========================================
 // 1. HERO SPONSOR (The "Powered By" Badge)
 // ==========================================
 export function AdHeroSponsor({ data }: AdComponentProps) {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     if (!data) return null; // Or render a default "Partner with us"
     const { content } = data;
 
     return (
         <Link href={content.ctaLink || '#'} target="_blank" className="group relative flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-xl rounded-full border border-white/10 hover:border-[#FF9800]/50 transition-all duration-300 cursor-pointer hover:shadow-[0_0_15px_rgba(255,152,0,0.1)]">
             <span className="text-[10px] uppercase tracking-widest text-white/50 group-hover:text-[#FF9800] transition-colors font-medium">
-                {content.badgeText || "Presented By"}
+                {content.badgeText || text.presentedBy}
             </span>
             <div className="h-4 w-[1px] bg-white/10 group-hover:bg-[#FF9800]/30 transition-colors"></div>
             <span className="font-oswald text-lg font-bold italic tracking-tighter text-white group-hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] transition-all">
@@ -46,6 +93,9 @@ export function AdHeroSponsor({ data }: AdComponentProps) {
 // 2. NATIVE FEED CARD (The "In-Grid" Promo)
 // ==========================================
 export function AdFeedCard({ data }: AdComponentProps) {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     if (!data) return null;
     const { content } = data;
 
@@ -53,7 +103,7 @@ export function AdFeedCard({ data }: AdComponentProps) {
         <div className="relative group w-full max-w-sm h-full rounded-xl overflow-hidden bg-[#0A0604] border border-white/5 hover:border-[#FF9800]/40 transition-all duration-500 hover:shadow-[0_0_30px_rgba(255,152,0,0.1)] flex flex-col">
             {/* Etiqueta "Partner" discreta */}
             <div className="absolute top-3 right-3 z-20 px-2 py-1 bg-[#FF9800] text-black text-[9px] font-bold uppercase tracking-wider rounded-sm shadow-lg">
-                {content.badgeText || "Partner Speedlight"}
+                {content.badgeText || text.partner}
             </div>
 
             <div className="relative h-48 sm:h-64 overflow-hidden flex-shrink-0">
@@ -81,13 +131,13 @@ export function AdFeedCard({ data }: AdComponentProps) {
                     <span className="text-xs text-[#FF9800] font-medium tracking-wide">{content.brandName || "Brand"}</span>
                 </div>
                 <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-[#FF9800] transition-colors">
-                    {content.title || "Oferta Especial"}
+                    {content.title || text.offer}
                 </h3>
                 <p className="text-sm text-neutral-400 mb-4 line-clamp-3 leading-relaxed flex-grow">
-                    {content.description || "Descubre los beneficios exclusivos para miembros de nuestra comunidad."}
+                    {content.description || text.desc}
                 </p>
                 <Link href={content.ctaLink || "#"} className="w-full text-center py-2.5 bg-white/5 hover:bg-[#FF9800] text-white/90 hover:text-black border border-white/10 hover:border-transparent rounded text-xs uppercase font-bold tracking-[0.15em] transition-all duration-300 mt-auto">
-                    {content.ctaText || "Ver Detalles"}
+                    {content.ctaText || text.seeDetails}
                 </Link>
             </div>
         </div>
@@ -98,6 +148,9 @@ export function AdFeedCard({ data }: AdComponentProps) {
 // 3. SIDEBAR TECH SPEC (The "Information" Ad)
 // ==========================================
 export function AdSidebarSpec({ data }: AdComponentProps) {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     if (!data) return null;
     const { content } = data;
 
@@ -108,13 +161,13 @@ export function AdSidebarSpec({ data }: AdComponentProps) {
 
             <h4 className="text-[#FF9800] text-[10px] font-bold uppercase tracking-[0.2em] mb-5 flex items-center gap-2 opacity-80">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#FF9800] animate-pulse"></span>
-                Tech Recommendation
+                {text.techRec}
             </h4>
 
             <div className="flex justify-between items-start mb-6">
                 <div>
-                    <h3 className="text-3xl font-black text-white mb-1 italic tracking-tighter">{content.title || "SPEC"}</h3>
-                    <p className="text-xs text-neutral-400 uppercase tracking-wide">{content.subtitle || "High Performance"}</p>
+                    <h3 className="text-3xl font-black text-white mb-1 italic tracking-tighter">{content.title || text.spec}</h3>
+                    <p className="text-xs text-neutral-400 uppercase tracking-wide">{content.subtitle || text.highPerf}</p>
                 </div>
                 <div className="text-right">
                     <div className="inline-flex items-center justify-center w-10 h-10 rounded border border-[#FF9800]/30 bg-[#FF9800]/10 text-[#FF9800] font-bold text-lg">
@@ -133,7 +186,7 @@ export function AdSidebarSpec({ data }: AdComponentProps) {
             </div>
 
             <Link href={content.ctaLink || "#"} className="flex items-center justify-between text-xs font-bold text-neutral-400 hover:text-[#FF9800] group/link transition-colors uppercase tracking-wider">
-                <span className="border-b border-transparent group-hover/link:border-[#FF9800] pb-0.5 transition-all">{content.ctaText || "Ver Ficha"}</span>
+                <span className="border-b border-transparent group-hover/link:border-[#FF9800] pb-0.5 transition-all">{content.ctaText || text.seeSpec}</span>
                 <span className="group-hover/link:translate-x-1 transition-transform">→</span>
             </Link>
         </div>
@@ -144,6 +197,9 @@ export function AdSidebarSpec({ data }: AdComponentProps) {
 // 4. WORKSHOP TRUST BADGE (The "Verified" Pin)
 // ==========================================
 export function AdWorkshopBadge({ data }: AdComponentProps) {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     if (!data) return null;
     const { content } = data;
 
@@ -157,12 +213,12 @@ export function AdWorkshopBadge({ data }: AdComponentProps) {
 
             <div className="flex-grow z-10">
                 <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-white font-bold tracking-tight">{content.brandName || "Taller VIP"}</h3>
+                    <h3 className="text-white font-bold tracking-tight">{content.brandName || text.vipWorkshop}</h3>
                     <span className="bg-[#FF9800] text-black text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider">
-                        {content.badgeText || "Verified"}
+                        {content.badgeText || text.verified}
                     </span>
                 </div>
-                <p className="text-xs text-neutral-500 group-hover:text-neutral-400 transition-colors">{content.description || "Servicio Certificado"}</p>
+                <p className="text-xs text-neutral-500 group-hover:text-neutral-400 transition-colors">{content.description || text.certService}</p>
             </div>
 
             <div className="text-right z-10">
@@ -177,6 +233,9 @@ export function AdWorkshopBadge({ data }: AdComponentProps) {
 // 5. ACADEMY POWERED INTRO (The "Video" Sponsor)
 // ==========================================
 export function AdAcademyIntro({ data }: AdComponentProps) {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     if (!data) return null;
     const { content } = data;
 
@@ -191,7 +250,7 @@ export function AdAcademyIntro({ data }: AdComponentProps) {
             {/* Sponsor Overlay */}
             <div className="relative z-10 text-center transform group-hover:scale-105 transition-transform duration-700 ease-out p-6">
                 <p className="text-[#FF9800] text-[10px] uppercase tracking-[0.4em] font-bold mb-6 opacity-80">
-                    {content.badgeText || "Powered By"}
+                    {content.badgeText || text.poweredBy}
                 </p>
                 <div className="relative inline-block">
                     <h2 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-neutral-600 italic tracking-tighter drop-shadow-2xl group-hover:to-white transition-all">
@@ -201,13 +260,13 @@ export function AdAcademyIntro({ data }: AdComponentProps) {
                 </div>
 
                 <p className="text-neutral-500 text-xs mt-6 tracking-[0.2em] uppercase font-medium border-t border-white/5 pt-4 inline-block px-8">
-                    {content.subtitle || "Official Partner"}
+                    {content.subtitle || text.official}
                 </p>
             </div>
 
             {/* Play Button simulating functionality */}
             <div className="absolute bottom-6 right-6 flex items-center gap-4 group/skip cursor-pointer">
-                <span className="text-[10px] text-white/30 uppercase tracking-widest group-hover/skip:text-white transition-colors">Omitir en 5s</span>
+                <span className="text-[10px] text-white/30 uppercase tracking-widest group-hover/skip:text-white transition-colors">{text.skip}</span>
                 <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-white/50 text-xs group-hover/skip:border-white group-hover/skip:text-white transition-all bg-black/50 backdrop-blur">
                     ✕
                 </div>
@@ -220,19 +279,22 @@ export function AdAcademyIntro({ data }: AdComponentProps) {
 // 6. GRADIENT STRIP (The "Education" Banner)
 // ==========================================
 export function AdGradientStrip() {
+    const { language } = useLanguage();
+    const text = t_ads[language];
+
     return (
         <div className="w-full bg-gradient-to-r from-[#003366] via-[#008080] to-[#4CAF50] p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg group cursor-pointer hover:shadow-[0_0_20px_rgba(76,175,80,0.3)] transition-all duration-300">
             <div className="flex items-center gap-4">
                 <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded uppercase tracking-wider border border-white/10">
-                    Education
+                    {text.eduBadge}
                 </span>
                 <span className="text-white font-medium tracking-wide">
-                    Aprende en la Academia
+                    {text.learn}
                 </span>
             </div>
 
             <div className="flex items-center gap-2 text-white font-bold text-sm tracking-wide group-hover:gap-4 transition-all">
-                <span>Ir a Speedlight Academy</span>
+                <span>{text.goTo}</span>
                 <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
                     <path d="M16.01 11H4v2h12.01v3L20 12l-3.99-4z" />
                 </svg>

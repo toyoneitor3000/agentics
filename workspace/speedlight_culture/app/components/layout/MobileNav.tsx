@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, PlusSquare, Heart, User } from "lucide-react";
+import { Home, Search, PlusSquare, Heart, User, Play } from "lucide-react";
 import { useScrollDirection } from "@/app/hooks/useScrollDirection";
 
 export default function MobileNav() {
@@ -25,8 +25,8 @@ export default function MobileNav() {
                     <Search className="w-6 h-6" strokeWidth={isActive('/explore') ? 2.5 : 2} />
                 </Link>
 
-                <Link href="/create" className="flex flex-col items-center gap-1 text-[#F5E6D3] hover:text-[#FF9800] transition-colors">
-                    <PlusSquare className="w-7 h-7" strokeWidth={2} />
+                <Link href="/reels" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/reels') ? 'text-[#FF9800] scale-110 drop-shadow-[0_0_10px_rgba(255,152,0,0.5)]' : 'text-[#F5E6D3] hover:text-[#FF9800]'}`}>
+                    <Play className="w-7 h-7 fill-current" strokeWidth={isActive('/reels') ? 2.5 : 2} />
                 </Link>
 
                 <Link href="/notifications" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/notifications') ? 'text-[#FF9800]' : 'text-[#8D6E63]'}`}>

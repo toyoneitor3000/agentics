@@ -1,10 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
 import { AdHeroSponsor } from "./AdBanners";
 import { getAdByType } from "@/app/data/ads";
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function Footer() {
     const heroAd = getAdByType('hero_sponsor');
+    const { language } = useLanguage();
+
+    const t_footer = {
+        es: {
+            plans: "Planes",
+            advertising: "Publicidad",
+            designedBy: "Diseñado y Desarrollado por",
+            in: "en Bogotá, Colombia"
+        },
+        en: {
+            plans: "Plans",
+            advertising: "Advertising",
+            designedBy: "Designed and Developed by",
+            in: "in Bogota, Colombia"
+        }
+    };
+
+    const text = t_footer[language];
+
     return (
         <footer className="border-t border-[#FF9800]/10 bg-[#050302] py-12 relative overflow-hidden">
             {/* Background Glow */}
@@ -63,14 +85,14 @@ export default function Footer() {
                             href="/pricing"
                             className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
                         >
-                            Planes
+                            {text.plans}
                             <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
                         </Link>
                         <Link
                             href="/admin/ads"
                             className="text-xs uppercase tracking-[0.2em] text-[#BCAAA4] hover:text-[#FF9800] transition-colors relative group"
                         >
-                            Publicidad
+                            {text.advertising}
                             <span className="absolute -bottom-2 left-0 w-0 h-[1px] bg-[#FF9800] group-hover:w-full transition-all duration-300"></span>
                         </Link>
                     </div>
@@ -78,7 +100,7 @@ export default function Footer() {
 
                 <div className="border-t border-[#FF9800]/10 pt-8 flex flex-col items-center gap-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-[#BCAAA4]/60 text-center">
-                        Diseñado y Desarrollado por <a href="https://purrpurr.dev" target="_blank" rel="noopener noreferrer" className="text-[#FF9800] hover:text-[#FFB74D] transition-colors">purrpurr.dev</a> en Bogotá, Colombia.
+                        {text.designedBy} <a href="https://purrpurr.dev" target="_blank" rel="noopener noreferrer" className="text-[#FF9800] hover:text-[#FFB74D] transition-colors">purrpurr.dev</a> {text.in}.
                     </p>
                     <div className="mt-4 opacity-50 hover:opacity-100 transition-opacity">
                         <AdHeroSponsor data={heroAd} />

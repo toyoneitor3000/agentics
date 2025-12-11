@@ -47,7 +47,7 @@ export default function AcademyPage() {
                 title="Speedlight Academy"
                 subtitle="Aprende. Construye. Corre."
                 description="La primera plataforma educativa dedicada exclusivamente a la cultura automotriz en Latinoamérica."
-                image="/images/academy-hero.jpg" // Placeholder
+                image="https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?q=80&w=2070&auto=format&fit=crop" // Racing Academy/Track
                 action={{
                     label: "Ver Todos los Cursos",
                     href: "#courses",

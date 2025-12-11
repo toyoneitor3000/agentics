@@ -73,7 +73,7 @@ export default function EventsPage() {
                 title="Calendario Global"
                 subtitle="Eventos & Meets"
                 description="La única fuente de verdad. Encuentra Car Meets, Talleres y Track Days en un solo lugar."
-                image="/images/events-hero.jpg" // Placeholder
+                image="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2070&auto=format&fit=crop" // Night Car Meet
                 action={{
                     label: "Publicar Evento",
                     href: "/events/new",

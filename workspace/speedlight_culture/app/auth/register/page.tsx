@@ -1,14 +1,28 @@
-import type { Metadata } from 'next'
+"use client";
+
 import AuthForm from '@/app/login/auth-form'
 import Image from 'next/image'
 import Link from 'next/link'
-
-export const metadata: Metadata = {
-    title: 'Registro - Speedlight ID',
-    description: 'Crea tu cuenta y únete a la comunidad automotriz más grande.',
-}
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function RegisterPage() {
+    const { language } = useLanguage();
+
+    const t_register = {
+        es: {
+            dontBe: "No seas un",
+            spectator: "Espectador.",
+            desc: "Construye tu perfil, vende tus piezas y muestra tu proyecto al mundo entero."
+        },
+        en: {
+            dontBe: "Don't be a",
+            spectator: "Spectator.",
+            desc: "Build your profile, sell your parts, and show your project to the whole world."
+        }
+    };
+
+    const text = t_register[language];
+
     return (
         <div className="min-h-screen w-full bg-[#050302] lg:grid lg:grid-cols-2 relative">
 
@@ -27,10 +41,10 @@ export default function RegisterPage() {
                 {/* Branding Text */}
                 <div className="absolute bottom-20 left-12 z-20 max-w-lg">
                     <h1 className="text-5xl font-display font-bold uppercase italic text-white mb-4 leading-none">
-                        No seas un <br /><span className="text-[#FF9800]">Espectador.</span>
+                        {text.dontBe} <br /><span className="text-[#FF9800]">{text.spectator}</span>
                     </h1>
                     <p className="text-gray-300 text-lg font-light">
-                        Construye tu perfil, vende tus piezas y muestra tu proyecto al mundo entero.
+                        {text.desc}
                     </p>
                 </div>
             </div>

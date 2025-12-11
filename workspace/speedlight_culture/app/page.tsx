@@ -1,80 +1,151 @@
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Camera, Wrench, ShoppingBag, Loader2 } from "lucide-react";
+
+import { MoreHorizontal, Camera, Wrench, ShoppingBag, Loader2, Zap, Play, ChevronRight } from "lucide-react";
 import { AdFeedCard } from "@/app/components/AdBanners";
 import { getAdByType } from "@/app/data/ads";
+import SocialActions from "@/app/components/feed/SocialActions";
+import { useLanguage } from "@/app/context/LanguageContext";
 
-// Sub-components for Feed
-const FeedPostHeader = ({ user, time, action }: { user: any, time: string, action?: string }) => (
-  <div className="flex items-center justify-between p-4 pb-2">
+// --- PREMIUM FEED COMPONENTS ---
+
+const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string, action?: string, type: string }) => (
+  <div className="flex items-center justify-between px-4 py-3">
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden border border-[#FF9800]/20 relative">
+      <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/10 relative overflow-hidden">
         {user.avatar ? (
           <Image src={user.avatar} alt={user.name} fill className="object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs text-[#F5E6D3] font-bold">{user.name.charAt(0)}</div>
+          <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold">{user.name.charAt(0)}</div>
         )}
       </div>
       <div>
-        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-[#F5E6D3] hover:underline decoration-[#FF9800] underline-offset-2">{user.name}</Link>
-        <p className="text-xs text-[#BCAAA4]">{action} • {time}</p>
+        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors">
+          {user.name}
+        </Link>
+        <div className="flex items-center gap-2 text-xs text-white/40 font-roboto-mono">
+          <span>{time}</span>
+          <span className="w-1 h-1 bg-white/20 rounded-full"></span>
+          <span className="uppercase tracking-wider text-[10px]">{action}</span>
+        </div>
       </div>
     </div>
-    <button className="text-[#BCAAA4] hover:text-white">
+    <button className="text-white/20 hover:text-white transition-colors">
       <MoreHorizontal className="w-5 h-5" />
     </button>
-  </div>
-);
-
-const FeedPostActions = ({ likes, comments }: { likes: number, comments: number }) => (
-  <div className="p-4 pt-2">
-    <div className="flex items-center gap-6 mb-3">
-      <button className="flex items-center gap-2 group">
-        <Heart className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
-      </button>
-      <button className="flex items-center gap-2 group">
-        <MessageCircle className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
-      </button>
-      <button className="flex items-center gap-2 group">
-        <Share2 className="w-6 h-6 text-[#F5E6D3] group-hover:text-[#FF9800] transition-colors" />
-      </button>
-    </div>
-    <p className="text-sm font-bold text-[#F5E6D3]">{likes} Me gusta</p>
-    <p className="text-sm text-[#BCAAA4] mt-1 cursor-pointer hover:text-white">Ver los {comments} comentarios</p>
   </div>
 );
 
 export default function Home() {
   const supabase = createClient();
   const [feedItems, setFeedItems] = useState<any[]>([]);
+  const [featuredItems, setFeaturedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const feedAd = getAdByType('feed_card');
+  const { language } = useLanguage();
+
+  const t_home = {
+    es: {
+      featured: "Máquinas Destacadas",
+      viewAll: "Ver todo",
+      latest: "Última Actividad",
+      empty: "El feed está tranquilo hoy...",
+      project: "PROYECTO",
+      gallery: "GALERÍA",
+      marketplace: "MARKETPLACE",
+      seller: "Vendedor",
+      builder: "Constructor",
+      photographer: "Fotógrafo",
+      untitled: "Sin título",
+      play: "Ver",
+      ago: "hace"
+    },
+    en: {
+      featured: "Featured Machines",
+      viewAll: "View All",
+      latest: "Latest Activity",
+      empty: "The feed is quiet today...",
+      project: "PROJECT",
+      gallery: "GALLERY",
+      marketplace: "MARKETPLACE",
+      seller: "Seller",
+      builder: "Builder",
+      photographer: "Photographer",
+      untitled: "Untitled",
+      play: "Play",
+      ago: "ago"
+    }
+  };
+
+  const labels = t_home[language];
 
   useEffect(() => {
-    async function fetchFeed() {
+    async function init() {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentUserId(session?.user?.id);
+      fetchFeed(session?.user?.id);
+    }
+
+    async function fetchFeed(userId?: string) {
       try {
         setLoading(true);
 
-        // 1. Fetch Projects
+        // Helper to fetch stats
+        const getStats = async (id: string, column: string) => {
+          try {
+            // Count Likes
+            const { count: likesCount, error: likesError } = await supabase
+              .from('likes')
+              .select('*', { count: 'exact', head: true })
+              .eq(column, id);
+
+            // Count Comments
+            const { count: commentsCount, error: commentsError } = await supabase
+              .from('comments')
+              .select('*', { count: 'exact', head: true })
+              .eq(column, id);
+
+            if (likesError || commentsError) throw new Error("Stats fetch failed");
+
+            // Allow user queries if logged in
+            let isLiked = false;
+            if (userId) {
+              const { data } = await supabase
+                .from('likes')
+                .select('id')
+                .eq(column, id)
+                .eq('user_id', userId)
+                .single();
+              isLiked = !!data;
+            }
+
+            return { likes: likesCount || 0, comments: commentsCount || 0, isLiked };
+          } catch (err) {
+            // Fail silently for UI stability if tables lack
+            return { likes: 0, comments: 0, isLiked: false };
+          }
+        };
+
+        // 1. Fetch Projects (Limit 15 to have enough for both sections)
         const { data: projects } = await supabase
           .from('projects')
           .select('id, title, description, cover_image, created_at, profiles(id, full_name, avatar_url)')
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(15);
 
         // 2. Fetch Albums
         const { data: albums } = await supabase
           .from('gallery_albums')
-          .select('id, title, cover_url, created_at, user_id') // User might need separate fetch if strict FK not set, but assuming it works or fallback
+          .select('id, title, cover_url, created_at, user_id')
           .order('created_at', { ascending: false })
           .limit(10);
 
-        // Fetch profiles for albums if relation missing in query
+        // Enrich Albums
         let albumWithAuthors: any[] = [];
         if (albums) {
           const userIds = [...new Set(albums.map(a => a.user_id).filter(Boolean))];
@@ -90,15 +161,14 @@ export default function Home() {
         // 3. Fetch Marketplace
         const { data: market } = await supabase
           .from('marketplace_listings')
-          .select('id, title, description, images, price, created_at, profile_id') // Assuming table structure
+          .select('id, title, description, images, price, created_at, profile_id')
           .order('created_at', { ascending: false })
           .limit(10);
 
-        // Fetch profiles for market
+        // Enrich Market
         let marketWithAuthors: any[] = [];
         if (market) {
-          // Logic similar to albums if direct relation query fails
-          const userIds = [...new Set(market.map(m => m.profile_id).filter(Boolean))]; // Assuming profile_id column
+          const userIds = [...new Set(market.map(m => m.profile_id).filter(Boolean))];
           const { data: users } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
           const userMap = new Map(users?.map(u => [u.id, u]) || []);
 
@@ -108,14 +178,19 @@ export default function Home() {
           }));
         }
 
+        // --- SEPARATE CONTENT TYPES ---
 
-        // 4. Transform & Mix
-        const items: any[] = [];
+        // Take top 5 projects for "Featured Machines" Horizontal Scroll
+        const featuredRaw = projects ? projects.slice(0, 5) : [];
+        const remainingProjects = projects ? projects.slice(5) : [];
 
-        // Project Items
-        projects?.forEach(p => {
-          items.push({
-            id: `proj_${p.id}`,
+        // Process Featured Items
+        const featured: any[] = [];
+        await Promise.all(featuredRaw.map(async (p) => {
+          const stats = await getStats(p.id, 'project_id');
+          featured.push({
+            id: p.id,
+            uniqueId: `feat_${p.id}`,
             type: 'project',
             date: new Date(p.created_at),
             user: {
@@ -128,61 +203,85 @@ export default function Home() {
               text: p.description,
               image: p.cover_image
             },
-            stats: { likes: Math.floor(Math.random() * 50) + 5, comments: Math.floor(Math.random() * 10) } // Mock stats for now
+            stats
           });
-        });
+        }));
+        setFeaturedItems(featured);
 
-        // Album Items
-        albumWithAuthors.forEach(a => {
-          items.push({
-            id: `album_${a.id}`,
-            type: 'gallery',
-            date: new Date(a.created_at),
-            user: {
-              id: a.profiles?.id,
-              name: a.profiles?.full_name || 'Fotógrafo',
-              avatar: a.profiles?.avatar_url
-            },
-            content: {
-              title: `Nuevo Álbum: ${a.title}`,
-              text: 'Ha subido nuevas fotos a la galería.',
-              image: a.cover_url
-            },
-            stats: { likes: Math.floor(Math.random() * 100) + 20, comments: Math.floor(Math.random() * 20) }
-          });
-        });
 
-        // Market Items
-        marketWithAuthors?.forEach(m => {
-          items.push({
-            id: `market_${m.id}`,
-            type: 'marketplace',
-            date: new Date(m.created_at),
-            user: {
-              id: m.profiles?.id,
-              name: m.profiles?.full_name || 'Vendedor',
-              avatar: m.profiles?.avatar_url
-            },
-            content: {
-              title: `VENDO: ${m.title}`,
-              text: `${m.description?.substring(0, 100)}... Precio: $${m.price}`,
-              image: m.images && m.images.length > 0 ? m.images[0] : null
-            },
-            stats: { likes: Math.floor(Math.random() * 20), comments: Math.floor(Math.random() * 5) }
-          });
-        });
+        // Process Vertical Feed Items
+        const items: any[] = [];
 
-        // Insert Ads periodically (every 5 items)
-        // Sort by date desc
+        await Promise.all([
+          ...(remainingProjects.map(async (p) => {
+            const stats = await getStats(p.id, 'project_id');
+            items.push({
+              id: p.id,
+              uniqueId: `proj_${p.id}`,
+              type: 'project',
+              date: new Date(p.created_at),
+              user: {
+                id: (p.profiles as any)?.id,
+                name: (p.profiles as any)?.full_name || 'Constructor',
+                avatar: (p.profiles as any)?.avatar_url
+              },
+              content: {
+                title: p.title,
+                text: p.description,
+                image: p.cover_image
+              },
+              stats
+            });
+          })),
+          ...(albumWithAuthors?.map(async (a) => {
+            const stats = await getStats(a.id, 'album_id');
+            items.push({
+              id: a.id,
+              uniqueId: `album_${a.id}`,
+              type: 'gallery',
+              date: new Date(a.created_at),
+              user: {
+                id: a.profiles?.id,
+                name: a.profiles?.full_name || 'Fotógrafo',
+                avatar: a.profiles?.avatar_url
+              },
+              content: {
+                title: a.title,
+                text: 'Nuevo álbum publicado en la galería.',
+                image: a.cover_url
+              },
+              stats
+            });
+          }) || []),
+          ...(marketWithAuthors?.map(async (m) => {
+            const stats = await getStats(m.id, 'listing_id');
+            items.push({
+              id: m.id,
+              uniqueId: `market_${m.id}`,
+              type: 'marketplace',
+              date: new Date(m.created_at),
+              user: {
+                id: m.profiles?.id,
+                name: m.profiles?.full_name || 'Vendedor',
+                avatar: m.profiles?.avatar_url
+              },
+              content: {
+                title: m.title,
+                text: `${m.description?.substring(0, 100)}... Precio: $${m.price?.toLocaleString()}`,
+                image: m.images && m.images.length > 0 ? m.images[0] : null
+              },
+              stats
+            });
+          }) || [])
+        ]);
+
         items.sort((a, b) => b.date.getTime() - a.date.getTime());
 
-        // Insert Ad at index 2
         if (items.length > 2 && feedAd) {
           items.splice(2, 0, { id: 'native_ad_1', type: 'ad', data: feedAd, date: new Date() });
         }
 
         setFeedItems(items);
-
       } catch (error) {
         console.error("Error loading feed:", error);
       } finally {
@@ -190,110 +289,199 @@ export default function Home() {
       }
     }
 
-    fetchFeed();
+    init();
   }, []);
 
-  // Time Formatter
   const timeAgo = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    let interval = seconds / 31536000;
-    if (interval > 1) return Math.floor(interval) + " años";
-    interval = seconds / 2592000;
-    if (interval > 1) return Math.floor(interval) + " meses";
-    interval = seconds / 86400;
-    if (interval > 1) return Math.floor(interval) + " días";
-    interval = seconds / 3600;
-    if (interval > 1) return Math.floor(interval) + " horas";
-    interval = seconds / 60;
-    if (interval > 1) return Math.floor(interval) + " min";
-    return Math.floor(seconds) + " seg";
+    // Simple logic for brevity
+    let value = 0;
+    let unit = "";
+
+    if (seconds < 60) return language === 'es' ? "ahora" : "now";
+
+    if (seconds < 3600) {
+      value = Math.floor(seconds / 60);
+      unit = language === 'es' ? 'm' : 'm';
+    } else if (seconds < 86400) {
+      value = Math.floor(seconds / 3600);
+      unit = language === 'es' ? 'h' : 'h';
+    } else if (seconds < 2592000) {
+      value = Math.floor(seconds / 86400);
+      unit = language === 'es' ? 'd' : 'd';
+    } else {
+      value = Math.floor(seconds / 2592000);
+      unit = language === 'es' ? 'mo' : 'mo';
+    }
+
+    return `${value}${unit}`;
   };
 
   return (
-    <div className="max-w-[600px] mx-auto min-h-screen">
+    <div className="max-w-[700px] mx-auto min-h-screen pb-20 overflow-x-hidden">
 
-      {/* Feed Header */}
-      <div className="md:hidden sticky top-[60px] z-40 bg-[#050302]/90 backdrop-blur-md px-4 py-3 border-b border-[#FF9800]/10">
-        <p className="font-bold text-lg text-[#F5E6D3]">Speedlight Feed</p>
-      </div>
-
-      {/* Create Post Input Placeholder */}
-      <div className="p-4 border-b border-[#FF9800]/10 flex gap-4 items-center">
-        <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#FF9800]/30 flex items-center justify-center">
-          <span className="text-[#FF9800] font-bold">Yo</span>
+      {/* Mobile Title - Reference Style */}
+      <div className="md:hidden sticky top-[60px] z-40 bg-[#050302]/80 backdrop-blur-xl px-4 py-3 border-b border-white/5 mb-6 flex items-center justify-between">
+        <div className="w-6"></div> {/* Spacer for centering */}
+        <h1 className="font-oswald font-bold text-2xl text-white uppercase tracking-wider drop-shadow-lg text-center">
+          Speedlight <span className="text-[#FF9800] text-shadow-glow">Culture</span>
+        </h1>
+        <div className="w-6 flex justify-end">
+          <div className="relative">
+            <span className="absolute top-0 right-0 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse"></span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/80"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+          </div>
         </div>
-        <input
-          type="text"
-          placeholder="¿Qué estás construyendo hoy?"
-          className="bg-transparent text-[#F5E6D3] placeholder-[#BCAAA4] flex-1 outline-none text-sm"
-        />
-        <button className="text-[#FF9800] font-bold text-sm uppercase">Publicar</button>
       </div>
 
-      {loading && (
+
+      {loading ? (
         <div className="flex justify-center p-12">
           <Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" />
         </div>
-      )}
-
-      {/* Feed Items */}
-      <div className="pb-20">
-        {!loading && feedItems.length === 0 && (
-          <div className="p-8 text-center text-[#BCAAA4]">
-            <p>No hay actividad reciente. Sé el primero en publicar algo.</p>
-          </div>
-        )}
-
-        {feedItems.map((item) => {
-          if (item.type === 'ad') {
-            return (
-              <div key={item.id} className="py-4 border-b border-[#FF9800]/10">
-                <AdFeedCard data={item.data} />
-              </div>
-            );
-          }
-
-          return (
-            <div key={item.id} className="border-b border-[#FF9800]/10 bg-[#050302]">
-              <FeedPostHeader
-                user={item.user}
-                time={timeAgo(item.date)}
-                action={
-                  item.type === 'project' ? 'actualizó proyecto' :
-                    item.type === 'gallery' ? 'subió álbum' :
-                      'publicó venta'
-                }
-              />
-
-              {/* Content Text */}
-              <div className="px-4 mb-3">
-                {item.content?.title && <h3 className="font-bold text-[#F5E6D3] mb-1">{item.content.title}</h3>}
-                {item.content?.text && <p className="text-sm text-[#E0E0E0] line-clamp-3">{item.content.text}</p>}
+      ) : (
+        <>
+          {/* HORIZONTAL SCROLL - Featured Machines */}
+          {featuredItems.length > 0 && (
+            <div className="mb-8">
+              <div className="px-4 flex items-center justify-between mb-4">
+                <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-1 h-3 bg-[#FF9800] rounded-full"></span>
+                  {labels.featured}
+                </h2>
+                <Link href="/projects" className="text-white/40 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 hover:text-white transition-colors">
+                  {labels.viewAll} <ChevronRight className="w-3 h-3" />
+                </Link>
               </div>
 
-              {/* Content Image */}
-              {item.content?.image && (
-                <div className="w-full aspect-square md:aspect-[4/3] relative bg-[#1A1A1A]">
-                  <Image
-                    src={item.content.image}
-                    alt="Content"
-                    fill
-                    className="object-cover"
-                  />
-                  {/* Type Badge */}
-                  <div className="absolute top-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white border border-white/10 flex items-center gap-2">
-                    {item.type === 'project' && <><Wrench className="w-3 h-3 text-[#FF9800]" /> PROJECT</>}
-                    {item.type === 'gallery' && <><Camera className="w-3 h-3 text-[#FF9800]" /> GALLERY</>}
-                    {item.type === 'marketplace' && <><ShoppingBag className="w-3 h-3 text-[#FF9800]" /> MARKET</>}
-                  </div>
-                </div>
-              )}
+              <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
+                {featuredItems.map((item) => (
+                  <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[85vw] max-w-[340px]">
+                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-[#FF9800]/30 shadow-[0_4px_20px_rgba(0,0,0,0.5)] group">
+                      {item.content?.image ? (
+                        <Image
+                          src={item.content.image}
+                          alt={item.content.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#1e1e1e] to-black flex items-center justify-center">
+                          <Wrench className="text-white/10 w-12 h-12" />
+                        </div>
+                      )}
 
-              <FeedPostActions likes={item.stats!.likes} comments={item.stats!.comments} />
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+
+                      {/* Play/View Button */}
+                      <div className="absolute bottom-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 flex items-center gap-2 hover:bg-white/20 transition-all">
+                        <Play className="w-3 h-3 text-white fill-white" />
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">{labels.play}</span>
+                      </div>
+
+                      <div className="absolute bottom-4 left-4 right-24">
+                        <h3 className="font-oswald font-bold text-lg text-white truncate drop-shadow-lg tracking-wide">{item.content.title}</h3>
+                        <p className="text-[#FF9800] text-xs font-bold tracking-wider">{timeAgo(item.date)} ago</p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          );
-        })}
-      </div>
+          )}
+
+
+          {/* VERTICAL SCROLL - Main Feed */}
+          <div className="px-4 space-y-8">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4 text-[#FF9800]" />
+              <h2 className="text-white text-sm font-bold uppercase tracking-wider">{labels.latest}</h2>
+            </div>
+
+            {feedItems.length === 0 && (
+              <div className="p-12 text-center text-white/30 border border-white/5 rounded-2xl bg-[#0A0A0A]">
+                <p>{labels.empty}</p>
+              </div>
+            )}
+
+            {feedItems.map((item) => {
+              if (item.type === 'ad') {
+                return (
+                  <div key={item.id} className="rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+                    <AdFeedCard data={item.data} />
+                  </div>
+                );
+              }
+
+              return (
+                <div key={item.uniqueId} className="bg-[#111] rounded-2xl overflow-hidden shadow-2xl border border-white/5 hover:border-[#FF9800]/20 transition-all duration-300 group">
+
+                  <FeedPostHeader
+                    user={item.user}
+                    time={timeAgo(item.date)}
+                    action={
+                      item.type === 'project' ? labels.project :
+                        item.type === 'gallery' ? labels.gallery :
+                          labels.marketplace
+                    }
+                    type={item.type}
+                  />
+
+                  {/* Main Visual Content */}
+                  {item.content?.image ? (
+                    <div className="relative w-full aspect-[4/5] bg-[#050505]">
+                      <Image
+                        src={item.content.image}
+                        alt="Content"
+                        fill
+                        className="object-cover"
+                      />
+
+                      {/* Gradient Overlay for Text Readability */}
+                      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/50 to-transparent flex flex-col justify-end p-6">
+                        <div className="flex items-center gap-2 mb-2">
+                          {item.type === 'project' && <Wrench className="w-4 h-4 text-[#FF9800]" />}
+                          {item.type === 'gallery' && <Camera className="w-4 h-4 text-[#FF9800]" />}
+                          {item.type === 'marketplace' && <ShoppingBag className="w-4 h-4 text-[#FF9800]" />}
+                          <span className="text-[#FF9800] text-xs font-bold uppercase tracking-widest">{item.type}</span>
+                        </div>
+                        <h3 className="font-oswald font-bold text-2xl md:text-3xl text-white leading-tight mb-2 drop-shadow-md">
+                          {item.content.title}
+                        </h3>
+                        {item.content.text && (
+                          <p className="text-white/80 text-sm md:text-base line-clamp-2 font-light drop-shadow-sm max-w-xl">
+                            {item.content.text}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Text Only Fallback */
+                    <div className="p-6 md:p-10 min-h-[200px] flex flex-col justify-center bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
+                      <h3 className="font-oswald font-bold text-2xl text-white mb-4">
+                        {item.content?.title || labels.untitled}
+                      </h3>
+                      <p className="text-white/70 text-lg font-light leading-relaxed">
+                        {item.content?.text}
+                      </p>
+                    </div>
+                  )}
+
+                  <SocialActions
+                    entityId={item.id}
+                    entityType={item.type}
+                    initialLikes={item.stats.likes}
+                    initialComments={item.stats.comments}
+                    initialIsLiked={item.stats.isLiked}
+                    currentUserId={currentUserId}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }

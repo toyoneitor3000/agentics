@@ -1,15 +1,28 @@
+"use client";
 
-import type { Metadata } from 'next'
 import AuthForm from './auth-form'
 import Image from 'next/image'
 import Link from 'next/link'
-
-export const metadata: Metadata = {
-    title: 'Acceso - Speedlight ID',
-    description: 'Inicia sesión para acceder a todo el ecosistema de Speedlight.',
-}
+import { useLanguage } from "@/app/context/LanguageContext";
 
 export default function LoginPage() {
+    const { language } = useLanguage();
+
+    const t_auth = {
+        es: {
+            legacy: "Tu Legado",
+            startsHere: "Empieza Aquí.",
+            desc: "Únete a la comunidad de constructores, pilotos y fotógrafos más exclusiva de Latinoamérica."
+        },
+        en: {
+            legacy: "Your Legacy",
+            startsHere: "Starts Here.",
+            desc: "Join the most exclusive community of builders, drivers, and photographers in Latin America."
+        }
+    };
+
+    const content = t_auth[language];
+
     return (
         <div className="min-h-screen w-full bg-[#050302] lg:grid lg:grid-cols-2 relative">
 
@@ -28,10 +41,10 @@ export default function LoginPage() {
                 {/* Motivational Quote or Branding */}
                 <div className="absolute bottom-20 left-12 z-20 max-w-lg">
                     <h1 className="text-5xl font-display font-bold uppercase italic text-white mb-4 leading-none">
-                        Tu Legado <br /><span className="text-[#FF9800]">Empieza Aquí.</span>
+                        {content.legacy} <br /><span className="text-[#FF9800]">{content.startsHere}</span>
                     </h1>
                     <p className="text-gray-300 text-lg font-light">
-                        Únete a la comunidad de constructores, pilotos y fotógrafos más exclusiva de Latinoamérica.
+                        {content.desc}
                     </p>
                 </div>
             </div>

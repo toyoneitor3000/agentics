@@ -18,7 +18,7 @@ export default async function MarketplacePage() {
                 title="Marketplace"
                 subtitle="Compra & Venta"
                 description="Piezas de alto rendimiento, vehículos de proyecto y servicios especializados. Directo de la comunidad."
-                image="/images/marketplace-hero.jpg" // Placeholder
+                image="https://images.unsplash.com/photo-1486262715619-01b8c22971f5?q=80&w=2070&auto=format&fit=crop" // Performance Parts / Shop
                 action={{
                     label: "Vender Artículo",
                     href: "/marketplace/sell"

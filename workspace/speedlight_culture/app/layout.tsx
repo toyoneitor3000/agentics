@@ -71,6 +71,7 @@ export const viewport = {
 
 import NavigationLayout from "./components/layout/NavigationLayout";
 import Preloader from "./components/Preloader";
+import { LanguageProvider } from "./context/LanguageContext";
 
 export default function RootLayout({
   children,
@@ -89,9 +90,11 @@ export default function RootLayout({
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
       >
         <Preloader />
-        <NavigationLayout>
-          {children}
-        </NavigationLayout>
+        <LanguageProvider>
+          <NavigationLayout>
+            {children}
+          </NavigationLayout>
+        </LanguageProvider>
         <Analytics />
       </body>
     </html>
