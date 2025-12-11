@@ -61,6 +61,11 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  appleWebApp: {
+    capable: true,
+    title: "Speedlight",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport = {
@@ -73,6 +78,8 @@ import NavigationLayout from "./components/layout/NavigationLayout";
 import Preloader from "./components/Preloader";
 import { LanguageProvider } from "./context/LanguageContext";
 
+import OneSignalInit from "./components/pwa/OneSignalInit";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -83,7 +90,7 @@ export default function RootLayout({
 
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/logo-192.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1A1A1A" />
       </head>
@@ -97,6 +104,7 @@ export default function RootLayout({
           </NavigationLayout>
         </LanguageProvider>
         <Analytics />
+        <OneSignalInit />
       </body>
     </html>
   );

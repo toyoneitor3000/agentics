@@ -2,7 +2,7 @@ import { createClient } from '@/app/utils/supabase/server'
 import { redirect } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { MapPin, Calendar, Trophy, Zap, Settings, Edit3 } from 'lucide-react'
+import { MapPin, Calendar, Trophy, Zap, Settings, Edit3, BadgeCheck, Star } from 'lucide-react'
 
 export const dynamic = 'force-dynamic';
 
@@ -76,10 +76,19 @@ export default async function ProfilePage() {
                                 </div>
                             )}
                         </div>
-                        {/* Level Badge */}
-                        <div className="absolute -bottom-2 -right-2 z-20 bg-[#FF9800] text-black font-black text-sm w-10 h-10 flex items-center justify-center rounded-full border-4 border-[#050505] shadow-lg transform group-hover:scale-110 transition-transform">
-                            {level}
-                        </div>
+                        {/* Founder Badge (Golden Pill) or Level */}
+                        {profile?.founder_number && profile.founder_number <= 500 ? (
+                            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/95 border border-[#FFD700] text-[#FFD700] pl-2 pr-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,215,0,0.5)] whitespace-nowrap min-w-max">
+                                <Star className="w-3.5 h-3.5 fill-[#FFD700] text-[#FFD700]" />
+                                <span className="text-[10px] font-black tracking-widest leading-none">
+                                    {profile.founder_number.toString().padStart(3, '0')}/500 CLUB
+                                </span>
+                            </div>
+                        ) : (
+                            <div className="absolute -bottom-2 -right-2 z-20 bg-[#FF9800] text-black font-black text-sm w-10 h-10 flex items-center justify-center rounded-full border-4 border-[#050505] shadow-lg transform group-hover:scale-110 transition-transform">
+                                {level}
+                            </div>
+                        )}
                     </div>
 
                     {/* Basic Info */}
@@ -89,13 +98,13 @@ export default async function ProfilePage() {
                                 {role}
                             </span>
                             {profile?.founder_number && profile.founder_number <= 500 && (
-                                <span className="bg-gradient-to-r from-yellow-400 to-amber-600 text-black border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_15px_rgba(255,193,7,0.3)] animate-pulse">
-                                    <Trophy className="w-3 h-3" /> FOUNDER #{profile.founder_number}
+                                <span className="bg-gradient-to-r from-[#FFD700] via-[#FDB931] to-[#B8860B] text-black border border-[#FFD700]/50 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_15px_rgba(255,215,0,0.4)]">
+                                    <Star className="w-3.5 h-3.5 fill-black text-black" /> FOUNDER
                                 </span>
                             )}
                             {profile?.founder_number && profile.founder_number > 500 && (
                                 <span className="text-white/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
-                                    <Trophy className="w-3 h-3" /> MEMBER #{profile.founder_number}
+                                    <BadgeCheck className="w-3 h-3" /> MEMBER #{profile.founder_number}
                                 </span>
                             )}
                             <span className="text-white/40 text-xs flex items-center gap-1">

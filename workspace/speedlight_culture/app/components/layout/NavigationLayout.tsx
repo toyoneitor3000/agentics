@@ -5,6 +5,7 @@ import { useState } from "react";
 import DesktopSidebar from "./DesktopSidebar";
 import MobileNav from "./MobileNav";
 import TopMobileHeader from "./TopMobileHeader";
+import InstallPrompt from "../pwa/InstallPrompt";
 
 export default function NavigationLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
@@ -35,6 +36,9 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
 
             {/* Mobile Bottom Navigation (Fixed Bottom) */}
             <MobileNav />
+
+            {/* PWA Install Prompt */}
+            <InstallPrompt />
         </div>
     );
 }
