@@ -36,6 +36,12 @@ export default async function ProfilePage() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
+    // Fetch User Events
+    const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .eq('user_id', user.id);
+
     // Default values
     const role = profile?.role || 'Rookie'
     const level = profile?.level || 1
@@ -188,6 +194,55 @@ export default async function ProfilePage() {
                             <div className="bg-[#111] border border-[#222] border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center">
                                 <p className="text-white/40 text-sm mb-4">No tienes proyectos de restauración o build log.</p>
                                 <Link href="/projects/new"><button className="text-[#FF9800] text-sm font-bold hover:underline">Crear Proyecto</button></Link>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* SECTION 1.5: EVENTOS */}
+                    <div className="mb-16">
+                        <h2 className="text-2xl font-oswald font-bold uppercase text-white mb-6 flex items-center gap-2">
+                            <span className="text-[#FF9800]">///</span> Mis Eventos Publicados
+                        </h2>
+
+                        {events && events.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {events.map((event) => (
+                                    <div key={event.id} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden group hover:border-[#FF9800]/50 transition-all flex flex-col">
+                                        <div className="h-48 bg-[#1a1a1a] relative">
+                                            {event.image ? (
+                                                <Image
+                                                    src={event.image}
+                                                    alt={event.title}
+                                                    fill
+                                                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                            ) : (
+                                                <div className="absolute inset-0 flex items-center justify-center text-white/10 text-4xl font-bold">📅</div>
+                                            )}
+                                            <div className="absolute top-2 right-2 flex gap-2">
+                                                <Link href={`/events/${event.id}/edit`} className="bg-black/60 backdrop-blur-md p-2 rounded text-white hover:bg-[#FF9800] hover:text-black transition-colors">
+                                                    <Edit3 className="w-4 h-4" />
+                                                </Link>
+                                            </div>
+                                        </div>
+                                        <div className="p-5 flex-1">
+                                            <div className="text-[#FF9800] text-xs font-bold uppercase mb-1">{event.date_text || event.date}</div>
+                                            <h3 className="font-oswald font-bold text-lg text-white mb-1 uppercase truncate">{event.title}</h3>
+                                            <p className="text-white/40 text-xs flex items-center gap-1">
+                                                <MapPin className="w-3 h-3" /> {event.location}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                                <Link href="/events/new" className="bg-[#111] border border-[#222] border-dashed rounded-xl flex flex-col items-center justify-center p-6 hover:bg-[#1a1a1a] transition-all group cursor-pointer min-h-[300px]">
+                                    <div className="w-12 h-12 rounded-full bg-[#222] flex items-center justify-center text-white/50 group-hover:text-[#FF9800] group-hover:scale-110 transition-all mb-4">+</div>
+                                    <span className="text-sm font-bold text-white/50 group-hover:text-white uppercase tracking-wide">Publicar Evento</span>
+                                </Link>
+                            </div>
+                        ) : (
+                            <div className="bg-[#111] border border-[#222] border-dashed rounded-3xl p-8 text-center flex flex-col items-center justify-center">
+                                <p className="text-white/40 text-sm mb-4">No has publicado eventos aún.</p>
+                                <Link href="/events/new"><button className="text-[#FF9800] text-sm font-bold hover:underline">Crear Evento</button></Link>
                             </div>
                         )}
                     </div>

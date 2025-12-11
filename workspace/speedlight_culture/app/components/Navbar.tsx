@@ -52,8 +52,8 @@ export default function Navbar() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-500 border-b ${scrolled
-                    ? "py-2 bg-[#050302]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
-                    : "py-6 bg-transparent border-transparent"
+                ? "py-2 bg-[#050302]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+                : "py-6 bg-transparent border-transparent"
                 }`}
         >
             {/* Ambient Top Glow (Neon Effect) */}
