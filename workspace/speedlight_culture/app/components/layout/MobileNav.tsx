@@ -14,7 +14,7 @@ export default function MobileNav() {
 
     return (
         <div
-            className={`md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#050302]/95 backdrop-blur-xl border-t border-[#FF9800]/20 px-6 py-3 pb-8 safe-area-bottom transition-transform duration-300 ease-in-out ${isHidden ? 'translate-y-full' : 'translate-y-0'}`}
+            className={`md:hidden fixed bottom-6 left-6 right-6 z-50 bg-black/20 backdrop-blur-2xl border border-white/10 rounded-full px-6 py-3 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-transform duration-300 ease-in-out ${isHidden ? 'translate-y-[150%]' : 'translate-y-0'}`}
         >
             <div className="flex justify-between items-center">
                 <Link href="/" className={`flex flex-col items-center gap-1 transition-colors ${isActive('/') ? 'text-[#FF9800]' : 'text-[#8D6E63]'}`}>

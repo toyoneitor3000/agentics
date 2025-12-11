@@ -42,7 +42,7 @@ export default function Preloader() {
                 <div className="relative">
                     <div className="absolute -inset-10 bg-[#FF9800]/20 blur-3xl animate-pulse"></div>
                     <Image
-                        src="/logonavbar.png"
+                        src="/logonavbar-new.png"
                         alt="Speedlight Culture"
                         width={300}
                         height={100}

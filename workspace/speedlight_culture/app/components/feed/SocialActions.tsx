@@ -32,21 +32,8 @@ export default function SocialActions({
     const [comments, setComments] = useState<any[]>([]); // We would fetch these real-time ideally
     const [loadingComments, setLoadingComments] = useState(false);
 
-    // Map entityType to DB column
-    const getColumnName = () => {
-        switch (entityType) {
-            case 'project': return 'project_id';
-            case 'gallery': return 'album_id';
-            case 'marketplace': return 'listing_id';
-            default: return null;
-        }
-    };
-
     const handleLike = async () => {
         if (!currentUserId) return; // Prompt login ideally
-
-        const column = getColumnName();
-        if (!column) return;
 
         // Optimistic Update
         const newLiked = !liked;
@@ -59,7 +46,8 @@ export default function SocialActions({
                     .from('likes')
                     .insert({
                         user_id: currentUserId,
-                        [column]: entityId
+                        target_id: entityId,
+                        target_type: entityType
                     });
                 if (error) throw error;
             } else {
@@ -68,7 +56,8 @@ export default function SocialActions({
                     .delete()
                     .match({
                         user_id: currentUserId,
-                        [column]: entityId
+                        target_id: entityId,
+                        target_type: entityType
                     });
                 if (error) throw error;
             }
@@ -81,9 +70,6 @@ export default function SocialActions({
     };
 
     const fetchComments = async () => {
-        const column = getColumnName();
-        if (!column) return;
-
         setLoadingComments(true);
         const { data, error } = await supabase
             .from('comments')
@@ -91,7 +77,8 @@ export default function SocialActions({
                 id, content, created_at,
                 profiles (id, full_name, avatar_url)
             `)
-            .eq(column, entityId)
+            .eq('target_id', entityId)
+            .eq('target_type', entityType)
             .order('created_at', { ascending: true });
 
         if (!error && data) {
@@ -109,9 +96,6 @@ export default function SocialActions({
 
     const handlePostComment = async () => {
         if (!commentText.trim() || !currentUserId) return;
-
-        const column = getColumnName();
-        if (!column) return;
 
         const tempId = Math.random().toString();
         const newComment = {
@@ -136,7 +120,8 @@ export default function SocialActions({
                 .insert({
                     user_id: currentUserId,
                     content: newComment.content,
-                    [column]: entityId
+                    target_id: entityId,
+                    target_type: entityType
                 });
 
             if (error) throw error;
@@ -151,7 +136,7 @@ export default function SocialActions({
 
     return (
         <>
-            <div className="px-4 py-3 bg-white/5 border-t border-white/5 flex items-center justify-between">
+            <div className="px-6 py-4 bg-transparent flex items-center justify-between">
                 <div className="flex items-center gap-6">
                     <button
                         onClick={handleLike}

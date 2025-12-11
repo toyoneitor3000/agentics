@@ -14,27 +14,27 @@ import { useLanguage } from "@/app/context/LanguageContext";
 // --- PREMIUM FEED COMPONENTS ---
 
 const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string, action?: string, type: string }) => (
-  <div className="flex items-center justify-between px-4 py-3">
+  <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex items-center justify-between">
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/10 relative overflow-hidden">
+      <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/20 relative overflow-hidden shadow-lg">
         {user.avatar ? (
-          <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+          <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold">{user.name.charAt(0)}</div>
         )}
       </div>
       <div>
-        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors">
+        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md">
           {user.name}
         </Link>
-        <div className="flex items-center gap-2 text-xs text-white/40 font-roboto-mono">
+        <div className="flex items-center gap-2 text-[10px] text-white/80 font-roboto-mono tracking-wide drop-shadow-sm">
           <span>{time}</span>
-          <span className="w-1 h-1 bg-white/20 rounded-full"></span>
-          <span className="uppercase tracking-wider text-[10px]">{action}</span>
+          <span className="w-1 h-1 bg-[#FF9800] rounded-full"></span>
+          <span className="uppercase tracking-wider text-[#FF9800]">{action}</span>
         </div>
       </div>
     </div>
-    <button className="text-white/20 hover:text-white transition-colors">
+    <button className="text-white/60 hover:text-white transition-colors bg-black/20 backdrop-blur-md p-2 rounded-full">
       <MoreHorizontal className="w-5 h-5" />
     </button>
   </div>
@@ -96,19 +96,21 @@ export default function Home() {
         setLoading(true);
 
         // Helper to fetch stats
-        const getStats = async (id: string, column: string) => {
+        const getStats = async (id: string, type: string) => {
           try {
             // Count Likes
             const { count: likesCount, error: likesError } = await supabase
               .from('likes')
               .select('*', { count: 'exact', head: true })
-              .eq(column, id);
+              .eq('target_id', id)
+              .eq('target_type', type);
 
             // Count Comments
             const { count: commentsCount, error: commentsError } = await supabase
               .from('comments')
               .select('*', { count: 'exact', head: true })
-              .eq(column, id);
+              .eq('target_id', id)
+              .eq('target_type', type);
 
             if (likesError || commentsError) throw new Error("Stats fetch failed");
 
@@ -118,7 +120,8 @@ export default function Home() {
               const { data } = await supabase
                 .from('likes')
                 .select('id')
-                .eq(column, id)
+                .eq('target_id', id)
+                .eq('target_type', type)
                 .eq('user_id', userId)
                 .single();
               isLiked = !!data;
@@ -187,7 +190,7 @@ export default function Home() {
         // Process Featured Items
         const featured: any[] = [];
         await Promise.all(featuredRaw.map(async (p) => {
-          const stats = await getStats(p.id, 'project_id');
+          const stats = await getStats(p.id, 'project');
           featured.push({
             id: p.id,
             uniqueId: `feat_${p.id}`,
@@ -214,7 +217,7 @@ export default function Home() {
 
         await Promise.all([
           ...(remainingProjects.map(async (p) => {
-            const stats = await getStats(p.id, 'project_id');
+            const stats = await getStats(p.id, 'project');
             items.push({
               id: p.id,
               uniqueId: `proj_${p.id}`,
@@ -234,7 +237,7 @@ export default function Home() {
             });
           })),
           ...(albumWithAuthors?.map(async (a) => {
-            const stats = await getStats(a.id, 'album_id');
+            const stats = await getStats(a.id, 'gallery');
             items.push({
               id: a.id,
               uniqueId: `album_${a.id}`,
@@ -254,7 +257,7 @@ export default function Home() {
             });
           }) || []),
           ...(marketWithAuthors?.map(async (m) => {
-            const stats = await getStats(m.id, 'listing_id');
+            const stats = await getStats(m.id, 'marketplace');
             items.push({
               id: m.id,
               uniqueId: `market_${m.id}`,
@@ -318,21 +321,8 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-[700px] mx-auto min-h-screen pb-20 overflow-x-hidden">
+    <div className="max-w-[700px] mx-auto min-h-screen pb-20 pt-24 overflow-x-hidden">
 
-      {/* Mobile Title - Reference Style */}
-      <div className="md:hidden sticky top-[60px] z-40 bg-[#050302]/80 backdrop-blur-xl px-4 py-3 border-b border-white/5 mb-6 flex items-center justify-between">
-        <div className="w-6"></div> {/* Spacer for centering */}
-        <h1 className="font-oswald font-bold text-2xl text-white uppercase tracking-wider drop-shadow-lg text-center">
-          Speedlight <span className="text-[#FF9800] text-shadow-glow">Culture</span>
-        </h1>
-        <div className="w-6 flex justify-end">
-          <div className="relative">
-            <span className="absolute top-0 right-0 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse"></span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/80"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-          </div>
-        </div>
-      </div>
 
 
       {loading ? (
@@ -357,13 +347,15 @@ export default function Home() {
               <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
                 {featuredItems.map((item) => (
                   <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[85vw] max-w-[340px]">
-                    <div className="relative aspect-video rounded-2xl overflow-hidden border border-[#FF9800]/30 shadow-[0_4px_20px_rgba(0,0,0,0.5)] group">
+                    <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
                       {item.content?.image ? (
                         <Image
                           src={item.content.image}
                           alt={item.content.title}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-700"
+                          sizes="(max-width: 768px) 85vw, 340px"
+                          priority={true}
+                          className="object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-[#1e1e1e] to-black flex items-center justify-center">
@@ -371,18 +363,19 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Gradient Overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                      {/* Clean Overlay */}
+                      <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
 
-                      {/* Play/View Button */}
-                      <div className="absolute bottom-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-1.5 flex items-center gap-2 hover:bg-white/20 transition-all">
-                        <Play className="w-3 h-3 text-white fill-white" />
-                        <span className="text-xs font-bold text-white uppercase tracking-wider">{labels.play}</span>
+                      <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 hover:bg-[#FF9800] hover:text-black hover:border-[#FF9800] transition-all group-hover:scale-105">
+                        <Play className="w-3 h-3 text-white group-hover:text-black fill-current" />
+                        <span className="text-[10px] font-bold text-white group-hover:text-black uppercase tracking-wider">{labels.play}</span>
                       </div>
 
-                      <div className="absolute bottom-4 left-4 right-24">
-                        <h3 className="font-oswald font-bold text-lg text-white truncate drop-shadow-lg tracking-wide">{item.content.title}</h3>
-                        <p className="text-[#FF9800] text-xs font-bold tracking-wider">{timeAgo(item.date)} ago</p>
+                      <div className="absolute bottom-5 left-5 right-5">
+                        <div className="flex items-center gap-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                          <span className="text-[#FF9800] text-[10px] font-black uppercase tracking-[0.2em]">{item.user.name}</span>
+                        </div>
+                        <h3 className="font-oswald font-bold text-xl text-white truncate drop-shadow-lg tracking-wide group-hover:text-[#FF9800] transition-colors">{item.content.title}</h3>
                       </div>
                     </div>
                   </Link>
@@ -393,8 +386,8 @@ export default function Home() {
 
 
           {/* VERTICAL SCROLL - Main Feed */}
-          <div className="px-4 space-y-8">
-            <div className="flex items-center gap-2 mb-2">
+          <div className="px-4 space-y-10">
+            <div className="flex items-center gap-2 mb-4 px-1">
               <Zap className="w-4 h-4 text-[#FF9800]" />
               <h2 className="text-white text-sm font-bold uppercase tracking-wider">{labels.latest}</h2>
             </div>
@@ -408,15 +401,16 @@ export default function Home() {
             {feedItems.map((item) => {
               if (item.type === 'ad') {
                 return (
-                  <div key={item.id} className="rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+                  <div key={item.id} className="rounded-3xl overflow-hidden shadow-2xl border border-white/5 mx-[-10px] md:mx-0">
                     <AdFeedCard data={item.data} />
                   </div>
                 );
               }
 
               return (
-                <div key={item.uniqueId} className="bg-[#111] rounded-2xl overflow-hidden shadow-2xl border border-white/5 hover:border-[#FF9800]/20 transition-all duration-300 group">
+                <div key={item.uniqueId} className="bg-[#0D0D0D] rounded-3xl overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.6)] border border-[#ffffff05] hover:border-[#FF9800]/20 transition-all duration-500 group relative">
 
+                  {/* HEADER OVERLAY - Now inside image context */}
                   <FeedPostHeader
                     user={item.user}
                     time={timeAgo(item.date)}
@@ -430,27 +424,30 @@ export default function Home() {
 
                   {/* Main Visual Content */}
                   {item.content?.image ? (
-                    <div className="relative w-full aspect-[4/5] bg-[#050505]">
+                    <div className="relative w-full aspect-[3/4] bg-[#050505] overflow-hidden">
                       <Image
                         src={item.content.image}
                         alt="Content"
                         fill
-                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
                       />
 
-                      {/* Gradient Overlay for Text Readability */}
-                      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/50 to-transparent flex flex-col justify-end p-6">
-                        <div className="flex items-center gap-2 mb-2">
-                          {item.type === 'project' && <Wrench className="w-4 h-4 text-[#FF9800]" />}
-                          {item.type === 'gallery' && <Camera className="w-4 h-4 text-[#FF9800]" />}
-                          {item.type === 'marketplace' && <ShoppingBag className="w-4 h-4 text-[#FF9800]" />}
-                          <span className="text-[#FF9800] text-xs font-bold uppercase tracking-widest">{item.type}</span>
+                      {/* IMMERSIVE GRADIENT OVERLAY */}
+                      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/80 to-transparent flex flex-col justify-end p-6 pb-24">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${item.type === 'project' ? 'border-[#FF9800] text-[#FF9800] bg-[#FF9800]/10' :
+                              item.type === 'marketplace' ? 'border-green-500 text-green-500 bg-green-500/10' :
+                                'border-blue-500 text-blue-500 bg-blue-500/10'
+                            }`}>
+                            {item.type}
+                          </span>
                         </div>
-                        <h3 className="font-oswald font-bold text-2xl md:text-3xl text-white leading-tight mb-2 drop-shadow-md">
+                        <h3 className="font-oswald font-bold text-3xl md:text-4xl text-white leading-[0.9] mb-3 drop-shadow-lg">
                           {item.content.title}
                         </h3>
                         {item.content.text && (
-                          <p className="text-white/80 text-sm md:text-base line-clamp-2 font-light drop-shadow-sm max-w-xl">
+                          <p className="text-white/70 text-sm md:text-base font-light line-clamp-2 drop-shadow-md max-w-lg mb-2">
                             {item.content.text}
                           </p>
                         )}
@@ -458,24 +455,29 @@ export default function Home() {
                     </div>
                   ) : (
                     /* Text Only Fallback */
-                    <div className="p-6 md:p-10 min-h-[200px] flex flex-col justify-center bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
-                      <h3 className="font-oswald font-bold text-2xl text-white mb-4">
+                    <div className="relative w-full aspect-[4/3] flex flex-col justify-end p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
+                      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#FF9800]/5 to-transparent"></div>
+                      <h3 className="font-oswald font-bold text-3xl text-white mb-4 relative z-10">
                         {item.content?.title || labels.untitled}
                       </h3>
-                      <p className="text-white/70 text-lg font-light leading-relaxed">
+                      <p className="text-white/70 text-lg font-light leading-relaxed relative z-10">
                         {item.content?.text}
                       </p>
                     </div>
                   )}
 
-                  <SocialActions
-                    entityId={item.id}
-                    entityType={item.type}
-                    initialLikes={item.stats.likes}
-                    initialComments={item.stats.comments}
-                    initialIsLiked={item.stats.isLiked}
-                    currentUserId={currentUserId}
-                  />
+                  {/* ACTIONS - FLOATING/INTEGRATED */}
+                  <div className="absolute bottom-0 inset-x-0 bg-[#0D0D0D]">
+                    <SocialActions
+                      entityId={item.id}
+                      entityType={item.type}
+                      initialLikes={item.stats.likes}
+                      initialComments={item.stats.comments}
+                      initialIsLiked={item.stats.isLiked}
+                      currentUserId={currentUserId}
+                    />
+                  </div>
+
                 </div>
               );
             })}

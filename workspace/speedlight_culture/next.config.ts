@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  devIndicators: {
+    buildActivityPosition: 'top-left',
+  },
   images: {
     remotePatterns: [
       {
