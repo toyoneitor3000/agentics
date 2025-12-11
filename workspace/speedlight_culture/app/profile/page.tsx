@@ -88,6 +88,16 @@ export default async function ProfilePage() {
                             <span className="bg-[#FF9800]/10 text-[#FF9800] border border-[#FF9800]/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
                                 {role}
                             </span>
+                            {profile?.founder_number && profile.founder_number <= 500 && (
+                                <span className="bg-gradient-to-r from-yellow-400 to-amber-600 text-black border border-yellow-500/50 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 shadow-[0_0_15px_rgba(255,193,7,0.3)] animate-pulse">
+                                    <Trophy className="w-3 h-3" /> FOUNDER #{profile.founder_number}
+                                </span>
+                            )}
+                            {profile?.founder_number && profile.founder_number > 500 && (
+                                <span className="text-white/30 text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                                    <Trophy className="w-3 h-3" /> MEMBER #{profile.founder_number}
+                                </span>
+                            )}
                             <span className="text-white/40 text-xs flex items-center gap-1">
                                 <MapPin className="w-3 h-3" /> {location}
                             </span>
