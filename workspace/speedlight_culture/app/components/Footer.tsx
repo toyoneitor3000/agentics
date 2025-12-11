@@ -1,7 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
+import { AdHeroSponsor } from "./AdBanners";
+import { getAdByType } from "@/app/data/ads";
 
 export default function Footer() {
+    const heroAd = getAdByType('hero_sponsor');
     return (
         <footer className="border-t border-[#FF9800]/10 bg-[#050302] py-12 relative overflow-hidden">
             {/* Background Glow */}
@@ -73,10 +76,13 @@ export default function Footer() {
                     </div>
                 </div>
 
-                <div className="border-t border-[#FF9800]/10 pt-8 flex justify-center">
+                <div className="border-t border-[#FF9800]/10 pt-8 flex flex-col items-center gap-4">
                     <p className="text-[10px] uppercase tracking-[0.15em] text-[#BCAAA4]/60 text-center">
                         Diseñado y Desarrollado por <a href="https://purrpurr.dev" target="_blank" rel="noopener noreferrer" className="text-[#FF9800] hover:text-[#FFB74D] transition-colors">purrpurr.dev</a> en Bogotá, Colombia.
                     </p>
+                    <div className="mt-4 opacity-50 hover:opacity-100 transition-opacity">
+                        <AdHeroSponsor data={heroAd} />
+                    </div>
                 </div>
             </div>
         </footer>

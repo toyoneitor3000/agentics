@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { AdHeroSponsor } from "./AdBanners";
 import { createClient } from "@/app/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -14,6 +15,12 @@ export default function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const supabase = createClient();
+    const pathname = usePathname();
+
+    // Hide Navbar on specific routes (Login, Register)
+    if (pathname && (pathname.startsWith('/login') || pathname.startsWith('/auth'))) {
+        return null;
+    }
 
     const navLinks = [
         { name: "Inicio", path: "/" },
@@ -74,10 +81,7 @@ export default function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Hero Sponsor (Hidden on mobile) */}
-                    <div className="hidden xl:block opacity-0 animate-[fadeIn_1s_ease-out_0.5s_forwards]">
-                        <AdHeroSponsor />
-                    </div>
+
                 </div>
 
                 {/* 2. Desktop Navigation - Kinetic Type & Glow */}

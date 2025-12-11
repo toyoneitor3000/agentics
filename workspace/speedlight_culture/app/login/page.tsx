@@ -16,7 +16,7 @@ export default function LoginPage() {
             {/* Left Panel: Immersive Image (Desktop Only) */}
             <div className="hidden lg:block relative overflow-hidden h-full">
                 <Image
-                    src="https://images.unsplash.com/photo-1611566026373-c6c85447dbdc?q=80&w=2600&auto=format&fit=crop"
+                    src="/hero-bg.png"
                     alt="Speedlight Garage"
                     fill
                     className="object-cover"

@@ -35,10 +35,7 @@ export default function Home() {
         {/* Dark overlay for text readability */}
         <div className="absolute inset-0 bg-black/50 z-0 pointer-events-none"></div>
 
-        {/* Sponsored Badge - Top Right (Absolute in Hero) */}
-        <div className="absolute top-24 md:top-32 right-6 md:right-12 z-20 animate-fade-in-down">
-          <AdHeroSponsor data={heroAd} />
-        </div>
+
 
         {/* Content */}
         <div className="relative z-10 container mx-auto px-6 flex flex-col items-center text-center">

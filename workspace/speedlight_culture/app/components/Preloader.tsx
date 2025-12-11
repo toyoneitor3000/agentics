@@ -28,22 +28,8 @@ export default function Preloader() {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#050302] overflow-hidden transition-opacity duration-1000">
-            {/* Starfield / Warp Effect */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                {[...Array(20)].map((_, i) => (
-                    <div
-                        key={i}
-                        className="absolute h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent w-1/2 origin-right"
-                        style={{
-                            transform: `rotate(${i * (360 / 20)}deg) translateX(100px)`,
-                            animation: `warp 1.5s linear infinite`,
-                            animationDelay: `${(i * 0.1) * -1}s`,
-                            opacity: 0
-                        }}
-                    >
-                    </div>
-                ))}
-            </div>
+            {/* Starfield / Warp Effect - Removed per user request to avoid lines crossing logo */}
+            {/* <div className="absolute inset-0 flex items-center justify-center"> ... </div> */}
 
             {/* Burst From Center */}
             <div className="absolute inset-0 flex items-center justify-center">
