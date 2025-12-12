@@ -1,18 +1,18 @@
 import { createClient } from "@/app/utils/supabase/server";
 import { redirect } from "next/navigation";
 import UserProfile from "@/app/components/profile/UserProfile";
-import FollowButton from "@/app/components/profile/FollowButton";
+import { FollowButton } from "@/app/components/profile/FollowButton";
 export const dynamic = 'force-dynamic';
 
 interface PublicProfilePageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
 // Correct simple props for React 18 Next.js server component
 export default async function PublicProfilePage({ params }: PublicProfilePageProps) {
-    const { id } = params;
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user: currentUser } } = await supabase.auth.getUser();
 
@@ -72,7 +72,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             content={content}
             isOwnProfile={isOwnProfile}
             actionButtons={!isOwnProfile ? (
-                <FollowButton targetUserId={id} initialIsFollowing={isFollowing} />
+                <FollowButton targetUserId={id} initialIsFollowing={isFollowing} currentUserId={currentUser?.id} />
             ) : null}
         />
     );
