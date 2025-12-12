@@ -2,22 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, User, LogIn, Search, Settings, Edit3, LogOut } from "lucide-react";
-import { createClient } from "@/app/utils/supabase/client";
+import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2 } from "lucide-react";
+import { useSession, signOut } from "@/app/lib/auth-client";
 import { useEffect, useState } from "react";
 
 export default function TopMobileHeader() {
-    const [user, setUser] = useState<any>(null);
+    const { data: session, isPending } = useSession();
+    const user = session?.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const supabase = createClient();
 
-    useEffect(() => {
-        const getUser = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
-        };
-        getUser();
-    }, []);
+    const handleSignOut = async () => {
+        await signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    window.location.reload();
+                }
+            }
+        });
+    };
 
     return (
         <header className="md:hidden fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 pointer-events-none w-full">
@@ -43,13 +45,21 @@ export default function TopMobileHeader() {
             </Link>
 
             {/* Profile / Auth Wrapper - Top Right */}
-            {user ? (
+            {isPending ? (
+                <Loader2 className="w-6 h-6 text-[#FF9800] animate-spin pointer-events-auto" />
+            ) : user ? (
                 <div className="relative pointer-events-auto">
                     <button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         className="text-[#FF9800] hover:text-[#FF9800]/80 transition-colors flex items-center justify-center"
                     >
-                        <User className="w-6 h-6" />
+                        {user.image ? (
+                            <div className="w-8 h-8 rounded-full border border-[#FF9800] overflow-hidden">
+                                <Image src={user.image} alt={user.name || "User"} width={32} height={32} className="object-cover w-full h-full" />
+                            </div>
+                        ) : (
+                            <User className="w-6 h-6" />
+                        )}
                     </button>
 
                     {/* Dropdown Menu */}
@@ -86,10 +96,7 @@ export default function TopMobileHeader() {
                                 </Link>
                                 <div className="h-px bg-white/10 my-1 mx-4"></div>
                                 <button
-                                    onClick={async () => {
-                                        await supabase.auth.signOut();
-                                        window.location.href = "/login";
-                                    }}
+                                    onClick={handleSignOut}
                                     className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />

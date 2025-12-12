@@ -2,9 +2,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { login, signup } from './actions'
+import { signIn, signUp } from '@/app/lib/auth-client'
 import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck, AlertTriangle } from 'lucide-react'
-import { createClient } from '@/app/utils/supabase/client'
 import { useLanguage } from '@/app/context/LanguageContext'
 import { isInAppBrowser } from '@/app/utils/detect-in-app'
 
@@ -18,7 +17,6 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [isRestrictedBrowser, setIsRestrictedBrowser] = useState(false)
-    const supabase = createClient()
 
     useEffect(() => {
         setIsRestrictedBrowser(isInAppBrowser())
@@ -81,26 +79,21 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
         return url
     }
 
-    async function handleGoogleLogin() {
+    async function handleGoogleLogin(e: any) {
+        e.preventDefault(); // Prevent button default submit if inside form
         setIsLoading(true)
-        const callbackUrl = window.location.hostname === 'localhost'
-            ? 'http://localhost:3000/auth/callback'
-            : 'https://www.speedlightculture.com/auth/callback'
-
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: callbackUrl,
-                queryParams: {
-                    access_type: 'offline',
-                    prompt: 'consent',
-                },
-            },
-        })
-
-        if (error) {
-            setError(error.message)
-            setIsLoading(false)
+        try {
+            const res = await signIn.social({
+                provider: "google",
+                callbackURL: "/profile",
+            });
+            // If the code reaches here without throwing, but no redirect happened automatically (which can happen in SPA mode sometimes), force it.
+            if (res && !res.error) {
+                window.location.href = "/profile";
+            }
+        } catch (err: any) {
+            setError(err.message || "Error starting Google Login");
+            setIsLoading(false);
         }
     }
 
@@ -108,15 +101,43 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
         setIsLoading(true)
         setError(null)
 
-        try {
-            const action = isLogin ? login : signup
-            const result = await action(formData)
+        const email = formData.get('email') as string
+        const password = formData.get('password') as string
+        const name = formData.get('fullName') as string
 
-            if (result?.error) {
-                setError(result.error)
-                setIsLoading(false)
+        try {
+            if (isLogin) {
+                await signIn.email({
+                    email,
+                    password,
+                    callbackURL: "/profile",
+                }, {
+                    onError: (ctx) => {
+                        setError(ctx.error.message)
+                        setIsLoading(false)
+                    },
+                    onSuccess: () => {
+                        // Redirect handled by callbackURL
+                    }
+                })
+            } else {
+                await signUp.email({
+                    email,
+                    password,
+                    name,
+                    callbackURL: "/profile",
+                }, {
+                    onError: (ctx) => {
+                        setError(ctx.error.message)
+                        setIsLoading(false)
+                    },
+                    onSuccess: () => {
+                        // Redirect handled by callbackURL
+                    }
+                })
             }
-        } catch (e) {
+        } catch (e: any) {
+            setError(e.message || "An error occurred")
             setIsLoading(false)
         }
     }

@@ -13,16 +13,34 @@ export default function Preloader() {
         } else {
             document.body.style.overflow = '';
         }
+        return () => { document.body.style.overflow = ''; };
+    }, [loading]);
 
-        const timer = setTimeout(() => {
+    useEffect(() => {
+
+        const handleLoad = () => {
+            // Optional: Add a small delay to ensure smooth transition after load
+            setTimeout(() => setLoading(false), 500);
+        };
+
+        // If page is already loaded (e.g. back navigation or cached)
+        if (document.readyState === 'complete') {
+            handleLoad();
+        } else {
+            // Wait for all resources (images, scripts, css)
+            window.addEventListener('load', handleLoad);
+        }
+
+        // Safety fallback: Force close after 8 seconds if something hangs
+        const maxTimeout = setTimeout(() => {
             setLoading(false);
-        }, 2000);
+        }, 8000);
 
         return () => {
-            clearTimeout(timer);
-            document.body.style.overflow = '';
+            window.removeEventListener('load', handleLoad);
+            clearTimeout(maxTimeout);
         };
-    }, [loading]);
+    }, []);
 
     if (!loading) return null;
 

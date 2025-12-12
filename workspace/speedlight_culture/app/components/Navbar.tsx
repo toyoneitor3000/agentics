@@ -4,18 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { AdHeroSponsor } from "./AdBanners";
+import { User as UserIcon, LogOut, Menu, X, ChevronRight, Loader2, LayoutDashboard } from "lucide-react";
+import { useSession, signOut } from "@/app/lib/auth-client";
 import { createClient } from "@/app/utils/supabase/client";
-import type { User } from "@supabase/supabase-js";
-import { User as UserIcon, LogOut, Menu, X, ChevronRight } from "lucide-react";
 
 export default function Navbar() {
     const [scrolled, setScrolled] = useState(false);
-    const [user, setUser] = useState<User | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-    const supabase = createClient();
+    const [userRole, setUserRole] = useState<string | null>(null);
     const pathname = usePathname();
+    const supabase = createClient();
+
+    // BetterAuth Hook
+    const { data: session, isPending } = useSession();
+    const user = session?.user;
 
     // Hide Navbar on specific routes (Login, Register)
     if (pathname && (pathname.startsWith('/login') || pathname.startsWith('/auth'))) {
@@ -40,26 +43,44 @@ export default function Navbar() {
         };
         window.addEventListener("scroll", handleScroll);
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-            setUser(session?.user ?? null);
-        });
-
         return () => {
             window.removeEventListener("scroll", handleScroll);
-            subscription.unsubscribe();
         };
-    }, [supabase]);
+    }, []);
+
+    // Check Admin Role
+    useEffect(() => {
+        async function checkRole() {
+            if (user?.id) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+                if (data) {
+                    setUserRole(data.role);
+                }
+            }
+        }
+        checkRole();
+    }, [user?.id, supabase]);
 
     const handleSignOut = async () => {
-        await supabase.auth.signOut();
-        setUser(null);
-        window.location.reload();
+        await signOut({
+            fetchOptions: {
+                onSuccess: () => {
+                    window.location.reload();
+                }
+            }
+        });
     };
+
+    const isAdmin = userRole === 'CEO' || userRole === 'ADMIN';
 
     return (
         <header
             className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-500 border-b ${scrolled
-                ? "py-2 bg-[#050302]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+                ? "py-2 bg-[#1A0F08]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
                 : "py-6 bg-transparent border-transparent"
                 }`}
         >
@@ -104,7 +125,11 @@ export default function Navbar() {
                 {/* 3. Auth & Mobile Toggle - Neon Interactions */}
                 <div className="flex items-center gap-4">
                     <div className="hidden md:block">
-                        {!user ? (
+                        {isPending ? (
+                            <div className="px-6 py-2">
+                                <Loader2 className="w-5 h-5 text-[#FF9800] animate-spin" />
+                            </div>
+                        ) : !user ? (
                             <Link href="/login">
                                 <button className="relative group px-6 py-2 overflow-hidden rounded-full bg-black/50 border border-[#FF9800]/30 hover:border-[#FF9800] transition-all duration-500 shadow-[0_0_20px_rgba(255,152,0,0)] hover:shadow-[0_0_20px_rgba(255,152,0,0.3)]">
                                     <div className="absolute inset-0 w-0 bg-[#FF9800] transition-all duration-[250ms] ease-out group-hover:w-full opacity-10"></div>
@@ -120,8 +145,8 @@ export default function Navbar() {
                                     className="flex items-center gap-2 group p-1 rounded-full border border-transparent hover:border-[#FF9800]/50 transition-all duration-300"
                                 >
                                     <div className="w-9 h-9 rounded-full border border-[#FF9800]/30 overflow-hidden bg-[#1A0F08] flex items-center justify-center shadow-[0_0_15px_rgba(255,152,0,0.1)] group-hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] transition-all">
-                                        {user.user_metadata?.avatar_url ? (
-                                            <Image src={user.user_metadata.avatar_url} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
+                                        {user.image ? (
+                                            <Image src={user.image} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
                                         ) : (
                                             <UserIcon className="w-4 h-4 text-[#F5E6D3]" />
                                         )}
@@ -129,12 +154,19 @@ export default function Navbar() {
                                 </button>
                                 {/* Dropdown */}
                                 {isMenuOpen && (
-                                    <div className="absolute right-0 top-12 w-56 bg-[#0D0907]/95 backdrop-blur-xl border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="absolute right-0 top-12 w-56 bg-[#1A0F08]/95 backdrop-blur-xl border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                         <div className="p-4 border-b border-white/5 bg-white/5">
                                             <p className="text-xs text-[#8D6E63] uppercase tracking-wider mb-1">Conectado como</p>
-                                            <p className="text-sm font-bold text-white truncate">{user.user_metadata?.full_name || user.email}</p>
+                                            <p className="text-sm font-bold text-white truncate">{user.name || user.email}</p>
                                         </div>
                                         <div className="p-2">
+                                            {/* Admin Link for CEO/Admins */}
+                                            {isAdmin && (
+                                                <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-sm text-[#FFD700] hover:bg-[#FFD700]/10 rounded-lg transition-colors mb-2 border border-[#FFD700]/20" onClick={() => setIsMenuOpen(false)}>
+                                                    <LayoutDashboard className="w-4 h-4" /> Admin Panel
+                                                </Link>
+                                            )}
+
                                             <Link href="/profile" className="flex items-center gap-3 px-3 py-2 text-sm text-[#F5E6D3] hover:bg-[#FF9800]/10 hover:text-[#FF9800] rounded-lg transition-colors" onClick={() => setIsMenuOpen(false)}>
                                                 <UserIcon className="w-4 h-4" /> Mi Perfil
                                             </Link>
@@ -159,7 +191,7 @@ export default function Navbar() {
             </div>
 
             {/* 4. Immersive Mobile Menu (Glass Overlay) */}
-            <div className={`fixed inset-0 z-[60] bg-[#050302]/95 backdrop-blur-3xl transition-transform duration-500 lg:hidden ${isMobileNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed inset-0 z-[60] bg-[#1A0F08]/95 backdrop-blur-3xl transition-transform duration-500 lg:hidden ${isMobileNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5">
                     <Link href="/" onClick={() => setIsMobileNavOpen(false)}>

@@ -19,7 +19,7 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
     }
 
     return (
-        <div className="flex min-h-screen bg-[#050302]">
+        <div className="flex min-h-screen bg-transparent">
             {/* Desktop Sidebar (Fixed Left) */}
             <DesktopSidebar isCollapsed={isCollapsed} toggleSidebar={() => setIsCollapsed(!isCollapsed)} />
 

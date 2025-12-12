@@ -1,23 +1,54 @@
 import { createClient } from "@/app/utils/supabase/server";
 import { redirect } from "next/navigation";
 import UserProfile from "@/app/components/profile/UserProfile";
+import { headers } from "next/headers";
 
 export const dynamic = 'force-dynamic';
 
 export default async function ProfilePage() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { auth } = await import("@/app/lib/auth");
 
-    if (!user) {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) {
         redirect("/login");
     }
 
-    // 1. Fetch Profile
+    const { user } = session;
+
+    // 1. Fetch Profile (Still using Supabase Client for DATA, but bypassing Auth check)
+    // We need to fetch the profile associated with this BetterAuth user ID.
+    // NOTE: BetterAuth ID might be different from Supabase Auth ID if we just migrated.
+    // But since we just created fresh tables, it's a new user. We need to Ensure a PROFILE exists for this new user.
+    // If no profile exists, we should probably create one on the fly or handle it.
+
+    // For now, let's try to fetch.
     const { data: profile } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
+
+    // If profile is missing (first time login with BetterAuth), create a basic one.
+    let finalProfile = profile;
+    if (!profile) {
+        const { data: newProfile, error } = await supabase
+            .from('profiles')
+            .insert({
+                id: user.id,
+                full_name: user.name,
+                avatar_url: user.image,
+                email: user.email,
+                username: user.email?.split('@')[0] || "racer_" + Math.floor(Math.random() * 1000)
+            })
+            .select()
+            .single();
+
+        if (newProfile) finalProfile = newProfile;
+    }
 
     // 2. Fetch Content (Parallel Queries)
     // We use Promise.allsettled or Promise.all. 

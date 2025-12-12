@@ -28,7 +28,7 @@ export default function Footer() {
     const text = t_footer[language];
 
     return (
-        <footer className="border-t border-[#FF9800]/10 bg-[#050302] py-12 relative overflow-hidden">
+        <footer className="border-t border-[#FF9800]/10 bg-[#1A0F08]/90 backdrop-blur-lg py-12 relative overflow-hidden">
             {/* Background Glow */}
             <div className="absolute inset-0 bg-gradient-to-t from-[#FF9800]/5 to-transparent pointer-events-none"></div>
 

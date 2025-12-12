@@ -76,8 +76,9 @@ export const viewport = {
 
 import NavigationLayout from "./components/layout/NavigationLayout";
 import Preloader from "./components/Preloader";
+import { BackgroundProvider } from "./context/BackgroundContext";
+import GlobalBackground from "./components/layout/GlobalBackground";
 import { LanguageProvider } from "./context/LanguageContext";
-
 import OneSignalInit from "./components/pwa/OneSignalInit";
 
 export default function RootLayout({
@@ -92,19 +93,23 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1A1A1A" />
+        <meta name="theme-color" content="#1A0F08" />
       </head>
       <body
-        className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased bg-[#050302] text-[#FFF8F0] selection:bg-[#FF9800]/30`}
+        className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased text-[#FFF8F0] selection:bg-[#FF9800]/30 min-h-screen relative`}
+        style={{ backgroundColor: 'transparent' }}
       >
-        <Preloader />
-        <LanguageProvider>
-          <NavigationLayout>
-            {children}
-          </NavigationLayout>
-        </LanguageProvider>
-        <Analytics />
-        <OneSignalInit />
+        <BackgroundProvider>
+          <GlobalBackground />
+          <Preloader />
+          <LanguageProvider>
+            <NavigationLayout>
+              {children}
+            </NavigationLayout>
+          </LanguageProvider>
+          <Analytics />
+          <OneSignalInit />
+        </BackgroundProvider>
       </body>
     </html>
   );

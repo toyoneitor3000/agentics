@@ -413,7 +413,7 @@ export default function Home() {
               }
 
               return (
-                <div key={item.uniqueId} className="bg-[#0D0D0D] rounded-3xl overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.6)] border border-[#ffffff05] hover:border-[#FF9800]/20 transition-all duration-500 group relative">
+                <div key={item.uniqueId} className="bg-black/10 backdrop-blur-3xl rounded-3xl overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.6)] border border-white/5 hover:border-[#FF9800]/20 transition-all duration-500 group relative">
 
                   {/* HEADER OVERLAY - Now inside image context */}
                   <FeedPostHeader
@@ -439,7 +439,7 @@ export default function Home() {
                       />
 
                       {/* IMMERSIVE GRADIENT OVERLAY */}
-                      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/80 to-transparent flex flex-col justify-end p-6 pb-24">
+                      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6 pb-24">
                         <div className="flex items-center gap-2 mb-3">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${item.type === 'project' ? 'border-[#FF9800] text-[#FF9800] bg-[#FF9800]/10' :
                             item.type === 'marketplace' ? 'border-green-500 text-green-500 bg-green-500/10' :
@@ -460,7 +460,7 @@ export default function Home() {
                     </div>
                   ) : (
                     /* Text Only Fallback */
-                    <div className="relative w-full aspect-[4/3] flex flex-col justify-end p-8 bg-gradient-to-br from-[#1A1A1A] to-[#0A0A0A]">
+                    <div className="relative w-full aspect-[4/3] flex flex-col justify-end p-8 bg-black/20 backdrop-blur-md">
                       <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#FF9800]/5 to-transparent"></div>
                       <h3 className="font-oswald font-bold text-3xl text-white mb-4 relative z-10">
                         {item.content?.title || labels.untitled}
@@ -472,7 +472,7 @@ export default function Home() {
                   )}
 
                   {/* ACTIONS - FLOATING/INTEGRATED */}
-                  <div className="absolute bottom-0 inset-x-0 bg-[#0D0D0D]">
+                  <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xl border-t border-white/5">
                     <SocialActions
                       entityId={item.id}
                       entityType={item.type}

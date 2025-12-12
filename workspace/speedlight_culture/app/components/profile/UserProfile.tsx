@@ -31,7 +31,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
         <div className="min-h-screen bg-[#050505] text-white pb-24">
             {/* 1. COVER IMAGE (Full Bleed Mobile) */}
             <div className="relative h-48 md:h-64 w-full bg-[#111] overflow-hidden">
-                {profile.cover_url ? (
+                {profile?.cover_url ? (
                     <Image src={profile.cover_url} alt="Cover" fill className="object-cover" />
                 ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a1a] to-[#050505] opacity-50" />
@@ -45,16 +45,16 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     {/* Avatar */}
                     <div className="relative mb-4">
                         <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#050505] bg-[#1a1a1a] overflow-hidden shadow-2xl relative z-10">
-                            {profile.avatar_url ? (
-                                <Image src={profile.avatar_url} alt={profile.full_name} fill className="object-cover" />
+                            {profile?.avatar_url ? (
+                                <Image src={profile.avatar_url} alt={profile.full_name || 'User'} fill className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-white/20">
-                                    {profile.full_name?.charAt(0)}
+                                    {profile?.full_name?.charAt(0) || 'U'}
                                 </div>
                             )}
                         </div>
                         {/* Founder/Level Badge (Pill) - Centered below avatar */}
-                        {profile.founder_number && profile.founder_number <= 500 ? (
+                        {profile?.founder_number && profile.founder_number <= 500 ? (
                             <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/90 border border-[#FFD700]/50 text-[#FFD700] pl-2 pr-3 py-1 rounded-full shadow-[0_0_15px_rgba(255,215,0,0.3)] whitespace-nowrap min-w-max backdrop-blur-md">
                                 <Star className="w-3 h-3 fill-[#FFD700]" />
                                 <span className="text-[10px] font-black tracking-widest leading-none">
@@ -70,17 +70,17 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
                     {/* BADGES ROW (Restored) */}
                     <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-                        {profile.role === 'CEO' ? (
+                        {profile?.role === 'CEO' ? (
                             <span className="bg-white text-black border border-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(255,255,255,0.4)] flex items-center gap-1">
                                 <Zap className="w-3 h-3 fill-black" /> CEO
                             </span>
                         ) : (
                             <span className="bg-[#FF9800]/10 text-[#FF9800] border border-[#FF9800]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                {profile.role || 'Rookie'}
+                                {profile?.role || 'Rookie'}
                             </span>
                         )}
                         {/* If founder > 500, simple Member badge */}
-                        {profile.founder_number && profile.founder_number > 500 && (
+                        {profile?.founder_number && profile.founder_number > 500 && (
                             <span className="text-white/30 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 border border-white/10 px-2 py-1 rounded-full">
                                 <BadgeCheck className="w-3 h-3" /> MEMBER #{profile.founder_number}
                             </span>
@@ -89,9 +89,9 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
                     {/* Identifiers */}
                     <h1 className="text-4xl font-black uppercase tracking-tighter italic text-white mb-0 leading-none">
-                        {profile.full_name}
+                        {profile?.full_name || 'Racer Unknown'}
                     </h1>
-                    {profile.alias && (
+                    {profile?.alias && (
                         <p className="text-[#FF9800] font-medium text-sm tracking-wide mb-1">
                             {profile.alias.startsWith('@') ? profile.alias : `@${profile.alias}`}
                         </p>
@@ -99,16 +99,16 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
                     {/* Location & Join Date (Moved Up) */}
                     <div className="flex items-center justify-center gap-3 text-[10px] text-white/40 uppercase tracking-wider mb-3">
-                        {profile.location && profile.show_location !== false && (
+                        {profile?.location && profile.show_location !== false && (
                             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {profile.location}</span>
                         )}
-                        {profile.show_join_date !== false && (
+                        {profile?.show_join_date !== false && (
                             <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Desde: {stats.join_date}</span>
                         )}
                     </div>
 
                     {/* Bio */}
-                    {profile.bio && (
+                    {profile?.bio && (
                         <p className="text-white/60 text-xs font-light max-w-sm mx-auto leading-relaxed mb-6 line-clamp-2">
                             {profile.bio}
                         </p>
