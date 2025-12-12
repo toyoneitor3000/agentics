@@ -2,6 +2,8 @@ import { createClient } from "@/app/utils/supabase/server";
 import { redirect } from "next/navigation";
 import UserProfile from "@/app/components/profile/UserProfile";
 import { headers } from "next/headers";
+import Link from "next/link";
+import { Edit3 } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -85,6 +87,12 @@ export default async function ProfilePage() {
             stats={stats}
             content={content}
             isOwnProfile={true}
+            actionButtons={
+                <Link href="/profile/edit" className="flex items-center gap-2 bg-[#1A1A1A] hover:bg-[#222] border border-white/10 px-4 py-2 rounded-lg text-xs font-bold uppercase transition-colors">
+                    <Edit3 className="w-4 h-4" />
+                    Editar Perfil
+                </Link>
+            }
         />
     );
 }

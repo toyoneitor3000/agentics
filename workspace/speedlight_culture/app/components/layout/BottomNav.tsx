@@ -6,7 +6,7 @@ import { Home, Compass, Heart, User, Play, ShoppingBag, GraduationCap, Calendar,
 import { useScrollDirection } from "@/app/hooks/useScrollDirection";
 import { useRef, useEffect } from "react";
 
-export default function MobileNav() {
+export default function BottomNav() {
     const pathname = usePathname();
     const scrollDirection = useScrollDirection();
     const isHidden = scrollDirection === "down";
@@ -45,7 +45,7 @@ export default function MobileNav() {
 
     return (
         <div
-            className={`md:hidden fixed bottom-6 left-6 right-6 z-50 bg-[#0F0F0F] border border-[#222] rounded-full h-[76px] shadow-[0_10px_40px_rgba(0,0,0,0.8)] transition-transform duration-300 ease-in-out ${isHidden ? 'translate-y-[150%]' : 'translate-y-0'} overflow-hidden flex items-center pr-1`}
+            className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-[#0F0F0F] border border-[#222] rounded-full h-[76px] shadow-[0_10px_40px_rgba(0,0,0,0.8)] transition-transform duration-300 ease-in-out ${isHidden ? 'translate-y-[150%]' : 'translate-y-0'} overflow-hidden flex items-center pr-1 w-[90%] max-w-md md:max-w-xl`}
         >
             {/* 1. PINNED HOME (Left Anchor) */}
             <div className="pl-2 pr-4 h-full flex items-center relative z-20 bg-[#0F0F0F] shadow-[10px_0_20px_0px_#0F0F0F]">

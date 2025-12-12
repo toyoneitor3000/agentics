@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Camera, Save, ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from '@/app/lib/auth-client';
+import { updateProfile } from './actions';
 
 export default function EditProfilePage() {
+    const { data: session, isPending } = useSession();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [user, setUser] = useState<any>(null);
     const [formData, setFormData] = useState({
         full_name: '',
         alias: '',
@@ -25,13 +27,15 @@ export default function EditProfilePage() {
     const router = useRouter();
 
     useEffect(() => {
+        if (isPending) return;
+
+        if (!session?.user) {
+            router.push('/login');
+            return;
+        }
+
         const getProfile = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-            setUser(user);
+            const user = session.user;
 
             const { data: profile } = await supabase
                 .from('profiles')
@@ -50,23 +54,31 @@ export default function EditProfilePage() {
                     show_location: profile.show_location !== false,
                     show_join_date: profile.show_join_date !== false
                 });
+            } else {
+                // Initialize with session data if no profile (or partial)
+                setFormData(prev => ({
+                    ...prev,
+                    full_name: user.name || '',
+                    avatar_url: user.image || ''
+                }));
             }
             setLoading(false);
         };
         getProfile();
-    }, [router, supabase]);
+    }, [session, isPending, router, supabase]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'avatar_url' | 'cover_url') => {
-        if (!e.target.files || e.target.files.length === 0) return;
+        if (!e.target.files || e.target.files.length === 0 || !session?.user) return;
 
         const file = e.target.files[0];
         const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${Math.random()}.${fileExt}`;
+        const fileName = `${session.user.id}/${Math.random()}.${fileExt}`;
         const filePath = `${fileName}`;
 
         setSaving(true);
         try {
             // Upload to Supabase Storage (assuming 'avatars' bucket for profile stuff)
+            // Note: This relies on Supabase Storage Policies being open or allowing Anon for now.
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
                 .upload(filePath, file);
@@ -81,7 +93,7 @@ export default function EditProfilePage() {
             setFormData(prev => ({ ...prev, [field]: publicUrl }));
         } catch (error) {
             console.error('Error uploading image:', error);
-            alert('Error al subir la imagen');
+            alert('Error al subir la imagen (Verifica permisos)');
         } finally {
             setSaving(false);
         }
@@ -92,22 +104,7 @@ export default function EditProfilePage() {
         setSaving(true);
 
         try {
-            const { error } = await supabase
-                .from('profiles')
-                .update({
-                    full_name: formData.full_name,
-                    alias: formData.alias,
-                    bio: formData.bio,
-                    location: formData.location,
-                    avatar_url: formData.avatar_url,
-                    cover_url: formData.cover_url,
-                    show_location: formData.show_location,
-                    show_join_date: formData.show_join_date,
-                    updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id);
-
-            if (error) throw error;
+            await updateProfile(formData);
             router.refresh();
             router.push('/profile');
         } catch (error: any) {
