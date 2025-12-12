@@ -2,14 +2,36 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2 } from "lucide-react";
+import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard } from "lucide-react";
 import { useSession, signOut } from "@/app/lib/auth-client";
 import { useEffect, useState } from "react";
+import { createClient } from "@/app/utils/supabase/client";
 
 export default function TopMobileHeader() {
     const { data: session, isPending } = useSession();
     const user = session?.user;
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [userRole, setUserRole] = useState<string | null>(null);
+    const supabase = createClient();
+
+    // Check Admin Role
+    useEffect(() => {
+        async function checkRole() {
+            if (user?.id) {
+                const { data } = await supabase
+                    .from('profiles')
+                    .select('role')
+                    .eq('id', user.id)
+                    .single();
+                if (data) {
+                    setUserRole(data.role);
+                }
+            }
+        }
+        checkRole();
+    }, [user?.id, supabase]);
+
+    const isAdmin = userRole === 'CEO' || userRole === 'ADMIN';
 
     const handleSignOut = async () => {
         await signOut({
@@ -70,6 +92,18 @@ export default function TopMobileHeader() {
                                 onClick={() => setIsMenuOpen(false)}
                             />
                             <div className="absolute right-0 top-10 w-48 bg-[#111] border border-[#222] rounded-xl shadow-2xl py-2 z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                                {/* Admin Link for CEO/Admins */}
+                                {isAdmin && (
+                                    <Link
+                                        href="/admin/users"
+                                        className="px-4 py-3 text-sm text-[#FFD700] hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-white/5"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <LayoutDashboard className="w-4 h-4" />
+                                        Admin Panel
+                                    </Link>
+                                )}
+
                                 <Link
                                     href="/profile"
                                     className="px-4 py-3 text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
