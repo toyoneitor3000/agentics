@@ -4,6 +4,8 @@ import Image from 'next/image';
 import { Camera, Zap } from 'lucide-react';
 import PageHero from '@/app/components/PageHero';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProjectsPage() {
     const supabase = await createClient();
 

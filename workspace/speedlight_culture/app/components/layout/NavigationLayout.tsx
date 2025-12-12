@@ -29,7 +29,7 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
             {/* Main Content Area */}
             <main className={`flex-1 w-full min-h-screen transition-all duration-300
                 ${isCollapsed ? 'md:pl-[80px]' : 'md:pl-[244px]'}
-                pt-[60px] pb-[80px] md:pt-0 md:pb-0`}
+                pt-[20px] pb-[80px] md:pt-0 md:pb-0`}
             >
                 {children}
             </main>

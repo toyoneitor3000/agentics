@@ -20,7 +20,7 @@ export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSi
         es: {
             home: "Inicio",
             cinema: "Cinema",
-            explore: "Explorar",
+            explore: "Proyectos",
             gallery: "Galería",
             academy: "Academy",
             marketplace: "Marketplace",
@@ -35,7 +35,7 @@ export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSi
         en: {
             home: "Home",
             cinema: "Cinema",
-            explore: "Explore",
+            explore: "Projects",
             gallery: "Gallery",
             academy: "Academy",
             marketplace: "Marketplace",

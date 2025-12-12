@@ -183,9 +183,14 @@ export default function Home() {
 
         // --- SEPARATE CONTENT TYPES ---
 
-        // Take top 5 projects for "Featured Machines" Horizontal Scroll
-        const featuredRaw = projects ? projects.slice(0, 5) : [];
-        const remainingProjects = projects ? projects.slice(5) : [];
+        // 1. Featured: Only Top 5 projects WITH images (Premium Look)
+        const featuredCandidates = projects ? projects.filter(p => p.cover_image) : [];
+        const featuredRaw = featuredCandidates.slice(0, 5);
+
+        // 2. Feed: Everything else (Rest of image-projects + ALL image-less projects)
+        // We filter out the exact IDs that made it to Featured
+        const featuredIds = new Set(featuredRaw.map(p => p.id));
+        const feedProjects = projects ? projects.filter(p => !featuredIds.has(p.id)) : [];
 
         // Process Featured Items
         const featured: any[] = [];
@@ -216,7 +221,7 @@ export default function Home() {
         const items: any[] = [];
 
         await Promise.all([
-          ...(remainingProjects.map(async (p) => {
+          ...(feedProjects.map(async (p) => {
             const stats = await getStats(p.id, 'project');
             items.push({
               id: p.id,
@@ -437,8 +442,8 @@ export default function Home() {
                       <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/80 to-transparent flex flex-col justify-end p-6 pb-24">
                         <div className="flex items-center gap-2 mb-3">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${item.type === 'project' ? 'border-[#FF9800] text-[#FF9800] bg-[#FF9800]/10' :
-                              item.type === 'marketplace' ? 'border-green-500 text-green-500 bg-green-500/10' :
-                                'border-blue-500 text-blue-500 bg-blue-500/10'
+                            item.type === 'marketplace' ? 'border-green-500 text-green-500 bg-green-500/10' :
+                              'border-blue-500 text-blue-500 bg-blue-500/10'
                             }`}>
                             {item.type}
                           </span>

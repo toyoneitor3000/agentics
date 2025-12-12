@@ -6,12 +6,14 @@ import Image from 'next/image';
 import { Lightbox } from '@/app/components/Lightbox';
 import { ArrowLeft, User, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import SocialActions from '@/app/components/feed/SocialActions';
 
 export default function AlbumDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const [album, setAlbum] = useState<any>(null);
     const [photos, setPhotos] = useState<string[]>([]);
     const [lightboxOpen, setLightboxOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
     const supabase = createClient();
 
     // Unwrap params using React.use() approach or await in useEffect is tricky in client components,
@@ -27,7 +29,11 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ id: stri
         if (!albumId) return;
 
         const fetchData = async () => {
-            // 1. Get Album Basic Info (Without join to avoid FK issues)
+            // 0. Get Current User
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) setCurrentUserId(user.id);
+
+            // 1. Get Album Basic Info
             const { data: albumData, error } = await supabase
                 .from('gallery_albums')
                 .select('*')
@@ -47,10 +53,43 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ id: stri
                 .eq('id', albumData.user_id)
                 .single();
 
-            // Merge data
-            setAlbum({ ...albumData, profiles: profileData });
+            // 3. Get Stats (Likes/Comments)
+            const { count: likesCount } = await supabase
+                .from('likes')
+                .select('*', { count: 'exact', head: true })
+                .eq('target_id', albumId)
+                .eq('target_type', 'gallery');
 
-            // 3. Get Photos
+            const { count: commentsCount } = await supabase
+                .from('comments')
+                .select('*', { count: 'exact', head: true })
+                .eq('target_id', albumId)
+                .eq('target_type', 'gallery');
+
+            let isLiked = false;
+            if (user) {
+                const { data: likeData } = await supabase
+                    .from('likes')
+                    .select('id')
+                    .eq('target_id', albumId)
+                    .eq('target_type', 'gallery')
+                    .eq('user_id', user.id)
+                    .single();
+                isLiked = !!likeData;
+            }
+
+            // Merge data
+            setAlbum({
+                ...albumData,
+                profiles: profileData,
+                stats: {
+                    likes: likesCount || 0,
+                    comments: commentsCount || 0,
+                    isLiked
+                }
+            });
+
+            // 4. Get Photos
             const { data: photosData } = await supabase
                 .from('gallery_photos')
                 .select('url')
@@ -74,7 +113,7 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ id: stri
 
                 <div className="mb-12">
                     <h1 className="text-4xl md:text-6xl font-oswald font-bold uppercase mb-4">{album.title}</h1>
-                    <div className="flex items-center gap-6 text-sm text-white/40 font-roboto-mono">
+                    <div className="flex items-center gap-6 text-sm text-white/40 font-roboto-mono mb-6">
                         <span className="flex items-center gap-2">
                             <User className="w-3 h-3" />
                             {album.profiles?.full_name || 'Autor Desconocido'}
@@ -88,8 +127,20 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ id: stri
                         </span>
                     </div>
                     {album.description && (
-                        <p className="mt-6 text-white/60 max-w-2xl leading-relaxed">{album.description}</p>
+                        <p className="mt-6 text-white/60 max-w-2xl leading-relaxed mb-6">{album.description}</p>
                     )}
+
+                    {/* Social Actions integration */}
+                    <div className="max-w-md">
+                        <SocialActions
+                            entityId={albumId}
+                            entityType="gallery"
+                            initialLikes={album.stats?.likes || 0}
+                            initialComments={album.stats?.comments || 0}
+                            initialIsLiked={album.stats?.isLiked || false}
+                            currentUserId={currentUserId}
+                        />
+                    </div>
                 </div>
 
                 {/* Masonry-ish Grid */}

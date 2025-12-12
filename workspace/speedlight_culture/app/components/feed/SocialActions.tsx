@@ -163,59 +163,97 @@ export default function SocialActions({
                 </button>
             </div>
 
-            {/* Comments Section */}
+            {/* Comments Overlay (TikTok Style) */}
             {isCommentsOpen && (
-                <div className="bg-[#050505] border-t border-white/5 p-4 animate-in slide-in-from-top-2 duration-200">
-                    <div className="space-y-4 mb-4 max-h-60 overflow-y-auto custom-scrollbar">
-                        {loadingComments && comments.length === 0 ? (
-                            <p className="text-xs text-white/30 text-center">Cargando comentarios...</p>
-                        ) : comments.length === 0 ? (
-                            <p className="text-xs text-white/30 text-center">Sé el primero en comentar.</p>
-                        ) : (
-                            comments.map((comment: any) => (
-                                <div key={comment.id} className="flex gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-neutral-800 flex-shrink-0 overflow-hidden relative border border-white/10">
-                                        {comment.profiles?.avatar_url ? (
-                                            <Image src={comment.profiles.avatar_url} alt="User" fill className="object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-[10px] text-white/50 font-bold">
-                                                {comment.profiles?.full_name?.charAt(0) || '?'}
-                                            </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="bg-white/5 rounded-2xl rounded-tl-none p-3 px-4">
-                                            <p className="text-xs font-bold text-white mb-1">{comment.profiles?.full_name || 'Usuario'}</p>
-                                            <p className="text-sm text-white/80 font-light">{comment.content}</p>
-                                        </div>
-                                        <p className="text-[10px] text-white/30 mt-1 ml-2">Justo ahora</p>
-                                        {/* Timestamp handling omitted for brevity but can be added */}
-                                    </div>
-                                </div>
-                            ))
-                        )}
-                    </div>
+                <>
+                    {/* Backdrop */}
+                    <div
+                        className="fixed inset-0 bg-black/60 z-[60] backdrop-blur-sm transition-opacity"
+                        onClick={() => setIsCommentsOpen(false)}
+                    />
 
-                    {/* Input */}
-                    <div className="flex gap-2 items-center">
-                        <input
-                            type="text"
-                            value={commentText}
-                            onChange={(e) => setCommentText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
-                            placeholder={currentUserId ? "Añade un comentario..." : "Inicia sesión para comentar"}
-                            disabled={!currentUserId}
-                            className="flex-1 bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#FF9800]/50"
-                        />
-                        <button
-                            onClick={handlePostComment}
-                            disabled={!commentText.trim() || !currentUserId}
-                            className="bg-[#FF9800] text-black p-2 rounded-full hover:bg-[#ffad33] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <Send className="w-4 h-4" />
-                        </button>
+                    {/* Bottom Sheet Drawer */}
+                    <div className="fixed bottom-0 left-0 right-0 z-[70] bg-[#111] border-t border-white/10 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)] flex flex-col max-h-[75vh] animate-in slide-in-from-bottom duration-300">
+
+                        {/* Drawer Handle / Header */}
+                        <div className="p-4 border-b border-white/5 flex items-center justify-between shrink-0">
+                            <div className="w-10"></div> {/* Spacer */}
+                            <div className="w-12 h-1.5 bg-white/20 rounded-full"></div>
+                            <button
+                                onClick={() => setIsCommentsOpen(false)}
+                                className="w-10 h-10 flex items-center justify-center text-white/50 hover:text-white bg-white/5 rounded-full"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Comments List (Scrollable) */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                            {loadingComments && comments.length === 0 ? (
+                                <div className="py-10 text-center">
+                                    <Loader2 className="w-6 h-6 animate-spin text-[#FF9800] mx-auto mb-2" />
+                                    <p className="text-xs text-white/30">Cargando comentarios...</p>
+                                </div>
+                            ) : comments.length === 0 ? (
+                                <div className="py-20 text-center flex flex-col items-center">
+                                    <MessageCircle className="w-12 h-12 text-white/10 mb-4" />
+                                    <p className="text-white/40 font-bold text-sm">Aún no hay comentarios</p>
+                                    <p className="text-white/20 text-xs">Sé el primero en opinar.</p>
+                                </div>
+                            ) : (
+                                comments.map((comment: any) => (
+                                    <div key={comment.id} className="flex gap-3">
+                                        <div className="w-8 h-8 rounded-full bg-neutral-800 flex-shrink-0 overflow-hidden relative border border-white/10">
+                                            {comment.profiles?.avatar_url ? (
+                                                <Image src={comment.profiles.avatar_url} alt="User" fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-[10px] text-white/50 font-bold">
+                                                    {comment.profiles?.full_name?.charAt(0) || '?'}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className="bg-white/5 rounded-2xl rounded-tl-none p-3 px-4">
+                                                <p className="text-xs font-bold text-white mb-1">{comment.profiles?.full_name || 'Usuario'}</p>
+                                                <p className="text-sm text-white/80 font-light leading-relaxed">{comment.content}</p>
+                                            </div>
+                                            <p className="text-[10px] text-white/30 mt-1 ml-2">Justo ahora</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        {/* Input Area (Fixed at bottom of drawer) */}
+                        <div className="p-4 border-t border-white/5 bg-[#111] shrink-0 pb-8 md:pb-4">
+                            <div className="flex gap-3 items-center">
+                                <div className="w-8 h-8 rounded-full bg-neutral-800 overflow-hidden relative border border-white/10 shrink-0">
+                                    {/* Current User Avatar Placeholder */}
+                                    <div className="w-full h-full flex items-center justify-center text-[10px] text-white/50">You</div>
+                                </div>
+                                <div className="flex-1 relative">
+                                    <input
+                                        type="text"
+                                        value={commentText}
+                                        onChange={(e) => setCommentText(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
+                                        placeholder={currentUserId ? "Añade un comentario..." : "Inicia sesión..."}
+                                        disabled={!currentUserId}
+                                        className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-12 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#FF9800]/50 transition-all font-light"
+                                        autoFocus={isCommentsOpen}
+                                    />
+                                    <button
+                                        onClick={handlePostComment}
+                                        disabled={!commentText.trim() || !currentUserId}
+                                        className="absolute right-1 top-1Bottom-1 bottom-1 aspect-square bg-[#FF9800] text-black rounded-full hover:bg-[#ffad33] disabled:opacity-0 disabled:scale-90 transition-all flex items-center justify-center w-8 h-8 my-auto top-0 mt-1 mr-1"
+                                    >
+                                        <Send className="w-4 h-4 ml-0.5" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </>
             )}
         </>
     );

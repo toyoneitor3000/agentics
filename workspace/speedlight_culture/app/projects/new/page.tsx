@@ -46,6 +46,7 @@ export default function NewProjectPage() {
             alert('Error al crear proyecto: ' + error.message);
             setIsLoading(false);
         } else {
+            router.refresh();
             router.push('/profile'); // Redirect to profile to see the new car
         }
     };
