@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
-import { Heart, MessageCircle, Share2, Send, X } from "lucide-react";
+import { Heart, MessageCircle, Share2, Send, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 

@@ -5,7 +5,7 @@ import { createClient } from '@/app/utils/supabase/client';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Search, User, Package, Calendar, Image as ImageIcon, Loader2, ArrowRight } from 'lucide-react';
-import { useDebounce } from '@/app/hooks/useDebounce'; // Ensuring we don't hammer the DB, if hook exists. If not, I'll inline.
+
 
 // Inline Debounce Hook if not exists (safer to inline for this single file to avoid dep check)
 function useDebounceValue<T>(value: T, delay: number): T {
