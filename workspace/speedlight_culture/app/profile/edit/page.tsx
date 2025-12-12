@@ -197,12 +197,35 @@ export default function EditProfilePage() {
                         <div className="space-y-2">
                             <label className="text-xs font-bold uppercase text-[#FF9800] tracking-wider block">Ubicación</label>
                             <input
+                                list="cities"
                                 type="text"
                                 value={formData.location}
                                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                                 className="w-full bg-[#111] border border-[#333] rounded-xl px-4 py-3 text-white focus:border-[#FF9800] focus:outline-none transition-colors"
-                                placeholder="Bogotá, Colombia"
+                                placeholder="Selecciona o escribe tu ciudad (Ej: Tokio, Japón)"
                             />
+                            <datalist id="cities">
+                                <option value="Bogotá, Colombia" />
+                                <option value="Medellín, Colombia" />
+                                <option value="Cali, Colombia" />
+                                <option value="Barranquilla, Colombia" />
+                                <option value="Cartagena, Colombia" />
+                                <option value="Bucaramanga, Colombia" />
+                                <option value="Pereira, Colombia" />
+                                <option value="Manizales, Colombia" />
+                                <option value="Santa Marta, Colombia" />
+                                <option value="Cúcuta, Colombia" />
+                                <option value="Ibagué, Colombia" />
+                                <option value="Villavicencio, Colombia" />
+                                <option value="Miami, USA" />
+                                <option value="Ciudad de México, México" />
+                                <option value="Madrid, España" />
+                                <option value="Buenos Aires, Argentina" />
+                                <option value="Santiago, Chile" />
+                            </datalist>
+                            <p className="text-[10px] text-white/40 mt-1 pl-1">
+                                * Puedes escribir libremente cualquier ciudad y país si no está en la lista.
+                            </p>
                         </div>
 
                         <div className="space-y-4 pt-2">

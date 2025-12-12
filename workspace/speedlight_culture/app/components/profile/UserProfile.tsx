@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Calendar, Star, Users, Heart, Grid, Youtube, Image as ImageIcon, Briefcase, Zap, BadgeCheck } from 'lucide-react';
+import { MapPin, Calendar, Star, Users, Heart, Grid, Youtube, Image as ImageIcon, Briefcase, Zap, BadgeCheck, CarFront } from 'lucide-react';
 
 interface ProfileProps {
     profile: any;
@@ -191,7 +191,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                                     ))}
                                 </div>
                             ) : (
-                                <EmptyState icon={Briefcase} text="Garaje vacío" />
+                                <EmptyState icon={CarFront} text="Garaje vacío" subtext="Sube tu primer proyecto y empieza a ganar XP." />
                             )
                         )}
 
