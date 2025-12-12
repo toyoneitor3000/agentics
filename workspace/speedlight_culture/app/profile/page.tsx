@@ -70,7 +70,7 @@ export default async function ProfilePage() {
         likes_given: likesRes.count || 0,
         xp: profile?.xp || 0,
         level: profile?.level || 1,
-        join_date: new Date(user.created_at || Date.now()).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })
+        join_date: new Date(user.createdAt || Date.now()).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })
     };
 
     const content = {
