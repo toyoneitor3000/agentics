@@ -1,11 +1,12 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { login, signup } from './actions'
-import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck } from 'lucide-react'
+import { Loader2, ArrowRight, User, Mail, Lock, ShieldCheck, AlertTriangle } from 'lucide-react'
 import { createClient } from '@/app/utils/supabase/client'
 import { useLanguage } from '@/app/context/LanguageContext'
+import { isInAppBrowser } from '@/app/utils/detect-in-app'
 
 interface AuthFormProps {
     initialView?: 'login' | 'register';
@@ -16,7 +17,12 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
     const [isLogin, setIsLogin] = useState(initialView === 'login')
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isRestrictedBrowser, setIsRestrictedBrowser] = useState(false)
     const supabase = createClient()
+
+    useEffect(() => {
+        setIsRestrictedBrowser(isInAppBrowser())
+    }, [])
 
     const t_form = {
         es: {
@@ -36,7 +42,8 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
             protected: "Protegido por Speedlight Secure.",
             terms: "Términos",
             privacy: "Privacidad",
-            accept: "Al continuar aceptas nuestros"
+            accept: "Al continuar aceptas nuestros",
+            browserWarning: "Google no permite iniciar sesión desde esta app. Por favor abre el enlace en tu navegador (Safari o Chrome)."
         },
         en: {
             welcome: "Welcome to the Pits",
@@ -55,7 +62,8 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
             protected: "Protected by Speedlight Secure.",
             terms: "Terms",
             privacy: "Privacy",
-            accept: "By continuing you accept our"
+            accept: "By continuing you accept our",
+            browserWarning: "Google does not allow signing in from this app. Please open the link in your system browser (Safari or Chrome)."
         }
     };
 
@@ -129,6 +137,16 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
 
                 {/* ... Gradient Bloom ... */}
                 <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-[#FF9800]/5 via-transparent to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+
+                {/* In-App Browser Warning */}
+                {isRestrictedBrowser && (
+                    <div className="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex gap-3 items-start animate-in fade-in slide-in-from-top-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-yellow-200/90 font-medium">
+                            {strings.browserWarning}
+                        </p>
+                    </div>
+                )}
 
                 {/* Google Login Button */}
                 <button
