@@ -18,4 +18,5 @@ export const auth = betterAuth({
     },
     trustedOrigins: ["http://localhost:3000", "https://speedlightculture.com", "https://www.speedlightculture.com"],
     baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    secret: process.env.BETTER_AUTH_SECRET,
 });

@@ -145,8 +145,8 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
     return (
         <div className="w-full max-w-md mx-auto relative z-10">
             {/* Header Text */}
-            <div className="text-center mb-10">
-                <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wider text-white mb-3">
+            <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+                <h2 className="text-3xl md:text-4xl font-display font-bold uppercase tracking-wider text-white mb-3 drop-shadow-[0_0_15px_rgba(255,152,0,0.4)]">
                     {isLogin ? strings.welcome : strings.join}
                 </h2>
                 <p className="text-gray-400 text-sm md:text-base font-light">
@@ -154,10 +154,10 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                 </p>
             </div>
 
-            <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden group">
+            <div className="bg-[#0A0A0A]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 md:p-8 shadow-[0_0_50px_rgba(0,0,0,0.5)] relative overflow-hidden group animate-in fade-in zoom-in-95 duration-500">
 
                 {/* ... Gradient Bloom ... */}
-                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-[#FF9800]/5 via-transparent to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
+                <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-[#FF9800]/10 via-transparent to-transparent pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity duration-700"></div>
 
                 {/* In-App Browser Warning */}
                 {isRestrictedBrowser && (
@@ -173,7 +173,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
                 <button
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
-                    className="relative z-10 w-full bg-white hover:bg-gray-50 text-black font-bold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 mb-8 shadow-[0_4px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.2)] transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative z-10 w-full bg-white hover:bg-gray-50 border border-gray-200 text-black font-bold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 mb-8 shadow-[0_4px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.2)] transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

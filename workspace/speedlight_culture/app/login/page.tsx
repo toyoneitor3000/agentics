@@ -26,6 +26,20 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen w-full bg-[#050302] lg:grid lg:grid-cols-2 relative">
 
+            {/* Brand Logo - Top Left (Global) */}
+            <div className="absolute top-6 left-6 lg:top-10 lg:left-12 z-50">
+                <Link href="/" className="hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_15px_rgba(255,152,0,0.3)] block">
+                    <Image
+                        src="/logonavbar.png"
+                        alt="Speedlight Culture"
+                        width={200}
+                        height={60}
+                        className="w-32 md:w-48 h-auto object-contain"
+                        priority
+                    />
+                </Link>
+            </div>
+
             {/* Left Panel: Immersive Image (Desktop Only) */}
             <div className="hidden lg:block relative overflow-hidden h-full">
                 <Image
@@ -63,15 +77,7 @@ export default function LoginPage() {
                     <div className="absolute inset-0 bg-gradient-to-b from-[#050302] via-[#050302]/90 to-[#050302]"></div>
                 </div>
 
-                {/* Navbar Placeholder / Logo Link */}
-                <div className="absolute top-8 left-0 w-full flex justify-center lg:justify-end lg:pr-12 z-20">
-                    <Link href="/" className="hover:opacity-80 transition-opacity">
-                        <span className="text-xl font-display font-bold text-white tracking-widest flex items-center gap-2">
-                            <span className="w-8 h-8 rounded-full bg-[#FF9800] flex items-center justify-center text-black font-bold italic">S</span>
-                            SPEEDLIGHT
-                        </span>
-                    </Link>
-                </div>
+                {/* Navbar Placeholder / Logo Link - REMOVED (Moved to Global Top Left) */}
 
                 <AuthForm />
 
