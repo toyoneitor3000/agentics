@@ -107,6 +107,10 @@ export default function ReelsPage() {
 }
 
 function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: boolean, isGlobalMuted: boolean }) {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showControls, setShowControls] = useState(true);
+
     const [isVideoReady, setIsVideoReady] = useState(false);
     const [showFullMovie, setShowFullMovie] = useState(false);
     const [imgError, setImgError] = useState(false);
@@ -121,17 +125,10 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
     const videoId = getYoutubeId(reel.videoUrl);
 
     // Params for "Netflix-like" automated experience
-    // - autoplay=1: Start immediately
-    // - mute=1: Crucial for autoplay policies
-    // - controls=0: Hide YT UI for cinema feel
-    // - start=0&end=15: The "Trailer" logic
-    // - loop=1&playlist={id}: Loop the trailer
-    // - vq=hd2160: Force 4K/High Quality preference
-    // - modestbranding=1: Hide logo as much as possible
+    // - enablejsapi=1: Required to control quality via PostMessage
+    const trailerParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=0&start=0&end=15&version=3&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1`;
 
-    const trailerParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=0&start=0&end=15&version=3&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&vq=hd2160`;
-
-    const fullMovieParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=1&version=3&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&vq=hd2160`;
+    const fullMovieParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=1&version=3&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1`;
 
     const embedUrl = `https://www.youtube.com/embed/${videoId}${showFullMovie ? fullMovieParams : trailerParams}`;
 
@@ -143,8 +140,49 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
         }
     }, [isActive]);
 
+    // Handle Fullscreen Events
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            const isFs = !!document.fullscreenElement;
+            setIsFullscreen(isFs);
+            // Hide controls by default when entering FS, show when exiting
+            setShowControls(!isFs);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
+    // Force 4K via YouTube JS API
+    const forceQuality = () => {
+        if (iframeRef.current && iframeRef.current.contentWindow) {
+            console.log("Attempting to force 4K...");
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'setPlaybackQualityRange',
+                args: ['hd2160', 'hd2160']
+            }), '*');
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'setPlaybackQuality',
+                args: ['hd2160']
+            }), '*');
+        }
+        // Delay ready state slightly to allow quality switch
+        setTimeout(() => setIsVideoReady(true), 1500);
+    };
+
+    const toggleControls = () => {
+        if (isFullscreen) {
+            setShowControls(prev => !prev);
+        }
+    };
+
     return (
-        <div className="h-full w-full snap-center relative flex items-center justify-center bg-black overflow-hidden">
+        <div
+            className="h-full w-full snap-center relative flex items-center justify-center bg-black overflow-hidden"
+            onClick={toggleControls}
+        >
 
             {/* 1. LAYER: POSTER / THUMBNAIL (Always visible until video is ready) */}
             <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isVideoReady ? 'opacity-0' : 'opacity-100'}`}>
@@ -174,27 +212,29 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                     {!showFullMovie && (
                         <div
                             className="absolute inset-0 z-20 bg-transparent cursor-pointer"
-                            onClick={() => setShowFullMovie(true)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setShowFullMovie(true);
+                            }}
                         ></div>
                     )}
 
                     <iframe
+                        ref={iframeRef}
                         src={embedUrl}
                         className="w-full h-full object-cover scale-[1.35] pointer-events-auto" // Scale nicely covers YT black bars
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
-                        onLoad={() => {
-                            // Small timeout to ensure buffering doesn't show black flash
-                            setTimeout(() => setIsVideoReady(true), 1500);
-                        }}
+                        onLoad={forceQuality}
                     />
                 </div>
             )}
 
-            {/* 3. LAYER: UI OVERLAY (Hide when watching full movie?) No, always show for context or auto-hide? 
-                Let's keep it visible for the "Feed" feel, videos usually play behind UI.
-            */}
-            <div className={`absolute bottom-20 left-4 right-16 z-30 transition-all duration-500 pointer-events-none ${showFullMovie ? 'opacity-0 translate-y-10' : 'opacity-100'}`}>
+            {/* 3. LAYER: UI OVERLAY */}
+            <div className={`absolute bottom-20 left-4 right-16 z-30 transition-all duration-500 pointer-events-none 
+                ${showFullMovie ? 'opacity-0 translate-y-10' : ''} 
+                ${isFullscreen && !showControls ? 'opacity-0 translate-y-10' : 'opacity-100'}`
+            }>
                 {/* ... Metadata ... */}
                 <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF9800] to-yellow-500 p-[1px]">
@@ -213,7 +253,10 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
 
                 {/* CALL TO ACTION: WATCH FULL */}
                 <button
-                    onClick={() => setShowFullMovie(true)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFullMovie(true);
+                    }}
                     className="mt-6 pointer-events-auto bg-white/10 hover:bg-[#FF9800] hover:text-black border border-white/20 text-white px-6 py-2.5 rounded-lg flex items-center gap-3 backdrop-blur-md transition-all group"
                 >
                     <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -227,7 +270,10 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
             </div>
 
             {/* Right Actions Sidebar */}
-            <div className={`absolute bottom-24 right-2 z-30 flex flex-col gap-6 items-center transition-all ${showFullMovie ? 'opacity-0 translate-x-10' : 'opacity-100'}`}>
+            <div className={`absolute bottom-24 right-2 z-30 flex flex-col gap-6 items-center transition-all 
+                ${showFullMovie ? 'opacity-0 translate-x-10' : ''}
+                ${isFullscreen && !showControls ? 'opacity-0 translate-x-10' : 'opacity-100'}`
+            }>
                 {/* Likes */}
                 <div className="flex flex-col items-center gap-1 pointer-events-auto">
                     <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:text-red-500 hover:bg-white/10 transition-all">
@@ -252,7 +298,8 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                 {/* Fullscreen Toggle */}
                 <div className="flex flex-col items-center gap-1 pointer-events-auto">
                     <button
-                        onClick={() => {
+                        onClick={(e) => {
+                            e.stopPropagation();
                             if (!document.fullscreenElement) {
                                 document.documentElement.requestFullscreen();
                             } else {
@@ -263,17 +310,21 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                         }}
                         className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/10 transition-all"
                     >
-                        <Maximize className="w-6 h-6" />
+                        {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
                     </button>
-                    <span className="text-xs text-white font-bold">Full</span>
+                    <span className="text-xs text-white font-bold">{isFullscreen ? 'Exit' : 'Full'}</span>
                 </div>
             </div>
 
             {/* Back Button for Full Movie Mode */}
             {showFullMovie && (
                 <button
-                    onClick={() => setShowFullMovie(false)}
-                    className="absolute top-24 left-6 z-40 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold uppercase border border-white/10 hover:bg-white hover:text-black transition-colors pointer-events-auto"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowFullMovie(false);
+                    }}
+                    className={`absolute top-24 left-6 z-40 bg-black/50 backdrop-blur-md text-white px-4 py-2 rounded-full text-xs font-bold uppercase border border-white/10 hover:bg-white hover:text-black transition-colors pointer-events-auto
+                    ${isFullscreen && !showControls ? 'opacity-0' : 'opacity-100'}`}
                 >
                     Volver al Feed
                 </button>
