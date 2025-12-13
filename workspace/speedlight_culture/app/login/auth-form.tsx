@@ -171,6 +171,7 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
 
                 {/* Google Login Button */}
                 <button
+                    type="button"
                     onClick={handleGoogleLogin}
                     disabled={isLoading}
                     className="relative z-10 w-full bg-white hover:bg-gray-50 border border-gray-200 text-black font-bold py-3.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 mb-8 shadow-[0_4px_20px_rgba(255,255,255,0.1)] hover:shadow-[0_4px_25px_rgba(255,255,255,0.2)] transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
