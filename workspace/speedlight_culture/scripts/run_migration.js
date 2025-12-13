@@ -39,7 +39,7 @@ async function run() {
         console.log('Connecting to database...');
         await client.connect();
 
-        const sqlPath = path.join(__dirname, '../supabase/migrations/20251212_migrate_legacy_to_better_auth.sql');
+        const sqlPath = path.join(__dirname, '../supabase/migrations/20251212_open_avatars_bucket.sql');
         const sql = fs.readFileSync(sqlPath, 'utf8');
 
         console.log('Executing migration from:', sqlPath);
