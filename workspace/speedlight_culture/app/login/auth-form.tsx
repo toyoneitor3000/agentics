@@ -89,7 +89,8 @@ export default function AuthForm({ initialView = 'login' }: AuthFormProps) {
             });
             // If the code reaches here without throwing, but no redirect happened automatically (which can happen in SPA mode sometimes), force it.
             if (res && !res.error) {
-                window.location.href = "/profile";
+                // BetterAuth handles the redirect to Google automatically.
+                // Do NOT manually redirect to /profile here.
             }
         } catch (err: any) {
             setError(err.message || "Error starting Google Login");

@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { Edit3 } from "lucide-react";
 
-export const dynamic = 'force-dynamic';
+
 
 export default async function ProfilePage() {
     const supabase = await createClient();
