@@ -4,6 +4,7 @@ import { Pool } from "pg";
 console.log("Initializing BetterAuth with URL:", process.env.DATABASE_URL?.split('@')[1]); // Log DB host only for privacy
 
 export const auth = betterAuth({
+    debug: true,
     database: new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: {

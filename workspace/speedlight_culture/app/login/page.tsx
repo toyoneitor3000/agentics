@@ -46,6 +46,7 @@ export default function LoginPage() {
                     src="/hero-bg.png"
                     alt="Speedlight Garage"
                     fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover"
                     priority
                 />
@@ -72,6 +73,7 @@ export default function LoginPage() {
                         src="https://images.unsplash.com/photo-1611566026373-c6c85447dbdc?q=80&w=1000&auto=format&fit=crop"
                         alt="Background"
                         fill
+                        sizes="100vw"
                         className="object-cover opacity-20"
                     />
                     <div className="absolute inset-0 bg-gradient-to-b from-[#050302] via-[#050302]/90 to-[#050302]"></div>
