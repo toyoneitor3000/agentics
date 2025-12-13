@@ -6,7 +6,8 @@ import EditProjectForm from './EditProjectForm';
 import Link from 'next/link';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
-export default async function EditProjectPage({ params }: { params: { id: string } }) {
+export default async function EditProjectPage(props: { params: Promise<{ id: string }> }) {
+    const params = await props.params;
     const session = await auth.api.getSession({
         headers: await headers()
     });
@@ -15,9 +16,7 @@ export default async function EditProjectPage({ params }: { params: { id: string
         redirect('/login');
     }
 
-    const { id } = await params; // Wait, params in newer Next.js might need await or proper type. Generally { params: { id: string } } works for page props. 
-    // Wait, params is async in latest Next.js canary, but standard 14/15 is sync props, but sometimes types differ.
-    // Let's assume standard props.
+    const { id } = params;
 
     const { rows: projectRows } = await query(
         'SELECT * FROM projects WHERE id = $1',
