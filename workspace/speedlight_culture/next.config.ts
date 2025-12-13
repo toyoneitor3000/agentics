@@ -30,6 +30,18 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'scontent.cdninstagram.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'scontent-iad3-1.cdninstagram.com', // Common variant, but wildcards often tricky in nextjs config for subdomains sometimes, usually better to suffice with one or use a pattern if supported. NextJS uses patterns.
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
