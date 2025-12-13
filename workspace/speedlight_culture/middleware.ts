@@ -1,8 +1,16 @@
-
-import { type NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/app/utils/supabase/middleware'
 
 export async function middleware(request: NextRequest) {
+    const host = request.headers.get('host')
+
+    // Redirect speedlightculture.com to www.speedlightculture.com in production
+    if (process.env.NODE_ENV === 'production' && host === 'speedlightculture.com') {
+        const url = request.nextUrl.clone()
+        url.hostname = 'www.speedlightculture.com'
+        return NextResponse.redirect(url)
+    }
+
     return await updateSession(request)
 }
 
