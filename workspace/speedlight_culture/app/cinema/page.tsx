@@ -59,7 +59,7 @@ export default function ReelsPage() {
     return (
         <div className="bg-black h-[100dvh] w-full overflow-hidden relative">
 
-            {/* Header Overlay - Adjusted Spacing */}
+            {/* Header Overlay - Minimalist */}
             <div className="absolute top-14 left-0 right-0 z-50 px-6 flex justify-between items-start pointer-events-none">
                 <div className="flex flex-col items-start gap-2 animate-in slide-in-from-top-4 duration-700 pointer-events-auto">
                     <div className="flex items-center gap-3">
@@ -69,22 +69,17 @@ export default function ReelsPage() {
                                 Cinema
                             </span>
                             <span className="text-white text-lg font-oswald font-bold uppercase tracking-wide drop-shadow-lg leading-none">
-                                Speedlight TV
+                                Speedlight Cinema
                             </span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex gap-3 pointer-events-auto">
-                    {/* Upload Button */}
-                    <Link href="/cinema/upload" className="flex items-center gap-2 bg-[#FF9800] text-black px-4 py-2 rounded-full font-bold text-xs uppercase hover:bg-white transition-colors shadow-lg">
-                        <Plus className="w-4 h-4" />
-                        <span>Subir</span>
+                    {/* Minimal Upload Button (Icon Only) */}
+                    <Link href="/cinema/upload" className="w-10 h-10 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-full border border-white/10 text-white/80 hover:text-[#FF9800] hover:bg-white/10 transition-colors shadow-lg">
+                        <Plus className="w-5 h-5" />
                     </Link>
-
-                    <button onClick={() => setIsMuted(!isMuted)} className="text-white/80 hover:text-white bg-black/40 backdrop-blur-md p-2 rounded-full border border-white/10">
-                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
                 </div>
             </div>
 
@@ -99,6 +94,7 @@ export default function ReelsPage() {
                         reel={reel}
                         isActive={index === currentReelIndex}
                         isGlobalMuted={isMuted}
+                        toggleMute={() => setIsMuted(!isMuted)}
                     />
                 ))}
             </div>
@@ -106,7 +102,7 @@ export default function ReelsPage() {
     );
 }
 
-function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: boolean, isGlobalMuted: boolean }) {
+function CinemaReel({ reel, isActive, isGlobalMuted, toggleMute }: { reel: any, isActive: boolean, isGlobalMuted: boolean, toggleMute: () => void }) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -270,7 +266,7 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                 ${isFullscreen && !showControls ? 'opacity-0 translate-y-10' : 'opacity-100'}`
             }>
                 {/* ... Metadata ... */}
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF9800] to-yellow-500 p-[1px]">
                         <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-[10px] font-bold text-white overflow-hidden relative">
                             {reel.avatar ? (
@@ -280,7 +276,12 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                             )}
                         </div>
                     </div>
-                    <span className="text-white font-bold text-sm shadow-black drop-shadow-md">{reel.creator}</span>
+                    <div className="flex items-center gap-2">
+                        <span className="text-white font-bold text-sm shadow-black drop-shadow-md">{reel.creator}</span>
+                        <button className="bg-white/10 hover:bg-white/20 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border border-white/20 transition-colors pointer-events-auto backdrop-blur-sm">
+                            Seguir
+                        </button>
+                    </div>
                 </div>
                 <h2 className="text-white font-oswald text-2xl font-bold mb-1 drop-shadow-lg">{reel.title}</h2>
                 <p className="text-white/80 text-sm font-light leading-snug drop-shadow-md line-clamp-2">{reel.description}</p>
@@ -308,6 +309,17 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                 ${showFullMovie ? 'opacity-0 translate-x-10' : ''}
                 ${isFullscreen && !showControls ? 'opacity-0 translate-x-10' : 'opacity-100'}`
             }>
+                {/* Mute Toggle (New Location) */}
+                <div className="flex flex-col items-center gap-1 pointer-events-auto">
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                        className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white/80 hover:text-white border border-white/10 hover:bg-white/10 transition-all"
+                    >
+                        {isGlobalMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                    </button>
+                    <span className="text-xs text-white font-bold">{isGlobalMuted ? 'Muted' : 'Sound'}</span>
+                </div>
+
                 {/* Likes */}
                 <div className="flex flex-col items-center gap-1 pointer-events-auto">
                     <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:text-red-500 hover:bg-white/10 transition-all">
