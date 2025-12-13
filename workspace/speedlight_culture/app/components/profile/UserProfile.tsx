@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Calendar, Star, Users, Heart, Grid, Youtube, Image as ImageIcon, Briefcase, Zap, BadgeCheck, CarFront } from 'lucide-react';
+import { MapPin, Calendar, Star, Users, Heart, Grid, Youtube, Image as ImageIcon, Briefcase, Zap, BadgeCheck, CarFront, MoreVertical, Archive, Trash2, Edit, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { createClient } from '@/app/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 
 interface ProfileProps {
     profile: any;
@@ -25,12 +27,100 @@ interface ProfileProps {
 }
 
 export default function UserProfile({ profile, stats, content, isOwnProfile, actionButtons }: ProfileProps) {
-    const [activeTab, setActiveTab] = useState<'garage' | 'gallery' | 'events' | 'cinema'>('garage');
+    const [activeTab, setActiveTab] = useState<'garage' | 'gallery' | 'events' | 'cinema' | 'archived'>('garage');
+    const supabase = createClient();
+    const router = useRouter();
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+    // Filter Content (Active vs Archived)
+    const filterContent = (items: any[]) => {
+        const active = items.filter(i => !i.archived);
+        const archived = items.filter(i => i.archived);
+        return { active, archived };
+    };
+
+    const projects = filterContent(content.projects);
+    const albums = filterContent(content.albums);
+    const events = filterContent(content.events);
+
+    const hasArchivedContent = projects.archived.length > 0 || albums.archived.length > 0 || events.archived.length > 0;
+
+    const toggleMenu = (id: string, e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setOpenMenuId(openMenuId === id ? null : id);
+    };
+
+    const handleArchive = async (type: 'projects' | 'gallery_albums' | 'events', id: string, currentStatus: boolean) => {
+        await supabase.from(type).update({ archived: !currentStatus }).eq('id', id);
+        setOpenMenuId(null);
+        router.refresh();
+    };
+
+    const handleDelete = async (type: 'projects' | 'gallery_albums' | 'events', id: string) => {
+        if (!confirm('¿Estás seguro de eliminar esto permanentemente?')) return;
+        await supabase.from(type).delete().eq('id', id);
+        setOpenMenuId(null);
+        router.refresh();
+    };
+
+    // Generic Action Menu Component
+    const ActionMenu = ({ type, id, isArchived, editUrl }: { type: 'projects' | 'gallery_albums' | 'events', id: string, isArchived: boolean, editUrl?: string }) => {
+        if (!isOwnProfile) return null;
+
+        const menuId = `${type}-${id}`;
+        const isOpen = openMenuId === menuId;
+
+        return (
+            <div className="absolute top-2 right-2 z-30">
+                <button
+                    onClick={(e) => toggleMenu(menuId, e)}
+                    className="p-1.5 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md transition-colors"
+                >
+                    <MoreVertical className="w-4 h-4" />
+                </button>
+
+                {isOpen && (
+                    <>
+                        <div className="fixed inset-0 z-40" onClick={(e) => { e.preventDefault(); setOpenMenuId(null); }} />
+                        <div className="absolute right-0 mt-2 w-48 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 flex flex-col animate-in fade-in zoom-in-95 duration-200">
+                            {/* Edit */}
+                            {editUrl && (
+                                <Link
+                                    href={editUrl}
+                                    className="px-4 py-3 text-left text-xs font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
+                                >
+                                    <Edit className="w-3 h-3" /> Editar
+                                </Link>
+                            )}
+
+                            {/* Archive */}
+                            <button
+                                onClick={(e) => { e.preventDefault(); handleArchive(type, id, isArchived); }}
+                                className="px-4 py-3 text-left text-xs font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors border-t border-white/5"
+                            >
+                                {isArchived ? <Eye className="w-3 h-3 text-green-500" /> : <EyeOff className="w-3 h-3 text-yellow-500" />}
+                                {isArchived ? 'Mostrar en perfil' : 'Archivar (Ocultar)'}
+                            </button>
+
+                            {/* Delete */}
+                            <button
+                                onClick={(e) => { e.preventDefault(); handleDelete(type, id); }}
+                                className="px-4 py-3 text-left text-xs font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                            >
+                                <Trash2 className="w-3 h-3" /> Eliminar
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    };
 
     return (
         <div className="min-h-screen bg-[#050505] text-white pb-24">
             {/* 1. COVER IMAGE (Full Bleed Mobile) */}
-            <div className="relative h-48 md:h-64 w-full bg-[#111] overflow-hidden">
+            <div className="relative h-80 md:h-[420px] w-full bg-[#111] overflow-hidden">
                 {profile?.cover_url ? (
                     <Image src={profile.cover_url} alt="Cover" fill className="object-cover" />
                 ) : (
@@ -39,7 +129,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent"></div>
             </div>
 
-            <div className="px-4 sm:px-6 relative z-10 -mt-20">
+            <div className="px-4 sm:px-6 relative z-10 -mt-40 md:-mt-64">
                 {/* 2. HEADER INFO */}
                 <div className="flex flex-col items-center text-center">
                     {/* Avatar */}
@@ -168,26 +258,41 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                                 <Youtube className="w-5 h-5" />
                                 <span className="text-[10px] font-bold uppercase tracking-wider">Cinema</span>
                             </button>
+
+                            {/* Archived Tab (Only for Owner) */}
+                            {isOwnProfile && hasArchivedContent && (
+                                <button
+                                    onClick={() => setActiveTab('archived')}
+                                    className={`flex-1 flex flex-col items-center gap-1 px-4 py-2 rounded-lg transition-all ${activeTab === 'archived' ? 'bg-white/10 text-white' : 'text-white/40 hover:bg-white/5 hover:text-white'}`}
+                                >
+                                    <Archive className="w-5 h-5" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider">Archivados</span>
+                                </button>
+                            )}
                         </div>
                     </div>
 
                     {/* 5. GRID CONTENT */}
                     <div className="w-full max-w-4xl">
+                        {/* GARAJE */}
                         {activeTab === 'garage' && (
-                            content.projects.length > 0 ? (
+                            projects.active.length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {content.projects.map((p) => (
-                                        <Link href={`/projects/${p.id}`} key={p.id} className="aspect-[4/5] bg-[#1a1a1a] rounded-xl overflow-hidden relative group">
-                                            {p.cover_image || p.gallery_images?.[0] ? (
-                                                <Image src={p.cover_image || p.gallery_images[0]} alt={p.title} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white/10"><Briefcase className="w-8 h-8" /></div>
-                                            )}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
-                                                <p className="text-white font-bold text-sm truncate">{p.title}</p>
-                                                <p className="text-[#FF9800] text-[10px] uppercase font-bold">{p.make} {p.model}</p>
-                                            </div>
-                                        </Link>
+                                    {projects.active.map((p) => (
+                                        <div key={p.id} className="relative group">
+                                            <Link href={`/projects/${p.id}`} className="block aspect-[4/5] bg-[#1a1a1a] rounded-xl overflow-hidden relative">
+                                                {p.cover_image || p.gallery_images?.[0] ? (
+                                                    <Image src={p.cover_image || p.gallery_images[0]} alt={p.title} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white/10"><Briefcase className="w-8 h-8" /></div>
+                                                )}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3">
+                                                    <p className="text-white font-bold text-sm truncate">{p.title}</p>
+                                                    <p className="text-[#FF9800] text-[10px] uppercase font-bold">{p.make} {p.model}</p>
+                                                </div>
+                                            </Link>
+                                            <ActionMenu type="projects" id={p.id} isArchived={false} editUrl={`/projects/${p.id}/edit`} />
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -195,20 +300,24 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                             )
                         )}
 
+                        {/* GALERÍA */}
                         {activeTab === 'gallery' && (
-                            content.albums.length > 0 ? (
+                            albums.active.length > 0 ? (
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                                    {content.albums.map((a) => (
-                                        <Link href={`/gallery/${a.id}`} key={a.id} className="aspect-square bg-[#1a1a1a] rounded-xl overflow-hidden relative group">
-                                            {a.cover_url ? (
-                                                <Image src={a.cover_url} alt={a.title} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon className="w-8 h-8" /></div>
-                                            )}
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <span className="text-white font-bold text-sm">{a.title}</span>
-                                            </div>
-                                        </Link>
+                                    {albums.active.map((a) => (
+                                        <div key={a.id} className="relative group">
+                                            <Link href={`/gallery/${a.id}`} className="block aspect-square bg-[#1a1a1a] rounded-xl overflow-hidden relative">
+                                                {a.cover_url ? (
+                                                    <Image src={a.cover_url} alt={a.title} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-white/10"><ImageIcon className="w-8 h-8" /></div>
+                                                )}
+                                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                    <span className="text-white font-bold text-sm">{a.title}</span>
+                                                </div>
+                                            </Link>
+                                            <ActionMenu type="gallery_albums" id={a.id} isArchived={false} />
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -216,20 +325,24 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                             )
                         )}
 
+                        {/* EVENTOS */}
                         {activeTab === 'events' && (
-                            content.events.length > 0 ? (
+                            events.active.length > 0 ? (
                                 <div className="space-y-3">
-                                    {content.events.map((e) => (
-                                        <Link href={`/events/${e.id}`} key={e.id} className="flex bg-[#111] p-3 rounded-xl gap-4 border border-[#222]">
-                                            <div className="w-16 h-16 bg-[#222] rounded-lg shrink-0 relative overflow-hidden">
-                                                {e.image && <Image src={e.image} alt={e.title} fill className="object-cover" />}
-                                            </div>
-                                            <div className="text-left">
-                                                <h3 className="text-white font-bold text-sm">{e.title}</h3>
-                                                <p className="text-white/40 text-xs">{e.date || 'Fecha por definir'}</p>
-                                                <p className="text-[#FF9800] text-xs font-bold uppercase mt-1">{e.location}</p>
-                                            </div>
-                                        </Link>
+                                    {events.active.map((e) => (
+                                        <div key={e.id} className="relative group">
+                                            <Link href={`/events/${e.id}`} className="flex bg-[#111] p-3 rounded-xl gap-4 border border-[#222]">
+                                                <div className="w-16 h-16 bg-[#222] rounded-lg shrink-0 relative overflow-hidden">
+                                                    {e.image && <Image src={e.image} alt={e.title} fill className="object-cover" />}
+                                                </div>
+                                                <div className="text-left">
+                                                    <h3 className="text-white font-bold text-sm">{e.title}</h3>
+                                                    <p className="text-white/40 text-xs">{e.date || 'Fecha por definir'}</p>
+                                                    <p className="text-[#FF9800] text-xs font-bold uppercase mt-1">{e.location}</p>
+                                                </div>
+                                            </Link>
+                                            <ActionMenu type="events" id={e.id} isArchived={false} />
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -237,8 +350,50 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                             )
                         )}
 
+                        {/* CINEMA */}
                         {activeTab === 'cinema' && (
                             <EmptyState icon={Youtube} text="Próximamente" subtext="El módulo de video estará disponible pronto." />
+                        )}
+
+                        {/* ARCHIVADOS */}
+                        {activeTab === 'archived' && (
+                            <div className="space-y-8 animate-in fade-in duration-300">
+                                {projects.archived.length > 0 && (
+                                    <div>
+                                        <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <Briefcase className="w-4 h-4" /> Proyectos Archivados
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {projects.archived.map((p) => (
+                                                <div key={p.id} className="relative group opacity-60 hover:opacity-100 transition-opacity">
+                                                    <div className="aspect-[4/5] bg-[#1a1a1a] rounded-xl overflow-hidden relative">
+                                                        {p.cover_image && <Image src={p.cover_image} alt={p.title} fill className="object-cover grayscale" />}
+                                                    </div>
+                                                    <ActionMenu type="projects" id={p.id} isArchived={true} editUrl={`/projects/${p.id}/edit`} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {albums.archived.length > 0 && (
+                                    <div>
+                                        <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <ImageIcon className="w-4 h-4" /> Álbumes Archivados
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                            {albums.archived.map((a) => (
+                                                <div key={a.id} className="relative group opacity-60 hover:opacity-100 transition-opacity">
+                                                    <div className="aspect-square bg-[#1a1a1a] rounded-xl overflow-hidden relative">
+                                                        {a.cover_url && <Image src={a.cover_url} alt={a.title} fill className="object-cover grayscale" />}
+                                                    </div>
+                                                    <ActionMenu type="gallery_albums" id={a.id} isArchived={true} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

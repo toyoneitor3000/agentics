@@ -36,30 +36,29 @@ export const ProjectGallery = ({ projectId, images, isOwner }: ProjectGalleryPro
                     <span className="w-8 h-1 bg-[#FF9800]"></span>
                     Galería
                 </h2>
-                {isOwner && (
-                    <span className="text-xs text-[#FF9800] bg-[#FF9800]/10 px-3 py-1 rounded-full animate-pulse border border-[#FF9800]/20">
-                        Modo Edición
-                    </span>
-                )}
+
             </div>
 
-            {/* Warning & Uploader for Owner */}
+            {/* Warning & Uploader for Owner (Collapsible) */}
             {isOwner && (
-                <div className="mb-8 space-y-4">
-                    <div className="bg-yellow-900/10 border border-yellow-700/30 p-4 rounded-xl flex gap-3 items-start">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="text-yellow-500 font-bold text-sm mb-1">Advertencia de Contenido Público</h4>
-                            <p className="text-yellow-500/60 text-xs leading-relaxed">
-                                Todas las imágenes subidas son visibles para cualquier visitante del sitio.
-                                Por su seguridad, <strong>NO suba fotos que revelen direcciones de casa, placas visibles si prefiere privacidad, o documentos personales.</strong>
-                                El contenido inapropiado será eliminado y la cuenta sancionada.
-                            </p>
+                <details className="mb-8 group">
+                    <summary className="list-none cursor-pointer flex items-center gap-2 text-[#FF9800] text-sm font-bold uppercase tracking-widest bg-[#FF9800]/10 px-4 py-3 rounded-xl hover:bg-[#FF9800]/20 transition-colors">
+                        <span className="flex-1">Agregar Fotos a la Galería</span>
+                        <span className="text-xl leading-none group-open:rotate-180 transition-transform">+</span>
+                    </summary>
+                    <div className="pt-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+                        <div className="bg-yellow-900/10 border border-yellow-700/30 p-4 rounded-xl flex gap-3 items-start">
+                            <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-yellow-500 font-bold text-sm mb-1">Nota de Privacidad</h4>
+                                <p className="text-yellow-500/60 text-xs leading-relaxed">
+                                    Las imágenes son públicas. Evita subir fotos con direcciones o datos sensibles visibles.
+                                </p>
+                            </div>
                         </div>
+                        <UploadGallery projectId={projectId} />
                     </div>
-
-                    <UploadGallery projectId={projectId} />
-                </div>
+                </details>
             )}
 
             {/* Image Grid */}

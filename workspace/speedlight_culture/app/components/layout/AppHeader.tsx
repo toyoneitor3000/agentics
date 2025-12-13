@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard } from "lucide-react";
+import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard, ChevronLeft } from "lucide-react";
 import { useSession, signOut } from "@/app/lib/auth-client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function AppHeader() {
     const { data: session, isPending } = useSession();
@@ -13,6 +14,8 @@ export default function AppHeader() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [userRole, setUserRole] = useState<string | null>(null);
     const supabase = createClient();
+    const pathname = usePathname();
+    const router = useRouter();
 
     // Check Admin Role
     useEffect(() => {
@@ -32,6 +35,7 @@ export default function AppHeader() {
     }, [user?.id, supabase]);
 
     const isAdmin = userRole === 'CEO' || userRole === 'ADMIN';
+    const showBackButton = pathname !== '/' && pathname !== null;
 
     const handleSignOut = async () => {
         await signOut({
@@ -48,12 +52,22 @@ export default function AppHeader() {
             {/* Cinematic Deep Fade Gradient (Background) */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
-            {/* Left: Logo (Desktop) / Bell (Mobile) */}
+            {/* Left: Back Button (Global) or Bell (Mobile Home) / Logo (Desktop) */}
             <div className="flex items-center gap-4 z-10 pointer-events-auto">
-                {/* Mobile: Notification Bell */}
-                <Link href="/notifications" className="md:hidden text-white/80 hover:text-[#FF9800] transition-colors p-2">
-                    <Bell className="w-6 h-6" />
-                </Link>
+                {showBackButton ? (
+                    <button
+                        onClick={() => router.back()}
+                        className="text-white hover:text-[#FF9800] transition-colors p-2 -ml-2 flex items-center justify-center bg-transparent"
+                        aria-label="Volver atrás"
+                    >
+                        <ChevronLeft className="w-8 h-8 md:w-6 md:h-6" />
+                    </button>
+                ) : (
+                    /* Mobile: Notification Bell (Only on Home) */
+                    <Link href="/notifications" className="md:hidden text-white/80 hover:text-[#FF9800] transition-colors p-2">
+                        <Bell className="w-6 h-6" />
+                    </Link>
+                )}
 
                 {/* Desktop: Brand Logo */}
                 <Link href="/" className="hidden md:block opacity-100 hover:scale-105 transition-transform duration-300">

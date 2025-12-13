@@ -98,7 +98,7 @@ export default function CreatePage() {
                     </Link>
 
                     {/* OPTION 3: CINEMA (REEL) */}
-                    <Link href="/reels/upload" className="group relative h-[400px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.02] transition-all duration-500 md:-mt-4 bg-[#0A0A0A]">
+                    <Link href="/cinema/upload" className="group relative h-[400px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.02] transition-all duration-500 md:-mt-4 bg-[#0A0A0A]">
                         <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop')] bg-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-700"></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
 

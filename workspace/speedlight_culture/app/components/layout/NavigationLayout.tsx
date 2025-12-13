@@ -21,7 +21,7 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
             <AppHeader />
 
             {/* Main Content Area */}
-            <main className="flex-1 w-full min-h-screen transition-all duration-300 pt-[70px] pb-[100px]">
+            <main className="flex-1 w-full min-h-screen transition-all duration-300 pt-0 pb-[100px]">
                 {children}
             </main>
 

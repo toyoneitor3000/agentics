@@ -56,7 +56,7 @@ export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSi
     // Profile moved to Top Header, removed from Sidebar
     const navItems = [
         { name: labels.home, path: "/", icon: Home },
-        { name: labels.cinema, path: "/reels", icon: Play },
+        { name: labels.cinema, path: "/cinema", icon: Play },
         { name: labels.explore, path: "/projects", icon: Compass },
         { name: labels.gallery, path: "/gallery", icon: Camera },
         { name: labels.academy, path: "/academy", icon: GraduationCap },

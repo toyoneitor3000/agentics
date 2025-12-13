@@ -17,7 +17,7 @@ export default function BottomNav() {
     // Reordered per user request ("Heart -> Gallery -> Cinema...")
     const navItems = [
         { name: "Galería", path: "/gallery", icon: ImageIcon }, // Changed to Image (Picture Frame)
-        { name: "Cinema", path: "/reels", icon: Play },
+        { name: "Cinema", path: "/cinema", icon: Play },
         { name: "Proyectos", path: "/projects", icon: Compass },
         { name: "Marketplace", path: "/marketplace", icon: ShoppingBag },
         { name: "Academy", path: "/academy", icon: GraduationCap },

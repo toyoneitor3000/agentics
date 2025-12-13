@@ -326,7 +326,7 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-[700px] mx-auto min-h-screen pb-20 pt-24 overflow-x-hidden">
+    <div className="max-w-[700px] mx-auto min-h-screen pb-20 pt-20 overflow-x-hidden">
 
 
 
@@ -338,8 +338,8 @@ export default function Home() {
         <>
           {/* HORIZONTAL SCROLL - Featured Machines */}
           {featuredItems.length > 0 && (
-            <div className="mb-8">
-              <div className="px-4 flex items-center justify-between mb-4">
+            <div className="mb-2">
+              <div className="px-4 flex items-center justify-between mb-2">
                 <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1 h-3 bg-[#FF9800] rounded-full"></span>
                   {labels.featured}
@@ -349,7 +349,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
+              <div className="flex overflow-x-auto gap-4 px-4 pb-2 snap-x snap-mandatory scrollbar-hide">
                 {featuredItems.map((item) => (
                   <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[85vw] max-w-[340px]">
                     <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
@@ -391,7 +391,7 @@ export default function Home() {
 
 
           {/* VERTICAL SCROLL - Main Feed */}
-          <div className="px-4 space-y-10">
+          <div className="px-4 space-y-6">
             <div className="flex items-center gap-2 mb-4 px-1">
               <Zap className="w-4 h-4 text-[#FF9800]" />
               <h2 className="text-white text-sm font-bold uppercase tracking-wider">{labels.latest}</h2>

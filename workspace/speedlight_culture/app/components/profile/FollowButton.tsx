@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
-import { createClient } from "@/app/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import { toggleFollow } from "@/app/actions/social";
 
 interface FollowButtonProps {
     targetUserId: string;
@@ -13,40 +14,27 @@ interface FollowButtonProps {
 export function FollowButton({ targetUserId, initialIsFollowing, currentUserId }: FollowButtonProps) {
     const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
     const [loading, setLoading] = useState(false);
-    const supabase = createClient();
+    const router = useRouter();
 
     const handleToggleFollow = async () => {
-        if (!currentUserId) return alert("Inicia sesión para seguir a este usuario."); // Simple alert for now
+        if (!currentUserId) {
+            // alert("Inicia sesión para seguir a este usuario.");
+            router.push('/login');
+            return;
+        }
         if (loading) return;
 
         setLoading(true);
-        const newStatus = !isFollowing;
-        setIsFollowing(newStatus); // Optimistic
+        // Optimistic update
+        const previousState = isFollowing;
+        setIsFollowing(!previousState);
 
         try {
-            if (newStatus) {
-                // Follow
-                const { error } = await supabase
-                    .from('follows')
-                    .insert({
-                        follower_id: currentUserId,
-                        following_id: targetUserId
-                    });
-                if (error) throw error;
-            } else {
-                // Unfollow
-                const { error } = await supabase
-                    .from('follows')
-                    .delete()
-                    .match({
-                        follower_id: currentUserId,
-                        following_id: targetUserId
-                    });
-                if (error) throw error;
-            }
+            const actualState = await toggleFollow(targetUserId);
+            setIsFollowing(actualState);
         } catch (error) {
             console.error("Error toggling follow:", error);
-            setIsFollowing(!newStatus); // Revert
+            setIsFollowing(previousState); // Revert
             alert("Error al actualizar seguimiento.");
         } finally {
             setLoading(false);
