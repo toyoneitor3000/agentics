@@ -24,18 +24,39 @@ export default async function AdminUsersPage() {
     // const { data: myProfile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
     // if (myProfile?.role !== 'CEO') redirect("/");
 
-    // 2. Fetch All Profiles
-    // We fetch from 'profiles' since it has the rich data (Founder #, XP, Level, Avatar)
-    // The previous migration linked profiles to 'user' auth table via ID.
-    const { data: profiles, error } = await supabase
+    // 2. Fetch All Profiles AND All Users (to get emails)
+    // Profiles contain the rich data (Founder #, XP, Level, Avatar)
+    // Users (from BetterAuth 'user' table) contain the email.
+
+    // Fetch Profiles
+    const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('founder_number', { ascending: true, nullsFirst: false });
 
-    if (error) {
-        console.error("Error fetching users:", error);
-        return <div className="p-8 text-red-500">Error loading users.</div>;
+    if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return <div className="p-8 text-red-500">Error loading profiles.</div>;
     }
+
+    // Fetch Users to get emails
+    const { data: users, error: usersError } = await supabase
+        .from('user') // BetterAuth table name is usually 'user' (singular) or 'users', defaulting to singular 'user' in standard schema unless changed.
+        .select('id, email');
+
+    if (usersError) {
+        console.error("Error fetching users auth data:", usersError);
+        // We continue showing profiles even if emails fail, just to be robust
+    }
+
+    // Map emails to profiles
+    const profilesWithEmails = profiles.map(profile => {
+        const userAuth = users?.find(u => u.id === profile.id);
+        return {
+            ...profile,
+            email: userAuth?.email || profile.email || 'No Email Found' // Fallback to profile.email just in case migration left one there
+        };
+    });
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -48,7 +69,7 @@ export default async function AdminUsersPage() {
                 </p>
             </header>
 
-            <UserListTable users={profiles || []} />
+            <UserListTable users={profilesWithEmails || []} />
         </div>
     );
 }
