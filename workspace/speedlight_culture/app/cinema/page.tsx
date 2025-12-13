@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, MoreVertical, Plus } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, MoreVertical, Plus, Maximize, Minimize } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -248,6 +248,24 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                         <Share2 className="w-6 h-6" />
                     </button>
                     <span className="text-xs text-white font-bold">Share</span>
+                </div>
+                {/* Fullscreen Toggle */}
+                <div className="flex flex-col items-center gap-1 pointer-events-auto">
+                    <button
+                        onClick={() => {
+                            if (!document.fullscreenElement) {
+                                document.documentElement.requestFullscreen();
+                            } else {
+                                if (document.exitFullscreen) {
+                                    document.exitFullscreen();
+                                }
+                            }
+                        }}
+                        className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/10 transition-all"
+                    >
+                        <Maximize className="w-6 h-6" />
+                    </button>
+                    <span className="text-xs text-white font-bold">Full</span>
                 </div>
             </div>
 
