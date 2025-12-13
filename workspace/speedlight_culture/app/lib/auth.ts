@@ -15,10 +15,6 @@ export const auth = betterAuth({
         google: {
             clientId: process.env.GOOGLE_CLIENT_ID as string,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-        },
-        instagram: {
-            clientId: process.env.INSTAGRAM_CLIENT_ID as string,
-            clientSecret: process.env.INSTAGRAM_CLIENT_SECRET as string,
         }
     },
     trustedOrigins: ["http://localhost:3000", "https://speedlightculture.com", "https://www.speedlightculture.com"],
