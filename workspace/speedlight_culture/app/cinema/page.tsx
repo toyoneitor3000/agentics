@@ -108,6 +108,7 @@ export default function ReelsPage() {
 
 function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: boolean, isGlobalMuted: boolean }) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
     const [isFullscreen, setIsFullscreen] = useState(false);
     const [showControls, setShowControls] = useState(true);
 
@@ -115,21 +116,22 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
     const [showFullMovie, setShowFullMovie] = useState(false);
     const [imgError, setImgError] = useState(false);
 
-    // Extract ID
+    // Identify Source Type
     const getYoutubeId = (url: string) => {
+        if (!url) return null;
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-        const match = url?.match(regExp);
+        const match = url.match(regExp);
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
     const videoId = getYoutubeId(reel.videoUrl);
+    const isYoutube = !!videoId;
+    // Attempt to identify if it's a direct video file (naive check, or just fallback if not YT)
+    const isNative = !isYoutube && reel.videoUrl;
 
-    // Params for "Netflix-like" automated experience
-    // - enablejsapi=1: Required to control quality via PostMessage
+    // Params for "Netflix-like" automated experience (YouTube)
     const trailerParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=0&start=0&end=15&version=3&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1`;
-
     const fullMovieParams = `?autoplay=1&mute=${isGlobalMuted ? 1 : 0}&controls=1&version=3&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1`;
-
     const embedUrl = `https://www.youtube.com/embed/${videoId}${showFullMovie ? fullMovieParams : trailerParams}`;
 
     // Reset state when sliding away
@@ -137,15 +139,33 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
         if (!isActive) {
             setShowFullMovie(false);
             setIsVideoReady(false);
+            // Pause native video if active
+            if (videoRef.current) {
+                videoRef.current.pause();
+                videoRef.current.currentTime = 0;
+            }
+        } else {
+            // Play native video if entering
+            if (videoRef.current) {
+                // Mute logic
+                videoRef.current.muted = isGlobalMuted;
+                videoRef.current.play().catch(e => console.log("Autoplay blocked:", e));
+            }
         }
-    }, [isActive]);
+    }, [isActive, isGlobalMuted]);
+
+    // Handle Mute Toggle Effect for Native
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isGlobalMuted;
+        }
+    }, [isGlobalMuted]);
 
     // Handle Fullscreen Events
     useEffect(() => {
         const handleFullscreenChange = () => {
             const isFs = !!document.fullscreenElement;
             setIsFullscreen(isFs);
-            // Hide controls by default when entering FS, show when exiting
             setShowControls(!isFs);
         };
 
@@ -156,19 +176,9 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
     // Force 4K via YouTube JS API
     const forceQuality = () => {
         if (iframeRef.current && iframeRef.current.contentWindow) {
-            console.log("Attempting to force 4K...");
-            iframeRef.current.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: 'setPlaybackQualityRange',
-                args: ['hd2160', 'hd2160']
-            }), '*');
-            iframeRef.current.contentWindow.postMessage(JSON.stringify({
-                event: 'command',
-                func: 'setPlaybackQuality',
-                args: ['hd2160']
-            }), '*');
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQualityRange', args: ['hd2160', 'hd2160'] }), '*');
+            iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackQuality', args: ['hd2160'] }), '*');
         }
-        // Delay ready state slightly to allow quality switch
         setTimeout(() => setIsVideoReady(true), 1500);
     };
 
@@ -186,14 +196,16 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
 
             {/* 1. LAYER: POSTER / THUMBNAIL (Always visible until video is ready) */}
             <div className={`absolute inset-0 z-0 transition-opacity duration-1000 ${isVideoReady ? 'opacity-0' : 'opacity-100'}`}>
-                <Image
-                    src={reel.poster}
-                    alt={reel.title}
-                    fill
-                    className="object-cover"
-                    priority={isActive}
-                    onError={() => setImgError(true)}
-                />
+                {reel.poster && (
+                    <Image
+                        src={reel.poster}
+                        alt={reel.title}
+                        fill
+                        className="object-cover"
+                        priority={isActive}
+                        onError={() => setImgError(true)}
+                    />
+                )}
                 {!isVideoReady && isActive && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
                         <div className="flex flex-col items-center gap-2">
@@ -205,28 +217,50 @@ function CinemaReel({ reel, isActive, isGlobalMuted }: { reel: any, isActive: bo
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
             </div>
 
-            {/* 2. LAYER: YOUTUBE PLAYER (Only Load if Active) */}
-            {isActive && videoId && (
+            {/* 2. LAYER: VIDEO PLAYER (YouTube OR Native) */}
+            {isActive && (
                 <div className={`absolute inset-0 z-10 transition-opacity duration-1000 ${isVideoReady ? 'opacity-100' : 'opacity-0'}`}>
-                    {/* Overlay to block Youtube Clicks/Pause in Trailer Mode to keep "Cinema" feel */}
-                    {!showFullMovie && (
-                        <div
-                            className="absolute inset-0 z-20 bg-transparent cursor-pointer"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowFullMovie(true);
-                            }}
-                        ></div>
+
+                    {/* YOUTUBE */}
+                    {isYoutube && (
+                        <>
+                            {!showFullMovie && (
+                                <div
+                                    className="absolute inset-0 z-20 bg-transparent cursor-pointer"
+                                    onClick={(e) => { e.stopPropagation(); setShowFullMovie(true); }}
+                                ></div>
+                            )}
+                            <iframe
+                                ref={iframeRef}
+                                src={embedUrl}
+                                className="w-full h-full object-cover scale-[1.35] pointer-events-auto"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                                onLoad={forceQuality}
+                            />
+                        </>
                     )}
 
-                    <iframe
-                        ref={iframeRef}
-                        src={embedUrl}
-                        className="w-full h-full object-cover scale-[1.35] pointer-events-auto" // Scale nicely covers YT black bars
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        onLoad={forceQuality}
-                    />
+                    {/* NATIVE VIDEO */}
+                    {isNative && (
+                        <video
+                            ref={videoRef}
+                            src={reel.videoUrl}
+                            className={`w-full h-full bg-black ${showFullMovie ? 'object-contain' : 'object-cover'}`}
+                            loop
+                            playsInline
+                            muted={isGlobalMuted}
+                            controls={showFullMovie} // Show native controls only when "watching full movie"
+                            onLoadedData={() => setIsVideoReady(true)}
+                            onClick={(e) => {
+                                // Toggle play/pause if needed, or behave like YT (click to full)
+                                if (!showFullMovie) {
+                                    e.stopPropagation();
+                                    setShowFullMovie(true);
+                                }
+                            }}
+                        />
+                    )}
                 </div>
             )}
 

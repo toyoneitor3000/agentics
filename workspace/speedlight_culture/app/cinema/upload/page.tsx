@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Youtube, Link as LinkIcon, AlertTriangle, CheckCircle2, MonitorPlay, Loader2 } from 'lucide-react';
-import { submitVideo } from '@/app/actions/cinema';
+import { useState, useEffect, useRef } from 'react';
+import { Youtube, Link as LinkIcon, AlertTriangle, CheckCircle2, MonitorPlay, Loader2, UploadCloud, FileVideo, X } from 'lucide-react';
+import { submitVideo, getSignedUploadUrl } from '@/app/actions/cinema';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
@@ -10,14 +10,23 @@ export default function UploadReelPage() {
     const router = useRouter();
 
     // State
+    const [mode, setMode] = useState<'youtube' | 'native'>('youtube');
     const [url, setUrl] = useState('');
     const [thumbnail, setThumbnail] = useState<string | null>(null);
     const [isValid, setIsValid] = useState(false);
     const [formData, setFormData] = useState({ title: '', description: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Native Upload State
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [isUploading, setIsUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     // Extract YouTube ID
     useEffect(() => {
+        if (mode !== 'youtube') return;
+
         const extractYoutubeId = (url: string) => {
             const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
             const match = url.match(regExp);
@@ -32,17 +41,89 @@ export default function UploadReelPage() {
             setIsValid(false);
             setThumbnail(null);
         }
-    }, [url]);
+    }, [url, mode]);
+
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validation: Max 50MB for Free Tier safety
+        if (file.size > 50 * 1024 * 1024) {
+            alert("El archivo supera el límite de 50MB del plan gratuito. Por favor optimiza tu video o usa YouTube.");
+            return;
+        }
+
+        setSelectedFile(file);
+        setIsValid(true); // Technically valid to start upload
+        // Create a fake object URL for preview if browser supports it (for <video>)
+        const infoUrl = URL.createObjectURL(file);
+        setThumbnail(null); // Clear thumb, we might want to show a video preview instead or generic icon
+    };
+
+    const uploadFileToSupabase = async () => {
+        if (!selectedFile) return null;
+
+        try {
+            setIsUploading(true);
+            setUploadProgress(10); // Start
+
+            // 1. Get Signed URL
+            const fileName = `${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+            const { signedUrl, path, fullPath } = await getSignedUploadUrl(fileName);
+
+            setUploadProgress(30);
+
+            // 2. Upload via PUT
+            const uploadRes = await fetch(signedUrl, {
+                method: 'PUT',
+                body: selectedFile,
+                headers: {
+                    'Content-Type': selectedFile.type
+                }
+            });
+
+            if (!uploadRes.ok) throw new Error('Upload failed');
+
+            setUploadProgress(80);
+
+            // 3. Get Public URL (Construct it manually or need another action? Supabase usually follows pattern)
+            // Pattern: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
+            // We know the bucket is 'cinema' from action.
+            const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL; // e.g. https://xyz.supabase.co
+            const publicUrl = `${projectUrl}/storage/v1/object/public/cinema/${path}`; // path returned from action
+
+            setUploadProgress(100);
+            return publicUrl;
+        } catch (e) {
+            console.error(e);
+            alert("Error subiendo el archivo. Intenta de nuevo.");
+            setIsUploading(false);
+            setUploadProgress(0);
+            return null;
+        }
+    };
 
     const handleSubmit = async () => {
         if (!isValid || !formData.title.trim()) return;
 
         setIsSubmitting(true);
         try {
+            let finalUrl = url;
+
+            // Handle Native Upload First
+            if (mode === 'native' && selectedFile) {
+                const uploadedUrl = await uploadFileToSupabase();
+                if (!uploadedUrl) {
+                    setIsSubmitting(false);
+                    return;
+                }
+                finalUrl = uploadedUrl;
+            }
+
             await submitVideo({
                 title: formData.title,
                 description: formData.description,
-                video_url: url,
+                video_url: finalUrl,
                 thumbnail_url: thumbnail || undefined,
                 category: 'General'
             });
@@ -56,6 +137,7 @@ export default function UploadReelPage() {
             alert('Error: ' + error.message);
         } finally {
             setIsSubmitting(false);
+            setIsUploading(false); // Valid cleanup
         }
     };
 
@@ -76,33 +158,81 @@ export default function UploadReelPage() {
 
                         {/* URL Input Input */}
                         <div className="bg-[#111] p-8 rounded-2xl border border-white/10 space-y-6">
+
+                            {/* Tabs Switch */}
+                            <div className="flex bg-black p-1 rounded-xl border border-white/10 w-fit mx-auto mb-4">
+                                <button
+                                    onClick={() => { setMode('youtube'); setIsValid(false); setUrl(''); }}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all ${mode === 'youtube' ? 'bg-[#FF9800] text-black' : 'text-white/50 hover:text-white'}`}
+                                >
+                                    <Youtube className="w-4 h-4" /> YouTube
+                                </button>
+                                <button
+                                    onClick={() => { setMode('native'); setIsValid(false); setSelectedFile(null); }}
+                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all ${mode === 'native' ? 'bg-[#FF9800] text-black' : 'text-white/50 hover:text-white'}`}
+                                >
+                                    <UploadCloud className="w-4 h-4" /> Nativo (Beta)
+                                </button>
+                            </div>
+
                             <div className="text-center space-y-2">
                                 <div className="w-16 h-16 bg-[#FF9800]/10 rounded-full flex items-center justify-center mx-auto text-[#FF9800]">
                                     <MonitorPlay className="w-8 h-8" />
                                 </div>
-                                <h3 className="text-xl font-bold font-oswald uppercase">Cinema Cloud Link</h3>
+                                <h3 className="text-xl font-bold font-oswald uppercase">
+                                    {mode === 'youtube' ? 'Cinema Cloud Link' : 'Subida Directa'}
+                                </h3>
                                 <p className="text-white/50 text-sm max-w-md mx-auto">
-                                    Conecta tu contenido 4K desde servidores globales de alta velocidad.
-                                    <br />
-                                    <span className="text-xs text-white/30">Motor de streaming nativo compatible con YouTube, Vimeo, etc.</span>
+                                    {mode === 'youtube'
+                                        ? "Conecta tu contenido 4K desde servidores globales de alta velocidad."
+                                        : "Sube archivos MP4 directamente. Máximo 50MB (Free Tier)."
+                                    }
                                 </p>
                             </div>
 
-                            <div className="relative">
-                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-                                    <LinkIcon className="w-5 h-5" />
+                            {mode === 'youtube' ? (
+                                <div className="relative">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
+                                        <LinkIcon className="w-5 h-5" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={url}
+                                        onChange={(e) => setUrl(e.target.value)}
+                                        placeholder="Pega el enlace de video de alta calidad..."
+                                        className={`w-full bg-black border ${isValid ? 'border-[#FF9800]/50' : 'border-white/10'} rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#FF9800] transition-colors`}
+                                    />
                                 </div>
-                                <input
-                                    type="text"
-                                    value={url}
-                                    onChange={(e) => setUrl(e.target.value)}
-                                    placeholder="Pega el enlace de video de alta calidad..."
-                                    className={`w-full bg-black border ${isValid ? 'border-[#FF9800]/50' : 'border-white/10'} rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#FF9800] transition-colors`}
-                                />
-                            </div>
+                            ) : (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className={`relative border-2 border-dashed ${selectedFile ? 'border-[#FF9800] bg-[#FF9800]/5' : 'border-white/20 hover:border-white/40 hover:bg-white/5'} rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all h-40`}
+                                >
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        accept="video/mp4,video/quicktime,video/webm"
+                                        onChange={handleFileSelect}
+                                    />
+                                    {selectedFile ? (
+                                        <>
+                                            <FileVideo className="w-8 h-8 text-[#FF9800] mb-2" />
+                                            <span className="text-white font-bold text-sm">{selectedFile.name}</span>
+                                            <span className="text-white/50 text-xs">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <UploadCloud className="w-8 h-8 text-white/50 mb-2" />
+                                            <span className="text-white/70 font-bold text-sm">Click para seleccionar</span>
+                                            <span className="text-white/30 text-xs mt-1">MP4, MOV (Max 50MB)</span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
 
-                            {/* Preview with Custom Player Skin */}
-                            {isValid && thumbnail && (
+                            {/* Preview (Only for YouTube for now, Native handled differently) */}
+                            {mode === 'youtube' && isValid && thumbnail && (
                                 <div className="rounded-xl overflow-hidden border border-[#FF9800]/20 relative aspect-video group bg-black">
                                     <Image
                                         src={thumbnail}
@@ -110,29 +240,18 @@ export default function UploadReelPage() {
                                         fill
                                         className="object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-700"
                                     />
-                                    {/* Custom Player Overlay - This proves to user it wont look like generic YT */}
                                     <div className="absolute inset-0 flex items-center justify-center">
                                         <div className="w-20 h-20 bg-[#FF9800] rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,152,0,0.5)] group-hover:scale-110 transition-transform">
                                             <MonitorPlay className="w-10 h-10 ml-1" />
                                         </div>
                                     </div>
+                                </div>
+                            )}
 
-                                    {/* Native Controls Simulation */}
-                                    <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                                        <div className="h-1 bg-white/20 rounded-full mb-3 overflow-hidden">
-                                            <div className="h-full w-1/3 bg-[#FF9800]"></div>
-                                        </div>
-                                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest text-white/80">
-                                            <div className="flex gap-4">
-                                                <span>Cinema Mode</span>
-                                                <span className="text-[#FF9800]">4K HDR</span>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                                <span>Stream Ready</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                            {/* Upload Progress (Native) */}
+                            {mode === 'native' && isUploading && (
+                                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                                    <div className="bg-[#FF9800] h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
                                 </div>
                             )}
                         </div>
