@@ -13,6 +13,9 @@ async function getPool() {
     let isDirect = false;
 
     // 1. Attempt to switch to Direct Connection (Session Mode, port 5432)
+    // DISABLED: This logic was inferring an incorrect hostname "db.gwxhkhalmixohsvxfbva.supabase.co" which failed DNS resolution.
+    // We will stick to the explicitly configured DATABASE_URL (Pooler) which is known to be correct/preferred by the user configuration.
+    /*
     if (connectionString && connectionString.includes(':6543')) {
         try {
             const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -33,6 +36,7 @@ async function getPool() {
             console.warn('Failed to construct direct connection string, falling back to env var', e);
         }
     }
+    */
 
     // 2. Force IPv4 Resolution to avoid EHOSTUNREACH on IPv6
     if (connectionString) {
