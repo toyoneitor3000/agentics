@@ -6,7 +6,9 @@ console.log("Initializing BetterAuth with URL:", process.env.DATABASE_URL?.split
 export const auth = betterAuth({
     debug: true,
     database: new Pool({
-        connectionString: process.env.DATABASE_URL,
+        // Sanitize connection string to remove sslmode=require if present, 
+        // as it conflicts with explicit ssl config below and causes SELF_SIGNED_CERT_IN_CHAIN
+        connectionString: process.env.DATABASE_URL?.replace("sslmode=require", ""),
         ssl: {
             rejectUnauthorized: false
         }

@@ -11,6 +11,11 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // Skip Supabase session update for BetterAuth routes
+    if (request.nextUrl.pathname.startsWith('/api/auth')) {
+        return NextResponse.next()
+    }
+
     return await updateSession(request)
 }
 
@@ -24,6 +29,6 @@ export const config = {
          * - /api/auth (BetterAuth routes)
          * Feel free to modify this pattern to include more paths.
          */
-        '/((?!api/auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 }
