@@ -1,3 +1,4 @@
+// Trigger Vercel Deployment
 import type { NextConfig } from "next";
 
 const withPWA = require("next-pwa")({
