@@ -19,21 +19,46 @@ interface UserBadgeProps {
     showLabel?: boolean; // Si queremos que diga "CEO" o solo el icono
 }
 
+// Sub-componente interno para estilos
+function BadgeContainer({ children, colorClass, glow, size, label }: any) {
+    const sizeClasses = {
+        sm: "w-3.5 h-3.5",
+        md: "w-4 h-4",
+        lg: "w-5 h-5"
+    };
+
+    return (
+        <div className="inline-flex items-center gap-1.5 align-middle ml-1.5">
+            {/* Icono sin background, solo el SVG con color */}
+            <div className={`${sizeClasses[size as keyof typeof sizeClasses]} ${colorClass} ${glow} flex items-center justify-center`}>
+                {children}
+            </div>
+
+            {/* Etiqueta de Texto Minimalista */}
+            {label && (
+                <span className={`text-[10px] font-bold uppercase tracking-widest ${colorClass}`}>
+                    {label}
+                </span>
+            )}
+        </div>
+    );
+}
+
 export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: UserBadgeProps) {
 
     // Normalizar rol por si viene de DB como texto
     let normalizedRole = role.toLowerCase();
 
-    // Lógica de Renderizado
+    // Lógica de Renderizado Minimalista
     if (normalizedRole === 'ceo' || normalizedRole === 'admin') {
         return (
             <BadgeContainer
-                color="bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500"
-                glow="shadow-[0_0_10px_rgba(255,87,34,0.6)]"
+                colorClass="text-yellow-500" // Dorado simple
+                glow="drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]"
                 size={size}
                 label={showLabel ? "CEO" : undefined}
             >
-                <Crown className="text-white fill-white" />
+                <Crown className="w-full h-full fill-yellow-500" />
             </BadgeContainer>
         );
     }
@@ -41,12 +66,12 @@ export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: Use
     if (normalizedRole === 'founder' || normalizedRole === 'club500') {
         return (
             <BadgeContainer
-                color="bg-[#FF9800]"
-                glow="shadow-[0_0_8px_rgba(255,152,0,0.4)]"
+                colorClass="text-[#FF9800]"
+                glow="drop-shadow-[0_0_5px_rgba(255,152,0,0.4)]"
                 size={size}
                 label={showLabel ? "Club 500" : undefined}
             >
-                <span className="font-bold font-serif italic text-black">F</span>
+                <Crown className="w-full h-full" />
             </BadgeContainer>
         );
     }
@@ -54,12 +79,12 @@ export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: Use
     if (normalizedRole === 'official_business' || normalizedRole === 'verified_business') {
         return (
             <BadgeContainer
-                color="bg-cyan-500"
-                glow="shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+                colorClass="text-cyan-400"
+                glow="drop-shadow-[0_0_5px_rgba(34,211,238,0.4)]"
                 size={size}
                 label={showLabel ? "Official" : undefined}
             >
-                <ShieldCheck className="text-black" />
+                <ShieldCheck className="w-full h-full" />
             </BadgeContainer>
         );
     }
@@ -67,58 +92,15 @@ export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: Use
     if (normalizedRole === 'business') {
         return (
             <BadgeContainer
-                color="bg-neutral-400"
+                colorClass="text-neutral-400"
                 glow=""
                 size={size}
                 label={showLabel ? "Business" : undefined}
             >
-                <Briefcase className="text-black" />
+                <Briefcase className="w-full h-full" />
             </BadgeContainer>
         );
     }
 
-    // Pro User (Suscripción)
-    if (normalizedRole === 'pro') {
-        return (
-            <BadgeContainer
-                color="bg-purple-600"
-                glow="shadow-[0_0_8px_rgba(147,51,234,0.4)]"
-                size={size}
-            >
-                <Check className="text-white" />
-            </BadgeContainer>
-        )
-    }
-
-    return null; // Usuario normal no tiene badge por defecto
-}
-
-// Sub-componente interno para estilos
-function BadgeContainer({ children, color, glow, size, label }: any) {
-    const sizeClasses = {
-        sm: "w-3.5 h-3.5 p-0.5",
-        md: "w-5 h-5 p-1",
-        lg: "w-6 h-6 p-1.5"
-    };
-
-    const iconSizes = {
-        sm: "w-full h-full",
-        md: "w-full h-full",
-        lg: "w-full h-full"
-    };
-
-    return (
-        <div className="inline-flex items-center gap-1.5 align-middle ml-1">
-            <div className={`${sizeClasses[size as keyof typeof sizeClasses]} rounded-full ${color} ${glow} flex items-center justify-center`}>
-                <div className={`${iconSizes[size as keyof typeof sizeClasses]}`}>
-                    {children}
-                </div>
-            </div>
-            {label && (
-                <span className={`text-[10px] font-bold uppercase tracking-wider ${color.replace('bg-', 'text-')} opacity-90`}>
-                    {label}
-                </span>
-            )}
-        </div>
-    );
+    return null;
 }

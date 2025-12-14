@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard, ChevronLeft } from "lucide-react";
+import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard, ChevronLeft, Megaphone } from "lucide-react";
 import { useSession, signOut } from "@/app/lib/auth-client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
+import { UserBadge } from "../UserBadge";
 
 export default function AppHeader() {
     const { data: session, isPending } = useSession();
@@ -116,7 +117,8 @@ export default function AppHeader() {
                         >
                             <div className="flex flex-col items-end hidden md:flex">
                                 <span className="text-xs font-bold uppercase tracking-wider">{user.name?.split(' ')[0]}</span>
-                                <span className="text-[10px] text-gray-400">{isAdmin ? 'ADMIN' : 'MEMBER'}</span>
+                                {/* Badge in Header */}
+                                <UserBadge role={userRole || 'user'} size="sm" showLabel={true} />
                             </div>
                             {user.image ? (
                                 <div className="w-9 h-9 rounded-full border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">
@@ -137,16 +139,20 @@ export default function AppHeader() {
                                     onClick={() => setIsMenuOpen(false)}
                                 />
                                 <div className="absolute right-0 top-12 w-56 bg-[#0A0A0A] border border-[#222] rounded-xl shadow-2xl py-2 z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                                    <div className="px-4 py-3 border-b border-white/5 md:hidden">
-                                        <p className="text-white font-bold text-sm truncate">{user.name}</p>
-                                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                    <div className="px-4 py-3 border-b border-white/5 md:hidden flex justify-between items-center">
+                                        <div className="overflow-hidden">
+                                            <p className="text-white font-bold text-sm truncate">{user.name}</p>
+                                            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                        </div>
+                                        {/* Badge in Mobile Dropdown Header */}
+                                        <UserBadge role={userRole || 'user'} size="sm" />
                                     </div>
 
                                     {/* Admin Link */}
                                     {isAdmin && (
                                         <Link
                                             href="/admin/users"
-                                            className="px-4 py-3 text-sm text-[#FFD700] hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-white/5"
+                                            className="px-4 py-3 text-sm text-white/80 hover:text-[#FF9800] hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-white/5"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             <LayoutDashboard className="w-4 h-4" />
@@ -156,12 +162,23 @@ export default function AppHeader() {
 
                                     <Link
                                         href="/profile"
-                                        className="px-4 py-3 text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
+                                        className="px-4 py-3 text-sm text-white/80 hover:text-[#FF9800] hover:bg-white/5 flex items-center gap-3 transition-colors"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        <User className="w-4 h-4 text-[#FF9800]" />
+                                        <User className="w-4 h-4" />
                                         Tu Perfil
                                     </Link>
+
+                                    {/* Link de Publicidad / Negocio */}
+                                    <Link
+                                        href="/advertising"
+                                        className="px-4 py-3 text-sm text-white/80 hover:text-[#FF9800] hover:bg-white/5 flex items-center gap-3 transition-colors"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <Megaphone className="w-4 h-4" />
+                                        Publicidad / Negocio
+                                    </Link>
+
                                     <Link
                                         href="/settings"
                                         className="px-4 py-3 text-sm text-white hover:bg-white/5 flex items-center gap-3 transition-colors"

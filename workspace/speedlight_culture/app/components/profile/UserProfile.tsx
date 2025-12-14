@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Calendar, Star, Users, Heart, Grid, Youtube, Image as ImageIcon, Briefcase, Zap, BadgeCheck, CarFront, MoreVertical, Archive, Trash2, Edit, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { createClient } from '@/app/utils/supabase/client';
+import { UserBadge } from "../UserBadge";
 import { useRouter } from 'next/navigation';
 
 interface ProfileProps {
@@ -158,29 +159,26 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                         )}
                     </div>
 
-                    {/* BADGES ROW (Restored) */}
-                    <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
-                        {profile?.role === 'CEO' ? (
-                            <span className="bg-white text-black border border-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-[0_0_15px_rgba(255,255,255,0.4)] flex items-center gap-1">
-                                <Zap className="w-3 h-3 fill-black" /> CEO
-                            </span>
-                        ) : (
-                            <span className="bg-[#FF9800]/10 text-[#FF9800] border border-[#FF9800]/20 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-                                {profile?.role || 'Rookie'}
-                            </span>
-                        )}
-                        {/* If founder > 500, simple Member badge */}
-                        {profile?.founder_number && profile.founder_number > 500 && (
-                            <span className="text-white/30 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 border border-white/10 px-2 py-1 rounded-full">
-                                <BadgeCheck className="w-3 h-3" /> MEMBER #{profile.founder_number}
-                            </span>
+                    {/* Identifiers */}
+                    <div className="flex flex-col items-center justify-center mb-1">
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic text-white leading-none">
+                                {profile?.full_name || 'Racer Unknown'}
+                            </h1>
+                            {/* Verified / Role Badge inline with name */}
+                            <UserBadge role={profile?.role} size="md" />
+                        </div>
+
+                        {/* Secondary Badge: Founder / Club 500 (Clean Pill) */}
+                        {profile?.founder_number && (
+                            <div className="mt-2 flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 px-3 py-0.5 rounded-full">
+                                <Star className="w-3 h-3 fill-yellow-500" />
+                                <span className="text-[9px] font-bold tracking-widest leading-none uppercase">
+                                    Club 500 #{profile.founder_number.toString().padStart(3, '0')}
+                                </span>
+                            </div>
                         )}
                     </div>
-
-                    {/* Identifiers */}
-                    <h1 className="text-4xl font-black uppercase tracking-tighter italic text-white mb-0 leading-none">
-                        {profile?.full_name || 'Racer Unknown'}
-                    </h1>
                     {profile?.alias && (
                         <p className="text-[#FF9800] font-medium text-sm tracking-wide mb-1">
                             {profile.alias.startsWith('@') ? profile.alias : `@${profile.alias}`}
