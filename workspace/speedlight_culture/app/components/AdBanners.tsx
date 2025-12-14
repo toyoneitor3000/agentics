@@ -92,52 +92,129 @@ export function AdHeroSponsor({ data }: AdComponentProps) {
 // ==========================================
 // 2. NATIVE FEED CARD (The "In-Grid" Promo)
 // ==========================================
+// ==========================================
+// 2. NATIVE FEED CARD (The "In-Grid" Carousel)
+// ==========================================
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+
 export function AdFeedCard({ data }: AdComponentProps) {
     const { language } = useLanguage();
     const text = t_ads[language];
+    const [currentIndex, setCurrentIndex] = useState(0);
 
-    if (!data) return null;
-    const { content } = data;
+    // Mock data fallback if no prop provided
+    const content = data?.content || {
+        brandName: "Speedlight Originals",
+        title: "Colección Limitada",
+        description: "Equipamiento profesional para conductores exigentes. Diseño aerodinámico y materiales de fibra de carbono.",
+        ctaText: "Ver Colección",
+        ctaLink: "/shop",
+        images: [
+            "https://images.unsplash.com/photo-1552519507-da3b142c6e3d?q=80&w=2070&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1966&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1583121274602-3e2820c698d9?q=80&w=2070&auto=format&fit=crop"
+        ],
+        badgeText: "Patrocinado"
+    } as any;
+
+    // Normalize images: use array if exists, otherwise single image, otherwise fallback
+    const images = content.images && content.images.length > 0
+        ? content.images
+        : [content.imageUrl || "https://images.unsplash.com/photo-1493238792015-fa094a3672a0?q=80&w=2073&auto=format&fit=crop"];
+
+    const nextSlide = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setCurrentIndex((prev) => (prev + 1) % images.length);
+    };
+
+    const prevSlide = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    };
 
     return (
-        <div className="relative group w-full max-w-sm h-full rounded-xl overflow-hidden bg-[#0A0604] border border-white/5 hover:border-[#FF9800]/40 transition-all duration-500 hover:shadow-[0_0_30px_rgba(255,152,0,0.1)] flex flex-col">
-            {/* Etiqueta "Partner" discreta */}
-            <div className="absolute top-3 right-3 z-20 px-2 py-1 bg-[#FF9800] text-black text-[9px] font-bold uppercase tracking-wider rounded-sm shadow-lg">
-                {content.badgeText || text.partner}
-            </div>
+        <div className="relative group w-full max-w-sm h-fit rounded-xl overflow-hidden bg-[#0A0604] border border-white/5 hover:border-[#FF9800]/40 transition-all duration-500 hover:shadow-[0_0_30px_rgba(255,152,0,0.1)] flex flex-col">
 
-            <div className="relative h-48 sm:h-64 overflow-hidden flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0A0604] via-transparent to-transparent z-10 opacity-80"></div>
-                {/* Visual Glare Effect */}
-                <div className="absolute -inset-full top-0 block h-full w-1/2 -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-0 group-hover:animate-shine" />
-
-                {/* Imagen simulada/real */}
-                <div className="w-full h-full bg-neutral-900 flex items-center justify-center relative">
-                    {content.imageUrl && content.imageUrl.startsWith('/') ? (
-                        // If we had a real image component we'd use it, for now fallback to text if image fails or just the bg
-                        <div className="absolute inset-0 bg-cover bg-center opacity-50" style={{ backgroundImage: `url(${content.imageUrl})` }}></div>
-                    ) : null}
-                    <span className="text-neutral-700 font-bold text-4xl opacity-20 group-hover:opacity-30 transition-opacity z-0">
-                        {content.brandName?.substring(0, 5) || "AD"}
-                    </span>
-                </div>
-            </div>
-
-            <div className="p-5 relative z-10 -mt-12 flex flex-col flex-grow">
-                <div className="flex items-center gap-2 mb-2">
-                    <div className="w-5 h-5 rounded-full bg-[#FF9800] flex items-center justify-center text-[10px] font-bold text-black border border-white/20">
-                        {content.brandName ? content.brandName.charAt(0) : "S"}
+            {/* Header: Brand Identity (Native Feel) */}
+            <div className="px-4 py-3 flex items-center justify-between border-b border-white/5 bg-[#0F0A08]">
+                <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#FF9800] to-orange-900 p-[1px]">
+                        <div className="w-full h-full rounded-full bg-black flex items-center justify-center text-[10px] font-bold text-white overflow-hidden">
+                            {content.brandName ? content.brandName.charAt(0) : "S"}
+                        </div>
                     </div>
-                    <span className="text-xs text-[#FF9800] font-medium tracking-wide">{content.brandName || "Brand"}</span>
+                    <span className="text-xs text-white font-bold tracking-wide">{content.brandName || "Brand"}</span>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2 leading-tight group-hover:text-[#FF9800] transition-colors">
-                    {content.title || text.offer}
-                </h3>
-                <p className="text-sm text-neutral-400 mb-4 line-clamp-3 leading-relaxed flex-grow">
-                    {content.description || text.desc}
-                </p>
-                <Link href={content.ctaLink || "#"} className="w-full text-center py-2.5 bg-white/5 hover:bg-[#FF9800] text-white/90 hover:text-black border border-white/10 hover:border-transparent rounded text-xs uppercase font-bold tracking-[0.15em] transition-all duration-300 mt-auto">
-                    {content.ctaText || text.seeDetails}
+                <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest">
+                    {content.badgeText || text.partner}
+                </span>
+            </div>
+
+            {/* Carousel Section */}
+            <div className="relative h-64 overflow-hidden bg-neutral-900 group/slider">
+                {images.map((img: string, idx: number) => (
+                    <div
+                        key={idx}
+                        className={`absolute inset-0 w-full h-full transition-opacity duration-500 ease-in-out ${idx === currentIndex ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    >
+                        <Image
+                            src={img}
+                            alt="Ad Content"
+                            fill
+                            className="object-cover"
+                        />
+                        {/* Vignette */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0A0604] via-transparent to-transparent opacity-60"></div>
+                    </div>
+                ))}
+
+                {/* Controls (Only if multiple images) */}
+                {images.length > 1 && (
+                    <>
+                        <button
+                            onClick={prevSlide}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#FF9800] hover:text-black z-20"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button
+                            onClick={nextSlide}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 backdrop-blur text-white flex items-center justify-center opacity-0 group-hover/slider:opacity-100 transition-opacity hover:bg-[#FF9800] hover:text-black z-20"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+
+                        {/* Dots */}
+                        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-20">
+                            {images.map((_: any, idx: number) => (
+                                <div
+                                    key={idx}
+                                    className={`w-1.5 h-1.5 rounded-full transition-all ${idx === currentIndex ? 'bg-[#FF9800] w-3' : 'bg-white/30'}`}
+                                ></div>
+                            ))}
+                        </div>
+                    </>
+                )}
+            </div>
+
+            {/* Content Body (Native CTA) */}
+            <div className="p-5 flex flex-col gap-3">
+                <div>
+                    <h3 className="text-lg font-bold text-white leading-tight mb-1">
+                        {content.title || text.offer}
+                    </h3>
+                    <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
+                        {content.description || text.desc}
+                    </p>
+                </div>
+
+                <Link
+                    href={content.ctaLink || "#"}
+                    className="w-full mt-2 bg-[#FF9800]/10 hover:bg-[#FF9800] text-[#FF9800] hover:text-black border border-[#FF9800]/20 hover:border-transparent py-3 rounded-lg flex items-center justify-center gap-2 transition-all group/btn"
+                >
+                    <span className="text-xs font-bold uppercase tracking-widest">{content.ctaText || text.seeDetails}</span>
+                    <ChevronRight className="w-3 h-3 transition-transform group-hover/btn:translate-x-1" />
                 </Link>
             </div>
         </div>

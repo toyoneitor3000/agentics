@@ -10,7 +10,7 @@ export default async function AdminUsersPage() {
     // 1. Check Admin Auth via BetterAuth
     const session = await auth.api.getSession({
         headers: await headers()
-    });
+        });
 
     if (!session) {
         redirect("/login");
