@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Plus, Star, X, Info, Maximize, Minimize, ChevronDown, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 import { getCinemaFeed } from '@/app/actions/cinema';
 
 // MOCK DATA FOR CATEGORIES
@@ -19,7 +20,7 @@ export default function CinemaSocialPage() {
     const [featuredPost, setFeaturedPost] = useState<any>(null);
     const [categories, setCategories] = useState<any>({});
     const [activeMovie, setActiveMovie] = useState<any>(null); // Full movie player state
-    const [isMuted, setIsMuted] = useState(false); // Sound ON by default
+    const [isMuted, setIsMuted] = useState(true); // Sound OFF by default (Autoplay compliance)
 
     // Load Data
     useEffect(() => {
@@ -106,39 +107,149 @@ export default function CinemaSocialPage() {
 // ----------------------------------------------------------------------
 function SocialHeroPlayer({ post, isMuted, toggleMute, onOpenFull }: any) {
     const youtubeId = getYoutubeId(post.videoUrl);
-    const isYoutube = !!youtubeId;
+    const cloudflareId = getCloudflareId(post.videoUrl || '');
 
-    // A. DEFINITIVE SOLUTION: NATIVE PLAYER (No Ads, No Logos, Total Control)
-    if (!isYoutube) {
+    // A. CLOUDFLARE ENGINE (Premium Stream)
+    if (cloudflareId) {
         return (
-            <NativeHeroPlayer
-                src={post.videoUrl}
-                poster={post.poster}
+            <CloudflareHeroPlayer
+                videoId={cloudflareId}
+                post={post}
                 isMuted={isMuted}
-                onOpenFull={onOpenFull}
-                post={post} // Pass full post for the UI Overlay
                 toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
             />
         );
     }
 
-    // B. LEGACY SOLUTION: YOUTUBE PLAYER (With "Nuclear" Hacks)
+    // B. YOUTUBE ENGINE (Legacy)
+    if (youtubeId) {
+        return (
+            <YoutubeHeroPlayer
+                videoId={youtubeId}
+                post={post}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
+            />
+        );
+    }
+
+    // C. NATIVE ENGINE (Direct MP4)
     return (
-        <YoutubeHeroPlayer
-            videoId={youtubeId}
-            post={post}
+        <NativeHeroPlayer
+            src={post.videoUrl}
+            poster={post.poster}
             isMuted={isMuted}
-            toggleMute={toggleMute}
             onOpenFull={onOpenFull}
+            post={post}
+            toggleMute={toggleMute}
         />
     );
 }
 
 // ----------------------------------------------------------------------
-// ENGINE A: NATIVE PLAYER (The Goal)
+// ENGINE A: CLOUDFLARE PLAYER (Premium)
+// ----------------------------------------------------------------------
+function CloudflareHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: any) {
+    const [player, setPlayer] = useState<any>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [isIdle, setIsIdle] = useState(false);
+    const [duration, setDuration] = useState(0); // Default 0
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Prevent re-render of iframe src when isMuted changes
+    const src = `https://iframe.videodelivery.net/${videoId}?autoplay=true&loop=true&muted=true&controls=false&preload=true`;
+
+    // Initialize SDK when script is loaded
+    const initPlayer = () => {
+        if ((window as any).Stream && iframeRef.current && !player) {
+            const streamPlayer = (window as any).Stream(iframeRef.current);
+            setPlayer(streamPlayer);
+            streamPlayer.muted = isMuted;
+
+            // Get Duration
+            streamPlayer.addEventListener('loadedmetadata', () => {
+                setDuration(streamPlayer.duration);
+            });
+            // Also check immediate if already loaded
+            if (streamPlayer.duration) setDuration(streamPlayer.duration);
+        }
+    };
+
+    // Sync Mute State dynamically
+    useEffect(() => {
+        if (player) {
+            player.muted = isMuted;
+        }
+    }, [isMuted, player]);
+
+    // IDLE DETECTOR (Speedlight UX)
+    useEffect(() => {
+        const resetTimer = () => {
+            setIsIdle(false);
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => setIsIdle(true), 2500); // 2.5s Idle
+        };
+
+        // Attach listeners to window to catch interaction even if over iframe (via bubbles if possible, or surrounding area)
+        // Iframe swallows clicks, so we rely on the covering div for clicks, but mousemove works on overlay.
+        window.addEventListener('mousemove', resetTimer);
+        window.addEventListener('click', resetTimer);
+        window.addEventListener('touchstart', resetTimer);
+        window.addEventListener('keydown', resetTimer);
+
+        resetTimer();
+
+        return () => {
+            window.removeEventListener('mousemove', resetTimer);
+            window.removeEventListener('click', resetTimer);
+            window.removeEventListener('touchstart', resetTimer);
+            window.removeEventListener('keydown', resetTimer);
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    return (
+        <div className={`relative w-full h-full group bg-black overflow-hidden ${isIdle ? 'cursor-none' : 'cursor-default'}`}>
+            <Script
+                src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js"
+                onLoad={initPlayer}
+            />
+
+            <iframe
+                ref={iframeRef}
+                src={src}
+                className="w-full h-full object-cover scale-[1.02] pointer-events-none" // Pointer off to allow interactions with our overlay
+                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                allowFullScreen
+            />
+
+            {/* Click layer for Full Mode (Double purpose: detect idle reset AND click action) */}
+            <div className="absolute inset-0 z-10 cursor-pointer" onClick={onOpenFull}></div>
+
+            {/* Gradient Overlay - Fades out on Idle for full immersion */}
+            <div className={`absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 pointer-events-none transition-opacity duration-1000 ${isIdle ? 'opacity-0' : 'opacity-90'}`}></div>
+
+            {/* UI */}
+            <SocialInterface
+                post={post}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
+                isIdle={isIdle}
+                duration={duration}
+            />
+        </div>
+    );
+}
+
+// ----------------------------------------------------------------------
+// ENGINE B: NATIVE PLAYER (The Goal)
 // ----------------------------------------------------------------------
 function NativeHeroPlayer({ src, poster, isMuted, onOpenFull, post, toggleMute }: any) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [duration, setDuration] = useState(0);
 
     // Sync Mute State
     useEffect(() => {
@@ -158,19 +269,26 @@ function NativeHeroPlayer({ src, poster, isMuted, onOpenFull, post, toggleMute }
                 muted={isMuted}
                 playsInline
                 onClick={onOpenFull}
+                onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
             />
 
             {/* Cinematic Gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/40 opacity-90 pointer-events-none"></div>
 
             {/* Shared Social UI */}
-            <SocialInterface post={post} isMuted={isMuted} toggleMute={toggleMute} onOpenFull={onOpenFull} />
+            <SocialInterface
+                post={post}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
+                duration={duration}
+            />
         </div>
     );
 }
 
 // ----------------------------------------------------------------------
-// ENGINE B: YOUTUBE PLAYER (The Fallback)
+// ENGINE C: YOUTUBE PLAYER (The Fallback)
 // ----------------------------------------------------------------------
 function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: any) {
     const [isReady, setIsReady] = useState(false);
@@ -218,14 +336,29 @@ function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: a
         setTriggerAutoplay(true);
     };
 
-    const isVideoVisible = isReady || forceReveal;
+    const isVideoVisible = isReady || forceReveal; // Construct URL
     const start = post.startSeconds || 0;
-    const baseParams = `?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&start=${start}&version=3&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&disablekb=1&fs=0&origin=${origin}`;
-    const finalParams = triggerAutoplay ? baseParams.replace(`mute=${isMuted ? 1 : 0}`, `mute=0`) : baseParams;
-    const embedUrl = `https://www.youtube.com/embed/${videoId}${finalParams}`;
+    const trailerParams = `?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&start=${start}&end=${start + 30}&version=3&loop=1&playlist=${videoId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&disablekb=1&fs=0&origin=${origin}`;
+    const embedUrl = `https://www.youtube.com/embed/${videoId}${trailerParams}`;
 
     return (
         <div className="relative w-full h-full group overflow-hidden bg-black">
+
+            {/* --- STUDIO SHORTCUT --- */}
+            <div className="absolute top-24 right-4 md:right-8 z-[60] pointer-events-auto animate-in slide-in-from-top-5 delay-500">
+                <Link
+                    href="/cinema/upload"
+                    className="flex items-center gap-2 px-3 py-1.5 bg-black/40 hover:bg-[#FF9800] backdrop-blur-md border border-white/10 hover:border-[#FF9800] rounded-full transition-all group/btn"
+                >
+                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                    <span className="text-white text-[10px] font-bold uppercase tracking-widest group-hover/btn:text-black hidden md:block">
+                        Subir Video
+                    </span>
+                    <Plus className="w-3 h-3 text-white group-hover/btn:text-black" />
+                </Link>
+            </div>
+
+            {/* VIDEO LAYER (Always Opacity 100, just covered. Pointer events active if revealed) */}
             <div className={`absolute inset-0 z-0 bg-black`}>
                 {shouldLoad && origin && (
                     <iframe
@@ -262,7 +395,14 @@ function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: a
             )}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60 opacity-90 z-10 pointer-events-none"></div>
-            <SocialInterface post={post} isMuted={isMuted} toggleMute={toggleMute} onOpenFull={onOpenFull} />
+            {/* YouTube always gets benefit of doubt for now (duration 100) */}
+            <SocialInterface
+                post={post}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
+                duration={100}
+            />
         </div>
     );
 }
@@ -270,10 +410,12 @@ function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: a
 // ----------------------------------------------------------------------
 // SHARED UI COMPONENT
 // ----------------------------------------------------------------------
-function SocialInterface({ post, isMuted, toggleMute, onOpenFull }: any) {
+function SocialInterface({ post, isMuted, toggleMute, onOpenFull, isIdle = false, duration = 0 }: any) {
+    const showFullMovieButton = duration > 15;
+
     return (
         <>
-            <div className="absolute bottom-0 left-0 p-6 md:p-12 z-30 max-w-[80%] md:max-w-2xl pointer-events-none">
+            <div className={`absolute bottom-0 left-0 p-6 md:p-12 z-30 max-w-[80%] md:max-w-2xl pointer-events-none transition-all duration-700 ease-in-out ${isIdle ? 'translate-y-20 opacity-0' : 'translate-y-0 opacity-100'}`}>
                 <div className="space-y-4 animate-in slide-in-from-bottom-10 duration-700">
                     <div className="flex items-center gap-3 pointer-events-auto w-fit">
                         <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-tr from-[#FF9800] to-yellow-400">
@@ -298,25 +440,28 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull }: any) {
                         </p>
                     </div>
 
-                    <div className="pt-4 pointer-events-auto">
-                        <button
-                            onClick={onOpenFull}
-                            className="group relative pl-3 pr-8 py-3 bg-white/10 hover:bg-[#FF9800] backdrop-blur-xl border border-white/20 hover:border-[#FF9800] rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] overflow-hidden"
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-50 pointer-events-none"></div>
-                            <div className="relative z-10 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-                                <Play className="w-4 h-4 fill-black translate-x-0.5" />
-                            </div>
-                            <div className="relative z-10 text-left text-white group-hover:text-black transition-colors duration-300">
-                                <span className="block text-[9px] font-black tracking-[0.2em] uppercase opacity-80 mb-0.5 group-hover:text-black/70">PELÍCULA +15s</span>
-                                <span className="block text-base font-bold leading-none uppercase tracking-wide">Ver Completa</span>
-                            </div>
-                        </button>
-                    </div>
+                    {/* ONLY SHOW IF DURATION > 15s */}
+                    {showFullMovieButton && (
+                        <div className="pt-4 pointer-events-auto">
+                            <button
+                                onClick={onOpenFull}
+                                className="group relative pl-3 pr-8 py-3 bg-white/10 hover:bg-[#FF9800] backdrop-blur-xl border border-white/20 hover:border-[#FF9800] rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] overflow-hidden"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-50 pointer-events-none"></div>
+                                <div className="relative z-10 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+                                    <Play className="w-4 h-4 fill-black translate-x-0.5" />
+                                </div>
+                                <div className="relative z-10 text-left text-white group-hover:text-black transition-colors duration-300">
+                                    <span className="block text-[9px] font-black tracking-[0.2em] uppercase opacity-80 mb-0.5 group-hover:text-black/70">PELÍCULA +15s</span>
+                                    <span className="block text-base font-bold leading-none uppercase tracking-wide">Ver Completa</span>
+                                </div>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
-            <div className="absolute bottom-24 right-4 md:right-8 z-30 flex flex-col gap-6 items-center pointer-events-auto">
+            <div className={`absolute bottom-24 right-4 md:right-8 z-30 flex flex-col gap-6 items-center pointer-events-auto transition-all duration-700 ease-in-out ${isIdle ? 'translate-x-20 opacity-0' : 'translate-x-0 opacity-100'}`}>
                 <div className="flex flex-col items-center gap-1 group cursor-pointer">
                     <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 group-hover:border-red-500 group-hover:text-red-500 transition-all shadow-lg">
                         <Heart className="w-6 h-6" />
@@ -399,123 +544,281 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 // ----------------------------------------------------------------------
 // IMMERSIVE CINEMA MODE (The "Full Movie" Player)
 // ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// IMMERSIVE CINEMA MODE (The "Full Movie" Player)
+// ----------------------------------------------------------------------
 function ImmersiveCinemaMode({ post, onClose }: any) {
     const [isIdle, setIsIdle] = useState(false);
-    const [isReady, setIsReady] = useState(false);
+    const [player, setPlayer] = useState<any>(null);
+
+    // Player State
+    const [isPlaying, setIsPlaying] = useState(true);
+    const [currentTime, setCurrentTime] = useState(0);
+    const [duration, setDuration] = useState(0);
+
+    // Feedback State
+    const [showActionIcon, setShowActionIcon] = useState<'play' | 'pause' | 'forward' | 'rewind' | null>(null);
+
     const timerRef = useRef<NodeJS.Timeout | null>(null);
+    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const youtubeId = getYoutubeId(post.videoUrl);
+    const cloudflareId = getCloudflareId(post.videoUrl || '');
     const isYoutube = !!youtubeId;
+    const isCloudflare = !!cloudflareId;
 
-    // Idle Logic (1.2s hide)
+    // Idle Logic
     useEffect(() => {
         const resetTimer = () => {
             setIsIdle(false);
             if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => setIsIdle(true), 1200);
+            timerRef.current = setTimeout(() => setIsIdle(true), 3000);
         };
-
         window.addEventListener('mousemove', resetTimer);
         window.addEventListener('click', resetTimer);
-        window.addEventListener('touchstart', resetTimer);
-
+        window.addEventListener('keydown', resetTimer);
         resetTimer();
-
         return () => {
             window.removeEventListener('mousemove', resetTimer);
             window.removeEventListener('click', resetTimer);
-            window.removeEventListener('touchstart', resetTimer);
+            window.removeEventListener('keydown', resetTimer);
             if (timerRef.current) clearTimeout(timerRef.current);
         };
     }, []);
 
-    // Minimal Player Settings
-    // YouTube: No controls, clean. Native: Same philosophy.
+    // ONE ROBUST CONNECT FUNCTION
+    const connectPlayer = useCallback(() => {
+        if (!isCloudflare || !iframeRef.current || player) return;
+        if (!(window as any).Stream) return;
+
+        console.log("⚡️ Attempting Stream Connection...");
+        try {
+            const streamPlayer = (window as any).Stream(iframeRef.current);
+            setPlayer(streamPlayer);
+
+            // Listeners
+            streamPlayer.addEventListener('timeupdate', () => setCurrentTime(streamPlayer.currentTime));
+            streamPlayer.addEventListener('durationchange', () => setDuration(streamPlayer.duration));
+            streamPlayer.addEventListener('loadedmetadata', () => setDuration(streamPlayer.duration));
+            streamPlayer.addEventListener('play', () => setIsPlaying(true));
+            streamPlayer.addEventListener('pause', () => setIsPlaying(false));
+
+            // Initial Sync
+            if (streamPlayer.duration) setDuration(streamPlayer.duration);
+            streamPlayer.muted = false;
+            streamPlayer.play().catch((e: any) => console.log("Autoplay caught:", e));
+        } catch (e) {
+            console.error("Connect Player Error:", e);
+        }
+    }, [isCloudflare, player]);
+
+    // 1. Try connect on Mount + Polling (for 4s max)
+    useEffect(() => {
+        connectPlayer();
+        const interval = setInterval(connectPlayer, 500);
+        const timeout = setTimeout(() => clearInterval(interval), 4000);
+        return () => { clearInterval(interval); clearTimeout(timeout); };
+    }, [connectPlayer]);
+
+
+    /* --- MODERN INTERACTION HANDLER --- */
+    const handleSmartClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const width = rect.width;
+        const third = width / 3;
+
+        // DOUBLE CLICK DETECTED
+        if (clickTimeoutRef.current) {
+            clearTimeout(clickTimeoutRef.current);
+            clickTimeoutRef.current = null;
+
+            // Interaction Zones
+            if (x < third) {
+                handleRewind();
+            } else if (x > width - third) {
+                handleForward();
+            } else {
+                toggleFullscreen(); // CENTER -> FULLSCREEN
+            }
+        } else {
+            // SINGLE CLICK WAIT
+            clickTimeoutRef.current = setTimeout(() => {
+                clickTimeoutRef.current = null;
+                togglePlay(); // SINGLE -> PLAY/PAUSE
+            }, 250);
+        }
+    };
+
+    const toggleFullscreen = () => {
+        if (!containerRef.current) return;
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(e => console.log(e));
+        } else {
+            document.exitFullscreen().catch(e => console.log(e));
+        }
+    };
+
+    const triggerFeedback = (type: 'play' | 'pause' | 'forward' | 'rewind') => {
+        setShowActionIcon(type);
+        setTimeout(() => setShowActionIcon(null), 600);
+    };
+
+    const togglePlay = () => {
+        if (!player) return;
+        if (player.paused) {
+            player.play();
+            // Optimistic update
+            setIsPlaying(true);
+            triggerFeedback('play');
+        } else {
+            player.pause();
+            setIsPlaying(false);
+            triggerFeedback('pause');
+        }
+    };
+
+    const handleForward = () => {
+        if (!player) return;
+        player.currentTime = Math.min(player.currentTime + 10, duration);
+        triggerFeedback('forward');
+    };
+
+    const handleRewind = () => {
+        if (!player) return;
+        player.currentTime = Math.max(player.currentTime - 10, 0);
+        triggerFeedback('rewind');
+    };
+
+    const handleSeek = (e: any) => {
+        e.stopPropagation();
+        if (!player) return;
+        const time = parseFloat(e.target.value);
+        player.currentTime = time;
+        setCurrentTime(time);
+        setIsIdle(false);
+    };
+
+    // Calculate progress
+    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
+
+    // Params
     const playerParams = `?autoplay=1&mute=0&controls=0&version=3&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&fs=0`;
+    const cfSrc = `https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=false&muted=false&controls=false&preload=true`;
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-500">
+        <div ref={containerRef} className={`fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-500 ${isIdle ? 'cursor-none' : 'cursor-default'}`}>
+
+            <Script
+                src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js"
+                onLoad={connectPlayer}
+            />
+
+            {/* ACTION FEEDBACK OVERLAY (Centered) */}
+            {showActionIcon && (
+                <div className="absolute inset-0 z-[130] flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
+                    <div className="w-20 h-20 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white/90">
+                        {showActionIcon === 'play' && <Play className="w-10 h-10 fill-current" />}
+                        {showActionIcon === 'pause' && <div className="flex gap-2"><div className="w-3 h-8 bg-white rounded-sm" /><div className="w-3 h-8 bg-white rounded-sm" /></div>}
+                        {showActionIcon === 'forward' && <div className="flex flex-col items-center"><div className="flex"><Play className="w-6 h-6 fill-current" /><Play className="w-6 h-6 fill-current -ml-3" /></div><span className="text-[10px] font-bold">+10s</span></div>}
+                        {showActionIcon === 'rewind' && <div className="flex flex-col items-center"><div className="flex"><Play className="w-6 h-6 fill-current rotate-180" /><Play className="w-6 h-6 fill-current rotate-180 -ml-3" /></div><span className="text-[10px] font-bold">-10s</span></div>}
+                    </div>
+                </div>
+            )}
 
             {/* BACK BUTTON */}
-            <div className={`absolute top-6 left-6 z-[110] transition-all duration-700 ${isIdle ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
+            <div className={`absolute top-6 left-6 z-[120] transition-all duration-700 ${isIdle ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
                 <button
                     onClick={onClose}
-                    className="group flex items-center gap-3 text-white hover:text-[#FF9800] transition-colors bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
+                    className="group flex items-center gap-3 text-white hover:text-[#FF9800] transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 hover:bg-black/40"
                 >
                     <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                    <span className="font-bold text-xs tracking-widest uppercase">Cerrar</span>
+                    <span className="font-bold text-xs tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0 delay-100 block w-0 group-hover:w-auto overflow-hidden">Cerrar</span>
                 </button>
             </div>
 
-            {/* VIDEO PLAYER ENGINE */}
-            <div className="w-full h-full relative">
-
-                {/* A. YOUTUBE ENGINE */}
-                {isYoutube ? (
-                    <>
-                        {!isReady && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-black z-40">
-                                <div className="w-12 h-12 border-4 border-[#FF9800] border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                        )}
-                        <iframe
-                            src={`https://www.youtube.com/embed/${youtubeId}${playerParams}`}
-                            className="w-full h-full object-contain pointer-events-none" // Pointer off to prevent pausing by clicking video, we want "Cinema" feel
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            onLoad={() => setIsReady(true)}
-                        />
-                    </>
+            {/* VIDEO PLAYER ENGINE + GESTURE LAYER */}
+            <div className="w-full h-full relative group" onClick={handleSmartClick}>
+                {/* A. CLOUDFLARE ENGINE */}
+                {isCloudflare ? (
+                    <iframe
+                        ref={iframeRef}
+                        src={cfSrc}
+                        onLoad={connectPlayer} // TRY CONNECT WHEN IFRAME LOADS
+                        className="w-full h-full object-contain pointer-events-none" // Events handled by parent div
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                        allowFullScreen
+                    />
+                ) : isYoutube ? (
+                    <iframe
+                        src={`https://www.youtube.com/embed/${youtubeId}${playerParams}`}
+                        className="w-full h-full object-contain pointer-events-none"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    />
                 ) : (
-                    /* B. NATIVE ENGINE */
                     <video
                         src={post.videoUrl}
-                        className="w-full h-full object-contain"
+                        className="w-full h-full object-contain pointer-events-none"
                         autoPlay
                         loop
-                        controls={false} // Cinema mode: minimal
                     />
                 )}
             </div>
 
-            {/* SOCIAL OVERLAY (Like "Reels" mode but Horizontal) - HIDES ON IDLE */}
-            <div className={`absolute bottom-0 left-0 right-0 p-12 z-[110] transition-all duration-700 ${isIdle ? 'translate-y-40 opacity-0' : 'translate-y-0 opacity-100'}`}>
-                <div className="flex items-end justify-between">
-                    {/* Info */}
-                    <div className="max-w-xl">
-                        <h2 className="text-white text-3xl font-oswald font-bold shadow-black drop-shadow-lg leading-none mb-2">{post.title}</h2>
-                        <div className="flex items-center gap-3">
-                            <div className="relative w-8 h-8 rounded-full overflow-hidden border border-white/50">
-                                {post.avatar ? <Image src={post.avatar} alt="user" fill className="object-cover" /> : null}
-                            </div>
-                            <span className="text-white font-bold text-sm">{post.creator}</span>
-                            <button className="bg-white/10 hover:bg-[#FF9800] text-white text-[10px] px-3 py-1 rounded-full uppercase font-bold transition-colors">Seguir</button>
-                        </div>
+            {/* MODERN PROGRESS BAR (Bottom Floating) */}
+            {isCloudflare && (
+                <div
+                    className={`absolute bottom-8 left-8 right-8 z-[120] transition-all duration-500 ${isIdle && isPlaying ? 'translate-y-20 opacity-0' : 'translate-y-0 opacity-100'}`}
+                    onClick={(e) => e.stopPropagation()} // Prevent play toggle when scrubbing
+                >
+                    <div className="flex items-center justify-between mb-2 px-1">
+                        <span className="text-[10px] font-bold font-mono text-white/80">{formatTime(currentTime)}</span>
+                        <span className="text-[10px] font-bold font-mono text-white/50">{formatTime(duration)}</span>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-6">
-                        <button className="flex flex-col items-center gap-1 group text-white hover:text-red-500 transition-colors">
-                            <Heart className="w-8 h-8 group-hover:fill-red-500" />
-                            <span className="text-xs font-bold">{formatNumber(post.likes)}</span>
-                        </button>
-                        <button className="flex flex-col items-center gap-1 group text-white hover:text-[#FF9800] transition-colors">
-                            <MessageCircle className="w-8 h-8" />
-                            <span className="text-xs font-bold">{post.comments}</span>
-                        </button>
-                        <button className="flex flex-col items-center gap-1 group text-white hover:text-white/80 transition-colors">
-                            <Share2 className="w-8 h-8" />
-                            <span className="text-xs font-bold">Share</span>
-                        </button>
+                    <div className="group/progress relative w-full h-1 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all duration-300">
+                        <div
+                            className="absolute left-0 top-0 h-full bg-[#FF9800] rounded-full relative transition-all duration-100 ease-linear" // Linear ease for smooth progress
+                            style={{ width: `${progressPercent}%` }}
+                        >
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover/progress:scale-100 transition-transform" />
+                        </div>
+                        <input
+                            type="range"
+                            min={0}
+                            max={duration || 100}
+                            value={currentTime}
+                            onChange={handleSeek}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
                     </div>
                 </div>
-            </div>
-
+            )}
         </div>
     );
 }
 
+function formatTime(seconds: number) {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
 // UTILS
+const getCloudflareId = (url: string) => {
+    if (!url) return null;
+    // Handle "watch" URLs or direct ID
+    // Logic: Look for 'cloudflarestream.com/' OR 'videodelivery.net/' followed by ID
+    // Example: https://watch.cloudflarestream.com/6b446a...
+    const regExp = /(?:cloudflarestream\.com|videodelivery\.net)\/([a-zA-Z0-9]+)/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+}
+
 const getYoutubeId = (url: string) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;

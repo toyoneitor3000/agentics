@@ -91,13 +91,60 @@ export async function getSignedUploadUrl(fileName: string) {
 }
 
 
+// ... existing imports
+// Add these:
+
+export async function getCloudflareUploadUrl() {
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const token = process.env.CLOUDFLARE_API_TOKEN;
+
+    // Check if Cloudflare is configured
+    if (!accountId || !token) {
+        return null; // Fallback to Supabase logic if keys missing
+    }
+
+    try {
+        // Request a Direct Upload URL from Cloudflare
+        // This URL lets the user upload directly to CF servers securely
+        const response = await fetch(`https://api.cloudflare.com/client/v4/accounts/${accountId}/stream/direct_upload`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                maxDurationSeconds: 10800, // 3 Hours Max
+                meta: {
+                    userId: user.id,
+                    name: `Upload by ${user.name}`
+                }
+            })
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+            console.error("CF Stream Error:", data.errors);
+            throw new Error("Error connecting to Cloudflare Stream");
+        }
+
+        return {
+            provider: 'cloudflare',
+            uploadUrl: data.result.uploadURL,
+            uid: data.result.uid // The Video ID we need to save
+        };
+
+    } catch (e) {
+        console.error("Cloudflare Action Error:", e);
+        return null; // Fallback
+    }
+}
+
 export async function getCinemaFeed() {
     try {
-        // Fetch videos with user details, ordered by Created At DESC (Newest First)
-        // We join with the 'user' table (BetterAuth standard table is usually 'user' or 'users', let's try 'user' based on standard schema, or just fetch videos first)
-        // Actually, let's just fetch videos and we can enrich them if needed, or do a join.
-        // Assuming Postgres standard, tables are usually lowercase.
-
         const { rows } = await query(
             `SELECT 
                 v.id, 

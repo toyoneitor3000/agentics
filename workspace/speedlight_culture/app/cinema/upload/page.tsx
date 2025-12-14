@@ -1,348 +1,426 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Youtube, Link as LinkIcon, AlertTriangle, CheckCircle2, MonitorPlay, Loader2, UploadCloud, FileVideo, X } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { Upload, FileVideo, ChevronLeft, Loader2, Info, Check } from 'lucide-react';
 import { submitVideo, getSignedUploadUrl } from '@/app/actions/cinema';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
+import { useDropzone } from 'react-dropzone';
+
+// Helper for file size
+const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
 
 export default function UploadReelPage() {
     const router = useRouter();
 
-    // State
-    const [mode, setMode] = useState<'youtube' | 'native'>('youtube');
-    const [url, setUrl] = useState('');
-    const [thumbnail, setThumbnail] = useState<string | null>(null);
-    const [isValid, setIsValid] = useState(false);
-    const [formData, setFormData] = useState({ title: '', description: '' });
+    // MODES: 'direct' (File) | 'link' (YouTube) - Keeping structure if we add link back later
+    const [mode, setMode] = useState<'direct' | 'link'>('direct');
+
+    // DATA
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [videoUrl, setVideoUrl] = useState('');
+    const [title, setTitle] = useState('');
+    const [description, setDescription] = useState('');
+
+    // UI STATES
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Native Upload State
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [uploadProgress, setUploadProgress] = useState(0);
-    const [isUploading, setIsUploading] = useState(false);
-    const fileInputRef = useRef<HTMLInputElement>(null);
+    // Success Modal State
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
+    const [successDetails, setSuccessDetails] = useState<{ title: string } | null>(null);
 
-    // Extract YouTube ID
-    useEffect(() => {
-        if (mode !== 'youtube') return;
+    // DROPZONE CONFIG
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        if (acceptedFiles?.length > 0) {
+            setSelectedFile(acceptedFiles[0]);
+            setMode('direct');
 
-        const extractYoutubeId = (url: string) => {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-            const match = url.match(regExp);
-            return (match && match[2].length === 11) ? match[2] : null;
-        };
-
-        const id = extractYoutubeId(url);
-        if (id) {
-            setIsValid(true);
-            setThumbnail(`https://img.youtube.com/vi/${id}/maxresdefault.jpg`);
-        } else {
-            setIsValid(false);
-            setThumbnail(null);
+            // Auto-fill title if empty
+            if (!title) {
+                const name = acceptedFiles[0].name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+                setTitle(name);
+            }
         }
-    }, [url, mode]);
+    }, [title]);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        accept: {
+            'video/*': ['.mp4', '.mov', '.webm', '.mkv']
+        },
+        maxFiles: 1,
+        multiple: false
+    });
 
-        // Validation: Max 50MB for Free Tier safety
-        if (file.size > 50 * 1024 * 1024) {
-            alert("El archivo supera el límite de 50MB del plan gratuito. Por favor optimiza tu video o usa YouTube.");
-            return;
-        }
-
-        setSelectedFile(file);
-        setIsValid(true); // Technically valid to start upload
-        // Create a fake object URL for preview if browser supports it (for <video>)
-        const infoUrl = URL.createObjectURL(file);
-        setThumbnail(null); // Clear thumb, we might want to show a video preview instead or generic icon
-    };
-
-    const uploadFileToSupabase = async () => {
+    // 1. SMART UPLOAD LOGIC (Cloudflare > Supabase)
+    const uploadFile = async () => {
         if (!selectedFile) return null;
 
         try {
             setIsUploading(true);
-            setUploadProgress(10); // Start
+            setUploadProgress(5);
 
-            // 1. Get Signed URL
-            const fileName = `${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
-            const { signedUrl, path, fullPath } = await getSignedUploadUrl(fileName);
+            // Dynamically import to ensure client-side execution safety for these actions if needed
+            const { getCloudflareUploadUrl, getSignedUploadUrl } = await import('@/app/actions/cinema');
 
-            setUploadProgress(30);
+            const cfResult = await getCloudflareUploadUrl();
 
-            // 2. Upload via PUT
-            const uploadRes = await fetch(signedUrl, {
-                method: 'PUT',
-                body: selectedFile,
-                headers: {
-                    'Content-Type': selectedFile.type
+            if (cfResult && cfResult.provider === 'cloudflare') {
+                // --- CLOUDFLARE UPLOAD FLOW ---
+                console.log("🚀 Using Cloudflare Engine");
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const xhr = new XMLHttpRequest();
+
+                return new Promise<string | null>((resolve, reject) => {
+                    xhr.open('POST', cfResult.uploadUrl, true);
+
+                    xhr.upload.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percentComplete = (e.loaded / e.total) * 100;
+                            setUploadProgress(Math.round(percentComplete));
+                        }
+                    };
+
+                    xhr.onload = () => {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            const watchUrl = `https://watch.cloudflarestream.com/${cfResult.uid}`;
+                            setUploadProgress(100);
+                            resolve(watchUrl);
+                        } else {
+                            reject(new Error('Cloudflare Upload Failed'));
+                        }
+                    };
+
+                    xhr.onerror = () => reject(new Error('Network Error'));
+                    xhr.send(formData);
+                });
+
+            } else {
+                // --- SUPABASE FALLBACK FLOW (Legacy/Free) ---
+                console.log("⚠️ Fallback to Supabase Storage");
+
+                if (selectedFile.size > 50 * 1024 * 1024) {
+                    throw new Error("Sin Cloudflare configurado, el límite es 50MB. Añade las claves API o reduce el archivo.");
                 }
-            });
 
-            if (!uploadRes.ok) throw new Error('Upload failed');
+                const fileName = `${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+                const { signedUrl, path } = await getSignedUploadUrl(fileName);
 
-            setUploadProgress(80);
+                const interval = setInterval(() => {
+                    setUploadProgress(prev => Math.min(prev + 10, 90));
+                }, 500);
 
-            // 3. Get Public URL (Construct it manually or need another action? Supabase usually follows pattern)
-            // Pattern: https://[project].supabase.co/storage/v1/object/public/[bucket]/[path]
-            // We know the bucket is 'cinema' from action.
-            const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL; // e.g. https://xyz.supabase.co
-            const publicUrl = `${projectUrl}/storage/v1/object/public/cinema/${path}`; // path returned from action
+                const uploadRes = await fetch(signedUrl, {
+                    method: 'PUT',
+                    body: selectedFile,
+                    headers: { 'Content-Type': selectedFile.type }
+                });
 
-            setUploadProgress(100);
-            return publicUrl;
-        } catch (e) {
+                clearInterval(interval);
+
+                if (!uploadRes.ok) throw new Error('Upload failed.');
+
+                setUploadProgress(100);
+                const projectUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+                return `${projectUrl}/storage/v1/object/public/cinema/${path}`;
+            }
+
+        } catch (e: any) {
             console.error(e);
-            alert("Error subiendo el archivo. Intenta de nuevo.");
+            alert("Error: " + e.message); // Fallback alert for upload specific errors
             setIsUploading(false);
             setUploadProgress(0);
             return null;
         }
     };
 
+    // 2. MAIN SUBMIT HANDLER
     const handleSubmit = async () => {
-        if (!isValid || !formData.title.trim()) return;
+        if (!title) return alert("Por favor escribe un título.");
+        if (mode === 'direct' && !selectedFile) return alert("Por favor selecciona un video.");
 
         setIsSubmitting(true);
-        try {
-            let finalUrl = url;
 
-            // Handle Native Upload First
-            if (mode === 'native' && selectedFile) {
-                const uploadedUrl = await uploadFileToSupabase();
-                if (!uploadedUrl) {
+        try {
+            let finalVideoUrl = '';
+
+            if (mode === 'direct') {
+                const url = await uploadFile();
+                if (!url) {
                     setIsSubmitting(false);
                     return;
                 }
-                finalUrl = uploadedUrl;
+                finalVideoUrl = url;
+            } else {
+                finalVideoUrl = videoUrl;
             }
 
+            // GENERATE THUMBNAIL (Cloudflare Logic)
+            let finalThumb = undefined;
+            if (mode === 'link') {
+                // YouTube logic would go here if we had meta
+            } else if (finalVideoUrl.includes('cloudflarestream.com')) {
+                const uid = finalVideoUrl.split('/').pop();
+                if (uid) {
+                    // Cloudflare Auto-Thumbnail (High Quality)
+                    finalThumb = `https://videodelivery.net/${uid}/thumbnails/thumbnail.jpg?time=1s&height=600`;
+                }
+            }
+
+            // Save to DB
             await submitVideo({
-                title: formData.title,
-                description: formData.description,
-                video_url: finalUrl,
-                thumbnail_url: thumbnail || undefined,
-                category: 'General'
+                title: title,
+                description: description,
+                video_url: finalVideoUrl,
+                thumbnail_url: finalThumb,
+                category: 'Native'
             });
 
-            // Use verify-style alert
-            const shouldGo = confirm('¡Éxito! Tu video ha sido importado al ecosistema Cinema.\n\n¿Ir a la galería ahora?');
-            if (shouldGo) router.push('/cinema');
+            // SUCCESS!
+            setSuccessDetails({ title });
+            setShowSuccessModal(true);
 
-        } catch (error: any) {
-            console.error(error);
-            alert('Error: ' + error.message);
+            // Reset Form
+            setSelectedFile(null);
+            setVideoUrl('');
+            setTitle('');
+            setDescription('');
+            setUploadProgress(0);
+
+        } catch (e: any) {
+            console.error(e);
+            alert("Error: " + e.message);
         } finally {
+            setIsUploading(false);
             setIsSubmitting(false);
-            setIsUploading(false); // Valid cleanup
         }
     };
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 pb-24 md:pl-[244px] md:pt-10">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center gap-3 mb-8">
-                    <span className="bg-[#FF9800] text-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest rounded-sm">
-                        Studio
-                    </span>
-                    <h1 className="text-3xl font-oswald font-bold uppercase">Submit to Cinema</h1>
-                </div>
+        <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden flex flex-col items-center justify-center p-6">
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* BACKGROUND AMBIENCE */}
+            <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#FF9800]/10 to-transparent pointer-events-none blur-3xl" />
 
-                    {/* Left Column: Input Area */}
-                    <div className="lg:col-span-2 space-y-6">
+            {/* HEADER */}
+            <div className="absolute top-6 left-6 md:left-12 flex items-center gap-4 z-20">
+                <Link href="/cinema" className="group flex items-center gap-2 text-white/50 hover:text-white transition-colors">
+                    <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:bg-white/10">
+                        <ChevronLeft className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold tracking-widest uppercase hidden md:block">Volver a Cinema</span>
+                </Link>
+                <div className="h-8 w-[1px] bg-white/10 mx-2"></div>
+                {/* Logo or Title if logo not available */}
+                <span className="text-xl font-black italic tracking-tighter opacity-80">SPEEDLIGHT</span>
+            </div>
 
-                        {/* URL Input Input */}
-                        <div className="bg-[#111] p-8 rounded-2xl border border-white/10 space-y-6">
+            {/* MAIN CONTENT - SPLIT LAYOUT */}
+            <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
 
-                            {/* Tabs Switch */}
-                            <div className="flex bg-black p-1 rounded-xl border border-white/10 w-fit mx-auto mb-4">
-                                <button
-                                    onClick={() => { setMode('youtube'); setIsValid(false); setUrl(''); }}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all ${mode === 'youtube' ? 'bg-[#FF9800] text-black' : 'text-white/50 hover:text-white'}`}
-                                >
-                                    <Youtube className="w-4 h-4" /> YouTube
-                                </button>
-                                <button
-                                    onClick={() => { setMode('native'); setIsValid(false); setSelectedFile(null); }}
-                                    className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition-all ${mode === 'native' ? 'bg-[#FF9800] text-black' : 'text-white/50 hover:text-white'}`}
-                                >
-                                    <UploadCloud className="w-4 h-4" /> Nativo (Beta)
-                                </button>
-                            </div>
+                {/* LEFT: UPLOAD ZONE (Huge & Interactive) */}
+                <div className="flex flex-col gap-6">
+                    <div className="space-y-2">
+                        <span className="text-[#FF9800] text-xs font-bold tracking-[0.2em] uppercase">Creator Studio</span>
+                        <h1 className="text-4xl md:text-6xl font-black font-oswald uppercase leading-none">
+                            Sube tu <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50">Masterpiece</span>
+                        </h1>
+                    </div>
 
-                            <div className="text-center space-y-2">
-                                <div className="w-16 h-16 bg-[#FF9800]/10 rounded-full flex items-center justify-center mx-auto text-[#FF9800]">
-                                    <MonitorPlay className="w-8 h-8" />
+                    <div
+                        {...getRootProps()}
+                        className={`
+                            relative w-full aspect-video rounded-3xl border-2 border-dashed transition-all duration-500 group cursor-pointer overflow-hidden
+                            ${isDragActive ? 'border-[#FF9800] bg-[#FF9800]/5 scale-[1.02]' : 'border-white/10 hover:border-white/30 hover:bg-white/5'}
+                            ${selectedFile ? 'border-solid border-[#FF9800]/50 bg-black' : ''}
+                        `}
+                    >
+                        <input {...getInputProps()} />
+
+                        {/* 1. IDLE STATE */}
+                        {!selectedFile && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                    <Upload className="w-8 h-8 text-white/50 group-hover:text-[#FF9800] transition-colors" />
                                 </div>
-                                <h3 className="text-xl font-bold font-oswald uppercase">
-                                    {mode === 'youtube' ? 'Cinema Cloud Link' : 'Subida Directa'}
-                                </h3>
-                                <p className="text-white/50 text-sm max-w-md mx-auto">
-                                    {mode === 'youtube'
-                                        ? "Conecta tu contenido 4K desde servidores globales de alta velocidad."
-                                        : "Sube archivos MP4 directamente. Máximo 50MB (Free Tier)."
-                                    }
-                                </p>
+                                <h3 className="text-xl font-bold text-white mb-2">Arrastra tu video aquí</h3>
+                                <p className="text-white/40 text-sm max-w-xs">Soporta MP4, MOV, WebM. <br /> Calidad hasta 4K HDR sin límites.</p>
+                                <div className="mt-8 px-6 py-2 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">
+                                    Explorar Archivos
+                                </div>
                             </div>
+                        )}
 
-                            {mode === 'youtube' ? (
-                                <div className="relative">
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30">
-                                        <LinkIcon className="w-5 h-5" />
+                        {/* 2. SELECTED / UPLOADING STATE */}
+                        {selectedFile && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                                <div className="w-16 h-16 mb-4 relative">
+                                    {/* Spinner */}
+                                    {isUploading && (
+                                        <div className="absolute inset-0 border-4 border-white/10 border-t-[#FF9800] rounded-full animate-spin"></div>
+                                    )}
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <FileVideo className="w-6 h-6 text-white" />
                                     </div>
-                                    <input
-                                        type="text"
-                                        value={url}
-                                        onChange={(e) => setUrl(e.target.value)}
-                                        placeholder="Pega el enlace de video de alta calidad..."
-                                        className={`w-full bg-black border ${isValid ? 'border-[#FF9800]/50' : 'border-white/10'} rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-[#FF9800] transition-colors`}
-                                    />
                                 </div>
-                            ) : (
-                                <div
-                                    onClick={() => fileInputRef.current?.click()}
-                                    className={`relative border-2 border-dashed ${selectedFile ? 'border-[#FF9800] bg-[#FF9800]/5' : 'border-white/20 hover:border-white/40 hover:bg-white/5'} rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all h-40`}
-                                >
-                                    <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        className="hidden"
-                                        accept="video/mp4,video/quicktime,video/webm"
-                                        onChange={handleFileSelect}
-                                    />
-                                    {selectedFile ? (
-                                        <>
-                                            <FileVideo className="w-8 h-8 text-[#FF9800] mb-2" />
-                                            <span className="text-white font-bold text-sm">{selectedFile.name}</span>
-                                            <span className="text-white/50 text-xs">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <UploadCloud className="w-8 h-8 text-white/50 mb-2" />
-                                            <span className="text-white/70 font-bold text-sm">Click para seleccionar</span>
-                                            <span className="text-white/30 text-xs mt-1">MP4, MOV (Max 50MB)</span>
-                                        </>
+
+                                <div className="text-center w-full px-12">
+                                    <h3 className="text-lg font-bold text-white mb-1 truncate w-full">{selectedFile.name.toUpperCase()}</h3>
+                                    <p className="text-[#FF9800] text-xs font-bold tracking-widest uppercase mb-4">
+                                        {isUploading ? `Subiendo ${uploadProgress}%` : formatFileSize(selectedFile.size) + ' • LISTO PARA PROCESAR'}
+                                    </p>
+
+                                    {/* Progress Bar */}
+                                    {isUploading && (
+                                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className="h-full bg-[#FF9800] transition-all duration-300 ease-out"
+                                                style={{ width: `${uploadProgress}%` }}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {!isUploading && (
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+                                            className="text-white/30 hover:text-white text-xs underline decoration-dotted transition-colors"
+                                        >
+                                            Cambiar archivo
+                                        </button>
                                     )}
                                 </div>
-                            )}
+                            </div>
+                        )}
+                    </div>
 
-                            {/* Preview (Only for YouTube for now, Native handled differently) */}
-                            {mode === 'youtube' && isValid && thumbnail && (
-                                <div className="rounded-xl overflow-hidden border border-[#FF9800]/20 relative aspect-video group bg-black">
-                                    <Image
-                                        src={thumbnail}
-                                        alt="Preview"
-                                        fill
-                                        className="object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-700"
-                                    />
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <div className="w-20 h-20 bg-[#FF9800] rounded-full flex items-center justify-center text-black shadow-[0_0_30px_rgba(255,152,0,0.5)] group-hover:scale-110 transition-transform">
-                                            <MonitorPlay className="w-10 h-10 ml-1" />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                    {/* MODE SWITCHER */}
+                    <div className="flex gap-8 justify-center lg:justify-start pt-2">
+                        <button
+                            className={`text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-colors ${mode === 'direct' ? 'text-white border-[#FF9800]' : 'text-white/30 border-transparent hover:text-white'}`}
+                        >
+                            Archivo Directo
+                        </button>
+                        <button
+                            className={`text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-colors ${mode === 'link' ? 'text-white border-[#FF9800]' : 'text-white/30 border-transparent hover:text-white'}`}
+                            onClick={() => {
+                                // Simple toggle logic if we ever re-enable link mode UI properly
+                                // For now it's just a visual tab
+                                setMode(prev => prev === 'direct' ? 'link' : 'direct');
+                            }}
+                        >
+                            Importar Link
+                        </button>
+                    </div>
+                </div>
 
-                            {/* Upload Progress (Native) */}
-                            {mode === 'native' && isUploading && (
-                                <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                                    <div className="bg-[#FF9800] h-full transition-all duration-300" style={{ width: `${uploadProgress}%` }}></div>
-                                </div>
-                            )}
+
+                {/* RIGHT: METADATA FORM */}
+                <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col gap-6 relative overflow-hidden group/form will-change-transform">
+                    {/* Glass Effect */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent pointer-events-none" />
+
+                    <div className="space-y-4 relative z-10">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Título de la Obra</label>
+                            <input
+                                type="text"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                                placeholder={selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "EJ: TRIBUTO PORSCHE 911"}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-lg font-bold transition-colors"
+                            />
                         </div>
 
-                        {/* Metadata Form */}
-                        <div className="bg-[#111] p-6 rounded-2xl border border-white/5 space-y-4">
-                            <div>
-                                <label className="block text-xs font-bold uppercase text-white/50 mb-2">Título</label>
-                                <input
-                                    type="text"
-                                    value={formData.title}
-                                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                    placeholder="Ej: Midnight Run GT3"
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[#FF9800] outline-none transition-colors"
-                                    disabled={isSubmitting}
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold uppercase text-white/50 mb-2">Descripción / Créditos</label>
-                                <textarea
-                                    rows={3}
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    placeholder="Cuenta la historia detrás del build..."
-                                    className="w-full bg-black/50 border border-white/10 rounded-lg p-3 text-white focus:border-[#FF9800] outline-none transition-colors"
-                                    disabled={isSubmitting}
-                                ></textarea>
-                            </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Descripción</label>
+                            <textarea
+                                value={description}
+                                onChange={(e) => setDescription(e.target.value)}
+                                placeholder="Añade contexto, créditos y detalles técnicos..."
+                                rows={4}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm font-medium transition-colors resize-none"
+                            />
+                        </div>
+                    </div>
 
-                            <button
-                                onClick={handleSubmit}
-                                disabled={isSubmitting || !isValid || !formData.title}
-                                className="w-full bg-[#FF9800] hover:bg-[#F57C00] text-black font-bold uppercase tracking-widest py-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            >
-                                {isSubmitting ? (
+                    <div className="pt-4 mt-auto space-y-4 relative z-10">
+                        <div className="flex items-start gap-3 p-4 bg-[#FF9800]/5 rounded-xl border border-[#FF9800]/20">
+                            <Info className="w-5 h-5 text-[#FF9800] shrink-0 mt-0.5" />
+                            <p className="text-[10px] text-white/60 leading-relaxed">
+                                Al publicar, confirmas que tienes los derechos de este contenido.
+                                El material será procesado en <strong>High Bitrate</strong>.
+                            </p>
+                        </div>
+
+                        <button
+                            disabled={!selectedFile || isUploading}
+                            onClick={handleSubmit}
+                            className={`
+                                w-full py-5 rounded-xl font-bold uppercase tracking-widest text-sm transition-all duration-300 relative overflow-hidden group/btn shadow-xl
+                                ${(!selectedFile || isUploading) ? 'bg-white/5 text-white/20 cursor-not-allowed' : 'bg-[#FF9800] text-black hover:scale-[1.02] hover:shadow-[#FF9800]/20'}
+                            `}
+                        >
+                            <div className="relative z-10 flex items-center justify-center gap-2">
+                                {isUploading ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
-                                        Sincronizando...
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        <span>Procesando...</span>
                                     </>
                                 ) : (
-                                    <>
-                                        <MonitorPlay className="w-5 h-5" />
-                                        Importar a Cinema
-                                    </>
+                                    <span>Publicar Masterpiece</span>
                                 )}
+                            </div>
+                            {/* Filling effect */}
+                            <div className={`absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ${isUploading ? 'hidden' : ''}`} />
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            {/* === SUCCESS MODAL === */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300">
+                    <div className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-sm w-full text-center relative overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                        {/* Status Light */}
+                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-green-500 to-transparent opacity-80" />
+
+                        <div className="w-20 h-20 bg-green-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/20">
+                            <Check className="w-10 h-10 text-green-500" />
+                        </div>
+
+                        <h2 className="text-2xl font-black font-oswald text-white uppercase mb-2">¡Subida Exitosa!</h2>
+                        <p className="text-white/60 text-sm mb-8 leading-relaxed">
+                            Tu obra <strong className="text-white">"{successDetails?.title}"</strong> se está procesando en nuestros servidores 4K y estará disponible en breve.
+                        </p>
+
+                        <div className="flex flex-col gap-3">
+                            <Link href="/cinema" className="w-full py-4 bg-white text-black font-bold uppercase tracking-widest text-xs rounded-xl hover:scale-[1.02] transition-transform">
+                                Ir al Cinema
+                            </Link>
+                            <button
+                                onClick={() => setShowSuccessModal(false)}
+                                className="w-full py-4 bg-white/5 text-white font-bold uppercase tracking-widest text-xs rounded-xl hover:bg-white/10 transition-colors"
+                            >
+                                Subir Otro
                             </button>
                         </div>
                     </div>
-
-                    {/* Right Column: Guidelines */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-[#1A1A1A] rounded-2xl p-6 border border-[#FF9800]/20 sticky top-4">
-                            <h3 className="font-oswald font-bold text-lg uppercase mb-4 flex items-center gap-2">
-                                <MonitorPlay className="w-5 h-5 text-[#FF9800]" />
-                                Guía para Creadores
-                            </h3>
-
-                            <p className="text-sm text-white/70 mb-6 leading-relaxed">
-                                Speedlight Cinema es el espacio premium. Al usar YouTube, garantizamos la mejor calidad de streaming mundial 4K/60fps sin costo para ti.
-                            </p>
-
-                            <div className="space-y-4">
-                                <div className="flex gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                                    <div>
-                                        <h4 className="font-bold text-sm">Sube a tu canal</h4>
-                                        <p className="text-xs text-white/50">Sube el video a tu canal personal. Puede estar en modo "Oculto" (Unlisted) si quieres que sea exclusivo de aquí.</p>
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3">
-                                    <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-                                    <div>
-                                        <h4 className="font-bold text-sm">Comparte el Link</h4>
-                                        <p className="text-xs text-white/50">Copia el enlace y pégalo aquí. Nosotros nos encargamos del resto.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 pt-6 border-t border-white/10">
-                                <div className="flex items-start gap-3 bg-[#FF9800]/10 p-3 rounded-lg">
-                                    <AlertTriangle className="w-5 h-5 text-[#FF9800] shrink-0" />
-                                    <p className="text-[10px] text-[#FF9800] font-bold leading-tight">
-                                        Tu video ganará visitas directamente en tu canal. ¡Es un win-win!
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
