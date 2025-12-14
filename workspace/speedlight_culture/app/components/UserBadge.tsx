@@ -20,23 +20,40 @@ interface UserBadgeProps {
 }
 
 // Sub-componente interno para estilos
-function BadgeContainer({ children, colorClass, glow, size, label }: any) {
+function BadgeContainer({ children, className, glow, size, label, textColor = "text-white" }: any) {
+    const isSmall = size === 'sm';
+
+    // Ajustes de tamaño
     const sizeClasses = {
-        sm: "w-3.5 h-3.5",
-        md: "w-4 h-4",
-        lg: "w-5 h-5"
+        sm: "h-auto gap-1", // Compacto para header
+        md: "h-6 px-2.5 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full", // Badge completo para perfiles (Sin borde)
+        lg: "h-7 px-3 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full"
     };
 
+    // Si es pequeño (Header), renderizamos solo texto e icono sin fondo
+    if (isSmall) {
+        return (
+            <div className={`inline-flex items-center gap-1.5 align-middle ml-2 ${className}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider text-[#FF9800]`}>
+                    {label}
+                </span>
+                <div className="w-3 h-3 text-[#FF9800]">
+                    {children}
+                </div>
+            </div>
+        );
+    }
+
+    // Versión Full (Perfil)
     return (
-        <div className="inline-flex items-center gap-1.5 align-middle ml-1.5">
-            {/* Icono sin background, solo el SVG con color */}
-            <div className={`${sizeClasses[size as keyof typeof sizeClasses]} ${colorClass} ${glow} flex items-center justify-center`}>
+        <div className={`inline-flex items-center gap-1.5 align-middle ml-2 ${className} ${sizeClasses[size as 'sm' | 'md' | 'lg']} ${glow}`}>
+            {/* Icono */}
+            <div className="w-3.5 h-3.5 flex items-center justify-center text-white">
                 {children}
             </div>
-
-            {/* Etiqueta de Texto Minimalista */}
+            {/* Etiqueta */}
             {label && (
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${colorClass}`}>
+                <span className={`text-[10px] font-black uppercase tracking-wider ${textColor} leading-none pt-0.5`}>
                     {label}
                 </span>
             )}
@@ -49,53 +66,61 @@ export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: Use
     // Normalizar rol por si viene de DB como texto
     let normalizedRole = role.toLowerCase();
 
-    // Lógica de Renderizado Minimalista
+    // 1. CEO (Minimal en Header, Full en Perfil)
     if (normalizedRole === 'ceo' || normalizedRole === 'admin') {
         return (
             <BadgeContainer
-                colorClass="text-yellow-500" // Dorado simple
-                glow="drop-shadow-[0_0_5px_rgba(234,179,8,0.5)]"
                 size={size}
-                label={showLabel ? "CEO" : undefined}
+                label="CEO"
+                // En versiones grandes (md/lg) el fondo lo maneja el sizeClasses dentro del componente
+                // En versiones pequeñas (sm) esto se ignora por el if(isSmall)
+                glow="shadow-[0_0_15px_rgba(255,87,34,0.4)]"
+                textColor="text-white"
             >
-                <Crown className="w-full h-full fill-yellow-500" />
+                <Crown className="w-full h-full fill-current" />
             </BadgeContainer>
         );
     }
 
+    // 2. FUNDADOR / CLUB 500
     if (normalizedRole === 'founder' || normalizedRole === 'club500') {
         return (
             <BadgeContainer
-                colorClass="text-[#FF9800]"
-                glow="drop-shadow-[0_0_5px_rgba(255,152,0,0.4)]"
+                className="bg-[#FF9800]/10 border-[#FF9800]/50"
+                glow="shadow-[0_0_10px_rgba(255,152,0,0.2)]"
                 size={size}
-                label={showLabel ? "Club 500" : undefined}
+                label={showLabel ? "Founder" : undefined}
+                textColor="text-[#FF9800]"
             >
                 <Crown className="w-full h-full" />
             </BadgeContainer>
         );
     }
 
+    // 3. NEGOCIO OFICIAL
     if (normalizedRole === 'official_business' || normalizedRole === 'verified_business') {
         return (
             <BadgeContainer
-                colorClass="text-cyan-400"
-                glow="drop-shadow-[0_0_5px_rgba(34,211,238,0.4)]"
+                className="bg-cyan-500/10 border-cyan-400/50"
+                glow="shadow-[0_0_10px_rgba(34,211,238,0.2)]"
                 size={size}
                 label={showLabel ? "Official" : undefined}
+                textColor="text-cyan-400"
             >
                 <ShieldCheck className="w-full h-full" />
             </BadgeContainer>
         );
     }
 
+    // 4. NEGOCIO NORMAL
     if (normalizedRole === 'business') {
         return (
             <BadgeContainer
-                colorClass="text-neutral-400"
+                className="bg-white/5 border-white/20"
                 glow=""
                 size={size}
                 label={showLabel ? "Business" : undefined}
+                textColor="text-neutral-400"
             >
                 <Briefcase className="w-full h-full" />
             </BadgeContainer>

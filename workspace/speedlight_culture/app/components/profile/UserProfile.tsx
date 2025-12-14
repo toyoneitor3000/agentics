@@ -160,25 +160,15 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     </div>
 
                     {/* Identifiers */}
-                    <div className="flex flex-col items-center justify-center mb-1">
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic text-white leading-none">
-                                {profile?.full_name || 'Racer Unknown'}
-                            </h1>
-                            {/* Verified / Role Badge inline with name */}
-                            <UserBadge role={profile?.role} size="md" />
-                        </div>
+                    <div className="flex flex-col items-center justify-center mt-3 mb-1 gap-3">
+                        {/* Verified / Role Badge Centered ABOVE Name */}
+                        <UserBadge role={profile?.role} size="md" />
 
-                        {/* Secondary Badge: Founder / Club 500 (Clean Pill) */}
-                        {profile?.founder_number && (
-                            <div className="mt-2 flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 px-3 py-0.5 rounded-full">
-                                <Star className="w-3 h-3 fill-yellow-500" />
-                                <span className="text-[9px] font-bold tracking-widest leading-none uppercase">
-                                    Club 500 #{profile.founder_number.toString().padStart(3, '0')}
-                                </span>
-                            </div>
-                        )}
+                        <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic text-white leading-none text-center">
+                            {profile?.full_name || 'Racer Unknown'}
+                        </h1>
                     </div>
+
                     {profile?.alias && (
                         <p className="text-[#FF9800] font-medium text-sm tracking-wide mb-1">
                             {profile.alias.startsWith('@') ? profile.alias : `@${profile.alias}`}
@@ -396,7 +386,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
 

@@ -157,20 +157,17 @@ const ServicesSection: React.FC = () => {
             title="Lavado Llanta a Llanta"
             imageUrl="/services/wheel-wash.jpg"
             benefits={[
-              "Exterior completo profesional",
-              "Limpieza profunda de rines",
-              "Pasos de rueda incluidos",
-              "Hidratación de neumáticos"
+              "Desmontaje de llanta por llanta",
+              "Limpieza y descontaminación de cáliper",
+              "Lavado profundo de paso rueda y suspensión",
+              "Lavado de rines (cara interna y externa)",
+              "Descontaminación ferrosa completa"
             ]}
             description={
               <div className="flex justify-between items-end border-t border-white/10 pt-4 mt-4">
-                <div>
-                  <span className="text-xs text-brand-slate block">Automóvil</span>
-                  <span className="text-xl font-bold text-brand-cyan">$45.000</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-brand-slate block">Camioneta</span>
-                  <span className="text-xl font-bold text-brand-cyan">$55.000</span>
+                <div className="w-full text-center">
+                  <span className="text-xs text-brand-slate block">Tarifa Única</span>
+                  <span className="text-xl font-bold text-brand-cyan">$350.000</span>
                 </div>
               </div>
             }
@@ -376,7 +373,7 @@ const ServicesSection: React.FC = () => {
             ¿No encuentras lo que buscas? Contáctanos para servicios personalizados
           </p>
           <a
-            href="https://wa.me/573124730909?text=Hola,%20necesito%20información%20sobre%20servicios%20personalizados."
+            href="https://wa.me/573157742419?text=Hola,%20necesito%20información%20sobre%20servicios%20personalizados."
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 bg-gradient-to-r from-brand-cyan to-blue-500 text-brand-dark-blue font-bold py-4 px-8 rounded-full hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-all duration-300 font-orbitron tracking-wide"

@@ -116,7 +116,7 @@ const HeroSection: React.FC = () => {
         </p>
 
         <div className="flex flex-col md:flex-row gap-4 md:gap-6 justify-center animate-slide-up" style={{ animationDelay: '0.4s' }}>
-          <a href="https://wa.me/573124730909?text=Hola,%20deseo%20agendar%20una%20cita%20VIP%20para%20mi%20vehículo." target="_blank" rel="noopener noreferrer" className="btn-primary text-base md:text-lg py-3 md:py-4 px-8 md:px-10">
+          <a href="https://wa.me/573157742419?text=Hola,%20deseo%20agendar%20una%20cita%20VIP%20para%20mi%20vehículo." target="_blank" rel="noopener noreferrer" className="btn-primary text-base md:text-lg py-3 md:py-4 px-8 md:px-10">
             Agendar Cita VIP
           </a>
           <a href="#services" className="btn-secondary text-base md:text-lg py-3 md:py-4 px-8 md:px-10">

@@ -152,7 +152,7 @@ const Header = () => {
 
               {/* Botón de CONTACTO a la DERECHA */}
               <a
-                href="https://wa.me/573124730909"
+                href="https://wa.me/573157742419"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-gradient-to-r from-brand-cyan to-brand-light-blue text-white font-bold py-3 px-8 rounded-full hover:shadow-[0_0_30px_rgba(6,182,212,0.7)] transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.4)] font-orbitron tracking-wide hover:scale-105 flex items-center gap-2 uppercase text-sm"
@@ -236,7 +236,7 @@ const Header = () => {
                 }}
               >
                 <a
-                  href="https://wa.me/573124730909"
+                  href="https://wa.me/573157742419"
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleNavLinkClick}

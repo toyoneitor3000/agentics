@@ -11,7 +11,7 @@ const WhatsAppFloatingButton: React.FC = () => {
   };
 
   const handleWhatsAppChat = () => {
-    window.open('https://wa.me/573124730909?text=Hola,%20deseo%20información%20sobre%20sus%20servicios%20de%20detailing.', '_blank');
+    window.open('https://wa.me/573157742419?text=Hola,%20deseo%20información%20sobre%20sus%20servicios%20de%20detailing.', '_blank');
   };
 
   const handleWhatsAppShare = () => {

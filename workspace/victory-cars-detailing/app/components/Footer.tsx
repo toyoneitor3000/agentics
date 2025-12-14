@@ -12,9 +12,9 @@ const Footer: React.FC = () => {
             Elevando el estándar del cuidado automotriz en Bogotá. Pasión, tecnología y perfección en cada detalle.
           </p>
           <div className="flex space-x-4">
-            <a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Instagram size={24} /></a>
-            <a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Facebook size={24} /></a>
-            <a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Twitter size={24} /></a>
+            <a href="https://wa.me/573157742419" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Instagram size={24} /></a>
+            <a href="https://wa.me/573157742419" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Facebook size={24} /></a>
+            <a href="https://wa.me/573157742419" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors"><Twitter size={24} /></a>
           </div>
         </div>
 
@@ -31,9 +31,9 @@ const Footer: React.FC = () => {
         <div>
           <h4 className="text-white font-bold mb-6 tracking-widest uppercase text-xs font-orbitron">Empresa</h4>
           <ul className="space-y-3 text-sm font-light">
-            <li><a href="https://wa.me/573124730909?text=Hola,%20deseo%20conocer%20más%20sobre%20Victory%20Cars." target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Nosotros</a></li>
+            <li><a href="https://wa.me/573157742419?text=Hola,%20deseo%20conocer%20más%20sobre%20Victory%20Cars." target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Nosotros</a></li>
             <li><a href="#gallery" className="hover:text-brand-cyan transition-colors">Portafolio</a></li>
-            <li><a href="https://wa.me/573124730909" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Contacto</a></li>
+            <li><a href="https://wa.me/573157742419" target="_blank" rel="noopener noreferrer" className="hover:text-brand-cyan transition-colors">Contacto</a></li>
             <li><a href="/privacy" className="hover:text-brand-cyan transition-colors">Política de Privacidad</a></li>
           </ul>
         </div>
@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
           <p className="text-xs mb-4 font-light">Reciba ofertas exclusivas y consejos de mantenimiento.</p>
           <div className="flex">
             <input type="email" placeholder="Su email" className="bg-brand-mid-blue border border-white/10 text-white px-4 py-2 rounded-l-lg focus:outline-none focus:border-brand-cyan w-full text-sm placeholder-white/20" />
-            <a href="https://wa.me/573124730909?text=Hola,%20deseo%20suscribirme%20al%20boletín%20VIP." target="_blank" rel="noopener noreferrer" className="bg-brand-cyan text-brand-dark-blue px-4 py-2 rounded-r-lg hover:bg-white transition-colors flex items-center justify-center">
+            <a href="https://wa.me/573157742419?text=Hola,%20deseo%20suscribirme%20al%20boletín%20VIP." target="_blank" rel="noopener noreferrer" className="bg-brand-cyan text-brand-dark-blue px-4 py-2 rounded-r-lg hover:bg-white transition-colors flex items-center justify-center">
               <ArrowRight size={18} />
             </a>
           </div>
