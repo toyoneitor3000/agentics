@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { Upload, FileVideo, ChevronLeft, Loader2, Info, Check } from 'lucide-react';
-import { submitVideo, getSignedUploadUrl } from '@/app/actions/cinema';
+import { submitVideo, getCloudflareUploadUrl, getSignedUploadUrl } from '@/app/actions/cinema';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -69,8 +69,8 @@ export default function UploadReelPage() {
             setIsUploading(true);
             setUploadProgress(5);
 
-            // Dynamically import to ensure client-side execution safety for these actions if needed
-            const { getCloudflareUploadUrl, getSignedUploadUrl } = await import('@/app/actions/cinema');
+            // Static import used above
+            // const { getCloudflareUploadUrl, getSignedUploadUrl } = await import('@/app/actions/cinema');
 
             const cfResult = await getCloudflareUploadUrl();
 

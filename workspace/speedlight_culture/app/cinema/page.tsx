@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Plus, Star, X, Info, Maximize, Minimize, ChevronDown, MoreVertical } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -550,6 +550,7 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 function ImmersiveCinemaMode({ post, onClose }: any) {
     const [isIdle, setIsIdle] = useState(false);
     const [player, setPlayer] = useState<any>(null);
+    const [isReady, setIsReady] = useState(false); // New explicit ready state
 
     // Player State
     const [isPlaying, setIsPlaying] = useState(true);
@@ -588,43 +589,78 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
         };
     }, []);
 
-    // ONE ROBUST CONNECT FUNCTION
-    const connectPlayer = useCallback(() => {
-        if (!isCloudflare || !iframeRef.current || player) return;
-        if (!(window as any).Stream) return;
-
-        console.log("⚡️ Attempting Stream Connection...");
-        try {
-            const streamPlayer = (window as any).Stream(iframeRef.current);
-            setPlayer(streamPlayer);
-
-            // Listeners
-            streamPlayer.addEventListener('timeupdate', () => setCurrentTime(streamPlayer.currentTime));
-            streamPlayer.addEventListener('durationchange', () => setDuration(streamPlayer.duration));
-            streamPlayer.addEventListener('loadedmetadata', () => setDuration(streamPlayer.duration));
-            streamPlayer.addEventListener('play', () => setIsPlaying(true));
-            streamPlayer.addEventListener('pause', () => setIsPlaying(false));
-
-            // Initial Sync
-            if (streamPlayer.duration) setDuration(streamPlayer.duration);
-            streamPlayer.muted = false;
-            streamPlayer.play().catch((e: any) => console.log("Autoplay caught:", e));
-        } catch (e) {
-            console.error("Connect Player Error:", e);
-        }
-    }, [isCloudflare, player]);
-
-    // 1. Try connect on Mount + Polling (for 4s max)
+    // ⚡️ ROBUST MANUAL SCRIPT INJECTION & INIT ⚡️
     useEffect(() => {
-        connectPlayer();
-        const interval = setInterval(connectPlayer, 500);
-        const timeout = setTimeout(() => clearInterval(interval), 4000);
-        return () => { clearInterval(interval); clearTimeout(timeout); };
-    }, [connectPlayer]);
+        if (!isCloudflare) return;
+
+        let pollInterval: NodeJS.Timeout;
+
+        const initSDK = () => {
+            if (iframeRef.current && (window as any).Stream) {
+                // Prevent Double Init
+                if (iframeRef.current.getAttribute('data-init') === 'true') return;
+
+                try {
+                    console.log("⚡️ Cloudflare SDK Found. Initializing...");
+                    const streamPlayer = (window as any).Stream(iframeRef.current);
+
+                    iframeRef.current.setAttribute('data-init', 'true');
+                    setPlayer(streamPlayer);
+
+                    // Robust Listeners
+                    const onTime = () => setCurrentTime(streamPlayer.currentTime);
+                    const onDur = () => setDuration(streamPlayer.duration);
+                    const onPlayState = () => setIsPlaying(!streamPlayer.paused);
+
+                    streamPlayer.addEventListener('timeupdate', onTime);
+                    streamPlayer.addEventListener('durationchange', onDur);
+                    streamPlayer.addEventListener('loadedmetadata', onDur);
+                    streamPlayer.addEventListener('play', onPlayState);
+                    streamPlayer.addEventListener('pause', onPlayState);
+
+                    // Bootup
+                    if (streamPlayer.duration) setDuration(streamPlayer.duration);
+                    streamPlayer.muted = false;
+                    streamPlayer.play().catch((e: any) => console.log("Auto-Play Blocked via SDK:", e));
+
+                    setIsReady(true);
+                    clearInterval(pollInterval); // Init complete
+                } catch (e) {
+                    console.error("SDK Init Failed", e);
+                }
+            }
+        };
+
+        // 1. Check if script exists, if not inject it
+        if (!(window as any).Stream) {
+            const script = document.createElement('script');
+            script.src = "https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js";
+            script.async = true;
+            script.onload = () => {
+                // Script loaded, start polling for iframe readiness
+                pollInterval = setInterval(initSDK, 200);
+            };
+            document.body.appendChild(script);
+        } else {
+            // Script already there, just poll
+            pollInterval = setInterval(initSDK, 200);
+        }
+
+        // Failsafe timeout
+        const failsafe = setTimeout(() => clearInterval(pollInterval), 8000);
+
+        return () => {
+            clearInterval(pollInterval);
+            clearTimeout(failsafe);
+        };
+    }, [isCloudflare]);
 
 
     /* --- MODERN INTERACTION HANDLER --- */
     const handleSmartClick = (e: React.MouseEvent<HTMLDivElement>) => {
+        // If player isn't ready, ignore interactions to prevent frustration bugs
+        if (!player && isCloudflare) return;
+
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const width = rect.width;
@@ -641,7 +677,8 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
             } else if (x > width - third) {
                 handleForward();
             } else {
-                toggleFullscreen(); // CENTER -> FULLSCREEN
+                // CENTER DOUBLE TAP: Just ensure playing
+                togglePlay();
             }
         } else {
             // SINGLE CLICK WAIT
@@ -649,15 +686,6 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
                 clickTimeoutRef.current = null;
                 togglePlay(); // SINGLE -> PLAY/PAUSE
             }, 250);
-        }
-    };
-
-    const toggleFullscreen = () => {
-        if (!containerRef.current) return;
-        if (!document.fullscreenElement) {
-            containerRef.current.requestFullscreen().catch(e => console.log(e));
-        } else {
-            document.exitFullscreen().catch(e => console.log(e));
         }
     };
 
@@ -670,12 +698,11 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
         if (!player) return;
         if (player.paused) {
             player.play();
-            // Optimistic update
-            setIsPlaying(true);
+            setIsPlaying(true); // Optimistic
             triggerFeedback('play');
         } else {
             player.pause();
-            setIsPlaying(false);
+            setIsPlaying(false); // Optimistic
             triggerFeedback('pause');
         }
     };
@@ -711,10 +738,15 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
     return (
         <div ref={containerRef} className={`fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-500 ${isIdle ? 'cursor-none' : 'cursor-default'}`}>
 
-            <Script
-                src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js"
-                onLoad={connectPlayer}
-            />
+            {/* LOADING STATE - VISIBLE UNTIL READY */}
+            {isCloudflare && !isReady && (
+                <div className="absolute inset-0 flex items-center justify-center z-[110] bg-black/80">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 border-4 border-[#FF9800] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-[#FF9800] text-xs font-bold tracking-widest uppercase animate-pulse">Cargando...</span>
+                    </div>
+                </div>
+            )}
 
             {/* ACTION FEEDBACK OVERLAY (Centered) */}
             {showActionIcon && (
@@ -746,7 +778,6 @@ function ImmersiveCinemaMode({ post, onClose }: any) {
                     <iframe
                         ref={iframeRef}
                         src={cfSrc}
-                        onLoad={connectPlayer} // TRY CONNECT WHEN IFRAME LOADS
                         className="w-full h-full object-contain pointer-events-none" // Events handled by parent div
                         allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                         allowFullScreen
