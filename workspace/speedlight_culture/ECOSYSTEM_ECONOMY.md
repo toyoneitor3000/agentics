@@ -20,20 +20,29 @@
 2.  **Suscripciones PRO (B2C):** Usuarios pagan por limpieza y herramientas.
 3.  **Compra de Créditos (Micro-transacciones):** Usuarios compran "SpeedCoins" (nombre a definir) para apoyar creadores.
 
-### B. Distribución (Output / Payouts)
-La conversión de Créditos Digitales a Dinero Fiat es **100% Automatizada**.
-*   **Tecnología:** Stripe Connect / PayPal Payouts API.
-*   **Proceso:**
-    1.  Usuario acumula valor en su "Wallet" interna (Base de Datos).
-    2.  Al superar umbral mínimo (ej: $50 USD), solicita retiro.
-    3.  Backend valida saldo y seguridad (anti-fraude).
-    4.  API de pagos dispersa los fondos a la cuenta bancaria registrada del usuario.
-    5.  Se descuenta comisión de plataforma (ej: 20%) automáticamente en el proceso.
+### B. Distribución (Output / Payouts) - Enfoque LATAM
+La conversión de "Regalos Recibidos" a Dinero Real.
+*   **Ingreso (Usuarios compran monedas):** Pasarela **MercadoPago**.
+    *   *Ventaja:* Acepta Nequi, PSE, Tarjetas locales. Confianza total en la región.
+*   **Mecánica de Intercambio:**
+    *   NO existen "transferencias" de dinero entre usuarios.
+    *   Todo ocurre a través de **Regalos Virtuales** comprados en la Tienda (ej: "Un Turbo", "Un Café", "Juego de Llantas Virtual").
+    *   El usuario compra monedas -> Compra Regalo -> Se lo da al Creador -> Creador acumula valor.
+*   **Retiros (Cash Out):**
+    *   Fase Inicial: Lotes mensuales manuales/semi-automáticos a cuentas locales (Bancolombia/Nequi).
+    *   Fase Escala: Integración de API de dispersión bancaria local.
 
-## 4. Sistema de Reputación (XP) vs Dinero
-*   **XP (Respeto):** NO se compra. Se gana con interacciones de calidad. Define la visibilidad en el algoritmo.
-*   **Créditos (Dinero):** Se compran o se reciben como regalo. Se usan para transacciones.
-*   *Regla de Oro:* El dinero no compra XP directamente. Evitar "Pay-to-Win" en el posicionamiento social.
+## 4. Sistema de Reputación (XP) vs Economía (Regalos)
+**Regla de Oro: El dinero y el respeto NO se mezclan.**
+
+*   **XP (Respeto / Estatus):**
+    *   **Intangible y Sagrado.** NO se puede comprar. NO se puede regalar.
+    *   Se gana exclusivamente por meritocracia: subir contenido bueno, recibir interacciones orgánicas, ayudar a la comunidad.
+    *   Función: Define el nivel, insignias y visibilidad algorítmica. Un millonario sin talento tendrá Nivel 1.
+*   **Regalos (Economía):**
+    *   Es la forma de apoyar económicamente.
+    *   Comprar/Dar muchos regalos NO te da XP (o muy poco), solo te da la gratitud del creador.
+
 
 ## 5. Publicidad "Abundante"
 *   El usuario Free ve publicidad, pero es publicidad de *alta calidad* (Carruseles, Historias Patrocinadas).
