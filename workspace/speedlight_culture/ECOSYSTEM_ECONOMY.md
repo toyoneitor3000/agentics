@@ -4,10 +4,14 @@
 "Riqueza Compartida": La plataforma provee las herramientas y la audiencia; los creadores proveen el valor. Ambos deben ganar. La automatización es clave para escalar.
 
 ## 2. Actores y Roles
-*   **Usuario Estándar:** Acceso gratuito. Consume contenido con publicidad nativa. Acumula XP.
+*   **Usuario Estándar:** Acceso gratuito. Consume contenido. Acumula XP.
+*   **Perfil de Empresa (Business Account):**
+    *   *Filosofía:* "Una cuenta, una identidad". No hay páginas complejas gestionadas por terceros usuario.
+    *   *Creación:* Se registra con el correo corporativo (ej: info@taller.com).
+    *   *Capacidades:* Interactúa igual que un usuario (likes, comments, posts) pero tiene acceso exclusivo al **Panel de Publicidad** y Analíticas.
+    *   *Distinción:* Avatar distintivo / Insignia de Negocio.
 *   **Fundador (Early Adopter):** Los primeros 500 usuarios registrados.
     *   *Status:* Insignia permanente "Club 500".
-    *   *Beneficio:* Acceso vitalicio a características base sin costo.
 *   **Socio PRO (Suscriptor):**
     *   *Modelo:* Suscripción mensual/anual recurrente.
     *   *Beneficios:* Experiencia 100% libre de publicidad. Herramientas avanzadas de venta/taller.
