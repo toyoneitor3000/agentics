@@ -4,9 +4,11 @@ import { usePathname } from "next/navigation";
 import AppHeader from "./AppHeader";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "../pwa/InstallPrompt";
+import { UiProvider, useUi } from "../../context/UiContext";
 
-export default function NavigationLayout({ children }: { children: React.ReactNode }) {
+function LayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { isUiVisible, isBottomNavVisible } = useUi();
 
     // Check if we are on an auth page
     const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/auth') || pathname?.startsWith('/sign-in') || pathname?.startsWith('/sign-up');
@@ -18,7 +20,11 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
     return (
         <div className="flex flex-col min-h-screen bg-transparent relative">
             {/* Universal Top Header (Fixed Top) */}
-            <AppHeader />
+            {/* Fades out ONLY on /cinema when idle. Stays visible elsewhere. 
+                Using isUiVisible (3s) for strict cinema immersion. */}
+            <div className={`transition-opacity duration-500 ease-in-out ${pathname === '/cinema' && !isUiVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                <AppHeader />
+            </div>
 
             {/* Main Content Area */}
             <main className="flex-1 w-full min-h-screen transition-all duration-300 pt-0 pb-[100px]">
@@ -26,10 +32,26 @@ export default function NavigationLayout({ children }: { children: React.ReactNo
             </main>
 
             {/* Universal Bottom Navigation "Island" (Fixed Bottom) */}
-            <BottomNav />
+            {/* Fades out globally when idle (5s delay per user request) */}
+            <div
+                className={`transition-opacity ease-in-out ${isBottomNavVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                style={{ transitionDuration: isBottomNavVisible ? '300ms' : '3000ms' }}
+            >
+                <BottomNav />
+            </div>
 
             {/* PWA Install Prompt */}
             <InstallPrompt />
         </div>
+    );
+}
+
+export default function NavigationLayout({ children }: { children: React.ReactNode }) {
+    return (
+        <UiProvider>
+            <LayoutContent>
+                {children}
+            </LayoutContent>
+        </UiProvider>
     );
 }

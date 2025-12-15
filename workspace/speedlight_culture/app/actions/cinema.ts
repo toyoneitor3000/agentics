@@ -143,8 +143,39 @@ export async function getCloudflareUploadUrl() {
     }
 }
 
+export async function toggleLike(videoId: string) {
+    const user = await getSessionUser();
+    if (!user) return { error: "Unauthorized" };
+
+    try {
+        // Check if exists
+        const { rows } = await query(
+            'SELECT 1 FROM cinema_likes WHERE user_id = $1 AND video_id = $2',
+            [user.id, videoId]
+        );
+
+        if (rows.length > 0) {
+            // Unlike
+            await query('DELETE FROM cinema_likes WHERE user_id = $1 AND video_id = $2', [user.id, videoId]);
+            revalidatePath('/cinema');
+            return { liked: false };
+        } else {
+            // Like
+            await query('INSERT INTO cinema_likes (user_id, video_id) VALUES ($1, $2)', [user.id, videoId]);
+            revalidatePath('/cinema');
+            return { liked: true };
+        }
+    } catch (error) {
+        console.error("Toggle Like Error", error);
+        return { error: "Failed" };
+    }
+}
+
 export async function getCinemaFeed() {
     try {
+        const user = await getSessionUser();
+        const userId = user?.id || null;
+
         const { rows } = await query(
             `SELECT 
                 v.id, 
@@ -156,10 +187,13 @@ export async function getCinemaFeed() {
                 v.created_at,
                 v.format,
                 u.name as creator_name,
-                u.image as creator_avatar
+                u.image as creator_avatar,
+                (SELECT COUNT(*) FROM cinema_likes l WHERE l.video_id = v.id) as like_count,
+                ${userId ? `(EXISTS(SELECT 1 FROM cinema_likes l WHERE l.video_id = v.id AND l.user_id = $1))` : 'false'} as liked_by_user
              FROM cinema_videos v
              LEFT JOIN "user" u ON v.user_id = u.id
-             ORDER BY v.created_at DESC`
+             ORDER BY v.created_at DESC`,
+            userId ? [userId] : []
         );
 
         return rows.map(row => {
@@ -167,6 +201,8 @@ export async function getCinemaFeed() {
             // unless explicitly marked horizontal manually later.
             const isNumericTitle = /^\d+$/.test(row.title);
             const effectiveFormat = isNumericTitle ? 'vertical' : (row.format || 'horizontal');
+            // like_count comes as string from COUNT
+            const likes = parseInt(row.like_count || '0');
 
             return {
                 id: row.id,
@@ -175,8 +211,9 @@ export async function getCinemaFeed() {
                 avatar: row.creator_avatar || "",
                 videoUrl: row.video_url,
                 poster: row.thumbnail_url || "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop",
-                likes: Math.floor(Math.random() * 1000),
-                comments: Math.floor(Math.random() * 100),
+                likes: likes, // REAL LIKES
+                liked_by_user: row.liked_by_user, // REAL STATUS
+                comments: 0, // Pending comments
                 description: row.description,
                 format: effectiveFormat
             };

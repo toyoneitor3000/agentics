@@ -5,7 +5,8 @@ import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Plus, Star, X, In
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
-import { getCinemaFeed } from '@/app/actions/cinema';
+import { getCinemaFeed, toggleLike } from '@/app/actions/cinema';
+import { useUi } from '@/app/context/UiContext';
 
 // MOCK DATA FOR CATEGORIES
 const CATEGORIES = [
@@ -19,14 +20,18 @@ const CATEGORIES = [
 export default function CinemaSocialPage() {
     const [featuredPost, setFeaturedPost] = useState<any>(null);
     const [categories, setCategories] = useState<any>({});
-    const [activeMovie, setActiveMovie] = useState<any>(null); // Full movie player state
-    const [isMuted, setIsMuted] = useState(true); // Sound OFF by default (Autoplay compliance)
+    const [isMuted, setIsMuted] = useState(false); // Sound ON by default (User Preference)
 
     // ----------------------------------------------------------------------
     // DUAL MODE ARCHITECTURE
     // ----------------------------------------------------------------------    // State for View Mode ('cinema' or 'social')
-    const [viewMode, setViewMode] = useState<'cinema' | 'social'>('social');
+    const [viewMode, setViewMode] = useState<'cinema' | 'social'>('cinema'); // Default: Cinema (Netflix)
+    const [activeMovie, setActiveMovie] = useState<any>(null); // For Cinema Modal
+    const [activeSocialPost, setActiveSocialPost] = useState<any>(null); // For Social Feed Fixed UId Data
     const [isLoading, setIsLoading] = useState(true);
+
+    // GLOBAL UI SYNC (Replaces Local Timer)
+    const { isUiVisible, resetIdleTimer } = useUi();
 
     // Load Data
     useEffect(() => {
@@ -112,7 +117,7 @@ export default function CinemaSocialPage() {
                 NEW UI: STICKY SUB-HEADER (Clean, Professional, Doesn't block Logo)
                 Assumes Main Navbar is approx 80px-100px tall. We stick below it or at top.
             ---------------------------------------------------------------------- */}
-            <div className={`fixed top-[70px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-300 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'}`}>
+            <div className={`fixed top-[70px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
                 {/* CENTERED TOGGLE (Now Integrated) */}
                 <div className="absolute left-1/2 -translate-x-1/2">
@@ -139,7 +144,6 @@ export default function CinemaSocialPage() {
                     </Link>
                 </div>
             </div>
-
 
             {/* =================================================================================
                 MODE A: CINEMA (Netflix/YouTube Style) - Horizontal Focused, Discovery Rows
@@ -213,14 +217,45 @@ export default function CinemaSocialPage() {
                         </div>
                     )}
 
-                    <div ref={socialFeedRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar pt-[0px]"> {/* We use full screen vertical, header floats on top */}
+                    {/* FIXED OVERLAY UI (Global for Feed) */}
+                    {/* Includes Gradient & Auto-Hide Logic */}
+                    <div
+                        className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-500 ease-in-out ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}
+                    >
+                        {/* Gradient: "0 to 100 hacia abajo" - Full vertical gradient subtle */}
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />
+
+                        {/* Safe Area Padding for Navbar */}
+                        <div className="w-full h-full pb-24 md:pb-32 relative">
+                            {activeSocialPost && (
+                                <SocialInterface
+                                    post={activeSocialPost}
+                                    isMuted={isMuted}
+                                    toggleMute={() => setIsMuted(!isMuted)}
+                                    duration={0}
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Feed Container - Handles Interactions to Reset Idle Timer */}
+                    <div
+                        ref={socialFeedRef}
+                        className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar pt-[0px]"
+                        onMouseMove={() => resetIdleTimer()}
+                        onClick={() => resetIdleTimer()}
+                        onTouchStart={() => resetIdleTimer()}
+                    >
                         {/* Feed: ONLY VERTICAL POSTS. If none, show a placeholder or mix */}
                         {(categories.vertical && categories.vertical.length > 0 ? categories.vertical : []).map((post: any, i: number) => (
-                            <div key={i} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
+                            <div key={post.id} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
                                 <ImmersiveCinemaMode
                                     post={post}
                                     onClose={() => { }} // No close in feed mode
                                     isFeedMode={true}
+                                    isMuted={isMuted}
+                                    toggleMute={() => setIsMuted(!isMuted)}
+                                    onView={() => setActiveSocialPost(post)}
                                 />
                             </div>
                         ))}
@@ -682,7 +717,9 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 // ----------------------------------------------------------------------
 // IMMERSIVE CINEMA MODE (The "TikTok/Netflix" Hybrid Player)
 // ----------------------------------------------------------------------
-function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
+// IMMERSIVE CINEMA MODE (The "TikTok/Netflix" Hybrid Player)
+// ----------------------------------------------------------------------
+function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = false, toggleMute, onView }: any) {
     const [isUiVisible, setIsUiVisible] = useState(true);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -714,8 +751,21 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
                 console.log(`Video ${post.title} visibility: around ${Math.round(entry.intersectionRatio * 100)}% | Intersecting: ${entry.isIntersecting}`);
 
                 setIsInView(entry.isIntersecting);
+
                 if (entry.isIntersecting) {
-                    player.play().catch(() => { });
+                    if (onView) onView();
+
+                    const playPromise = player.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(() => {
+                            // If unmuted autoplay fails, try mute+play
+                            console.log("Autoplay blocked. Retrying muted.");
+                            if (player.muted === false) {
+                                player.muted = true;
+                                player.play().catch((e: any) => console.log("Force mute play failed", e));
+                            }
+                        });
+                    }
                 } else {
                     player.pause();
                 }
@@ -724,7 +774,8 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isFeedMode, player, post.title]);
+    }, [isFeedMode, player, post.title, onView]);
+
 
     // ----------------------------------------------------------------------
     // KEYBOARD CONTROL (Space to Pause)
@@ -762,9 +813,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
                     const sp = (window as any).Stream(iframeRef.current);
                     iframeRef.current.setAttribute('data-init', 'true');
                     setPlayer(sp);
-                    // Force Config: Start Muted for auto-play policy, but we intend sound ON manually later or via tap
-                    // Actually, let's try starting unmuted.
-                    sp.muted = false;
+
+                    // Sync Mute State
+                    sp.muted = isMuted;
 
                     if (isFeedMode) sp.loop = true; // Loop social vids
                     else sp.loop = false; // Don't loop cinema movies
@@ -772,6 +823,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
                     sp.addEventListener('timeupdate', () => setCurrentTime(sp.currentTime));
                     sp.addEventListener('durationchange', () => setDuration(sp.duration));
                     sp.addEventListener('ended', () => setIsEnded(true));
+
+                    // Listen for volume change events from player to sync upstream? 
+                    // (Optional, complicated for now, sticky global state is handled by parent prop)
 
                     // In Feed Mode, we let the Observer handle play/pause.
                     // In Cinema Mode (Modal), we auto-play immediately.
@@ -796,7 +850,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
             document.body.appendChild(s);
         }
         return () => clearInterval(interval);
-    }, [cloudflareId, isFeedMode]);
+    }, [cloudflareId, isFeedMode, isMuted]); // Added isMuted dependency to re-sync?
 
 
     // GESTURES
@@ -814,15 +868,22 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
     const handleTap = () => {
         if (isLongPress.current) return;
         const now = Date.now();
-        // Always try to unmute on interaction if muted, regardless of tap speed for better UX
-        if (player && player.muted) {
-            player.muted = false;
+
+        // UNMUTE LOGIC
+        // If current state is Muted, Tap = Unmute (and thus unmute ALL via prop)
+        if (isMuted) {
+            if (toggleMute) toggleMute(); // Update Global State
+            if (player) {
+                player.muted = false; // Immediate local update
+                player.play(); // Ensure playing
+            }
             setShowActionIcon('unmute');
             setTimeout(() => setShowActionIcon(null), 600);
             lastTapTime.current = now;
             return;
         }
 
+        // DOUBLE TAP / SINGLE TAP UI TOGGLE
         if (now - lastTapTime.current < 300) {
             // For now, let's just toggle UI visibility if not muted, or pause/play if already unmuted.
             // The primary goal of single tap is to unmute if muted.
@@ -865,22 +926,41 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
     useEffect(() => {
         if (!cloudflareId && nativeVideoRef.current) {
             const video = nativeVideoRef.current;
-            // Short delay to ensure ref is ready and avoid race conditions
-            const t = setTimeout(() => {
-                const adapter = {
-                    play: () => video.play().catch(() => { }),
-                    pause: () => video.pause(),
-                    get muted() { return video.muted; },
-                    set muted(val: boolean) { video.muted = val; },
-                    get currentTime() { return video.currentTime; },
-                    get duration() { return video.duration; },
-                    get paused() { return video.paused; } // Added paused getter
-                };
-                setPlayer(adapter);
-            }, 100);
-            return () => clearTimeout(t);
+
+            // Sync initial mute state immediately to prevent "unmuted autoplay" blocking
+            video.muted = isMuted;
+
+            const adapter = {
+                play: async () => {
+                    try {
+                        await video.play();
+                    } catch (e) {
+                        console.warn("Native Play Interrupted/Failed", e);
+                        // Auto-recover if it was a permission issue by muting
+                        if (!video.muted) {
+                            video.muted = true;
+                            await video.play().catch(e => console.error("Recovery failed", e));
+                        }
+                    }
+                },
+                pause: () => video.pause(),
+                get muted() { return video.muted; },
+                set muted(val: boolean) { video.muted = val; },
+                get currentTime() { return video.currentTime; },
+                get duration() { return video.duration; },
+                get paused() { return video.paused; }
+            };
+            setPlayer(adapter);
         }
-    }, [cloudflareId]);
+    }, [cloudflareId, isMuted]); // Re-run if mute preference changes (to sync ref) OR handle inside. Actually isMuted change should just update video.muted. 
+    // Optimization: Don't recreate adapter on isMuted change. Just sync props.
+
+    // SYNC MUTE PROP TO NATIVE REF
+    useEffect(() => {
+        if (nativeVideoRef.current) {
+            nativeVideoRef.current.muted = isMuted;
+        }
+    }, [isMuted]);
 
     // FORCE READY STATE (Fix for persistent spinner)
     useEffect(() => {
@@ -943,29 +1023,43 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
                     <iframe
                         ref={iframeRef}
                         // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
-                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=false&controls=false`}
+                        // Pass 'muted' param BUT Cloudflare JS API (sp.muted) takes precedence after load
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
                         className="w-full h-full object-contain pointer-events-none"
                     />
                 ) : (
                     // NATIVE FALLBACK (For non-Cloudflare URLs)
+                    // We use explicit <source> tags to hint the browser about the format, 
+                    // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
+                    // for videos uploaded previously with issues.
                     <video
+                        key={post.videoUrl} // Force recreation if URL changes
                         ref={nativeVideoRef}
-                        src={post.videoUrl}
                         className="w-full h-full object-contain pointer-events-none"
-                        autoPlay={!isFeedMode} // Only autoplay in Cinema Mode
+                        preload="auto"
+                        crossOrigin="anonymous"
+                        autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
                         loop={isFeedMode}
-                        muted={false}
+                        muted={isMuted}
                         playsInline
                         onTimeUpdate={(e) => {
                             setCurrentTime(e.currentTarget.currentTime);
-                            if (e.currentTarget.currentTime > 0.1) setIsReady(true); // Remove spinner immediately on play
+                            if (e.currentTarget.currentTime > 0.1) setIsReady(true);
                         }}
                         onLoadedMetadata={(e) => {
                             setDuration(e.currentTarget.duration);
-                            setIsReady(true);
+                            // Don't set ready here, wait for buffer
                         }}
+                        onCanPlay={() => setIsReady(true)} // Better signal
                         onEnded={() => setIsEnded(true)}
-                    />
+                        onError={(e) => {
+                            console.error("Native Video Error:", e.currentTarget.error);
+                        }}
+                    >
+                        <source src={post.videoUrl} type="video/mp4" />
+                        <source src={post.videoUrl} type="video/quicktime" />
+                        <source src={post.videoUrl} /> {/* Fallback catch-all */}
+                    </video>
                 )}
             </div>
 
@@ -984,33 +1078,47 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
                 </div>
             )}
 
-            {/* 6. SOCIAL INTERFACE (Feed Mode Overlay) */}
-            {isFeedMode && (
-                <SocialInterface
-                    post={post}
-                    isMuted={player ? player.muted : false}
-                    toggleMute={() => { if (player) player.muted = !player.muted; }}
-                    duration={duration}
-                />
-            )}
 
-        </div>
+
+        </div >
     );
 }
 
 // ----------------------------------------------------------------------
 // 2. SOCIAL INTERFACE (Overlay UI for TikTok/Reels style)
 // ----------------------------------------------------------------------
+
 function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: any) {
-    const [liked, setLiked] = useState(false);
+    const [liked, setLiked] = useState(post.liked_by_user || false);
     const [saved, setSaved] = useState(false);
     const [likeCount, setLikeCount] = useState(post.likes || 0);
 
-    const handleLike = (e: any) => {
+    // Sync state if post prop updates (e.g. revalidation)
+    useEffect(() => {
+        setLiked(post.liked_by_user);
+        setLikeCount(post.likes);
+    }, [post.liked_by_user, post.likes]);
+
+    const handleLike = async (e: any) => {
         e.stopPropagation();
-        setLiked(!liked);
-        setLikeCount((prev: number) => liked ? prev - 1 : prev + 1);
-        // TODO: Call Server Action to persist like
+
+        // Optimistic
+        const failState = { liked, likeCount };
+        const newLiked = !liked;
+        setLiked(newLiked);
+        setLikeCount((prev: number) => newLiked ? prev + 1 : prev - 1);
+
+        try {
+            const res = await toggleLike(post.id);
+            if (res?.error) {
+                // Revert
+                setLiked(failState.liked);
+                setLikeCount(failState.likeCount);
+            }
+        } catch (err) {
+            setLiked(failState.liked);
+            setLikeCount(failState.likeCount);
+        }
     };
 
     const handleSave = (e: any) => {
@@ -1034,7 +1142,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: an
     };
 
     return (
-        <div className="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between">
+        <div className="w-full h-full pointer-events-none z-20 flex flex-col justify-between">
 
             {/* TOP BAR: Transparent */}
             <div className="w-full p-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}

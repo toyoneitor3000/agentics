@@ -168,6 +168,7 @@ export default function UploadReelPage() {
     const handleSubmit = async () => {
         if (!title) return alert("Por favor escribe un título.");
         if (mode === 'direct' && !selectedFile) return alert("Por favor selecciona un video.");
+        if (mode === 'link' && !videoUrl) return alert("Por favor ingresa un enlace de video.");
 
         setIsSubmitting(true);
 
@@ -188,7 +189,12 @@ export default function UploadReelPage() {
             // GENERATE THUMBNAIL (Cloudflare Logic)
             let finalThumb = undefined;
             if (mode === 'link') {
-                // YouTube logic would go here if we had meta
+                // YouTube logic
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = finalVideoUrl.match(regExp);
+                if (match && match[2].length === 11) {
+                    finalThumb = `https://img.youtube.com/vi/${match[2]}/maxresdefault.jpg`;
+                }
             } else if (finalVideoUrl.includes('cloudflarestream.com')) {
                 const uid = finalVideoUrl.split('/').pop();
                 if (uid) {
@@ -248,7 +254,7 @@ export default function UploadReelPage() {
             {/* MAIN CONTENT - SPLIT LAYOUT */}
             <div className="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
 
-                {/* LEFT: UPLOAD ZONE (Huge & Interactive) */}
+                {/* LEFT: UPLOAD ZONE (Interactive) */}
                 <div className="flex flex-col gap-6">
                     <div className="space-y-2">
                         <span className="text-[#FF9800] text-xs font-bold tracking-[0.2em] uppercase">Creator Studio</span>
@@ -258,86 +264,106 @@ export default function UploadReelPage() {
                         </h1>
                     </div>
 
-                    <div
-                        {...getRootProps()}
-                        className={`
+                    {/* MODE A: DIRECT FILE UPLAOD */}
+                    {mode === 'direct' && (
+                        <div
+                            {...getRootProps()}
+                            className={`
                             relative w-full aspect-video rounded-3xl border-2 border-dashed transition-all duration-500 group cursor-pointer overflow-hidden
                             ${isDragActive ? 'border-[#FF9800] bg-[#FF9800]/5 scale-[1.02]' : 'border-white/10 hover:border-white/30 hover:bg-white/5'}
                             ${selectedFile ? 'border-solid border-[#FF9800]/50 bg-black' : ''}
                         `}
-                    >
-                        <input {...getInputProps()} />
+                        >
+                            <input {...getInputProps()} />
 
-                        {/* 1. IDLE STATE */}
-                        {!selectedFile && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
-                                <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
-                                    <Upload className="w-8 h-8 text-white/50 group-hover:text-[#FF9800] transition-colors" />
-                                </div>
-                                <h3 className="text-xl font-bold text-white mb-2">Arrastra tu video aquí</h3>
-                                <p className="text-white/40 text-sm max-w-xs">Soporta MP4, MOV, WebM. <br /> Calidad hasta 4K HDR sin límites.</p>
-                                <div className="mt-8 px-6 py-2 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">
-                                    Explorar Archivos
-                                </div>
-                            </div>
-                        )}
-
-                        {/* 2. SELECTED / UPLOADING STATE */}
-                        {selectedFile && (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
-                                <div className="w-16 h-16 mb-4 relative">
-                                    {/* Spinner */}
-                                    {isUploading && (
-                                        <div className="absolute inset-0 border-4 border-white/10 border-t-[#FF9800] rounded-full animate-spin"></div>
-                                    )}
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                        <FileVideo className="w-6 h-6 text-white" />
+                            {/* 1. IDLE STATE */}
+                            {!selectedFile && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8">
+                                    <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                                        <Upload className="w-8 h-8 text-white/50 group-hover:text-[#FF9800] transition-colors" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-2">Arrastra tu video aquí</h3>
+                                    <p className="text-white/40 text-sm max-w-xs">Soporta MP4, MOV, WebM. <br /> Calidad hasta 4K HDR sin límites.</p>
+                                    <div className="mt-8 px-6 py-2 rounded-full border border-white/20 text-xs font-bold uppercase tracking-widest group-hover:bg-white group-hover:text-black transition-all">
+                                        Explorar Archivos
                                     </div>
                                 </div>
+                            )}
 
-                                <div className="text-center w-full px-12">
-                                    <h3 className="text-lg font-bold text-white mb-1 truncate w-full">{selectedFile.name.toUpperCase()}</h3>
-                                    <p className="text-[#FF9800] text-xs font-bold tracking-widest uppercase mb-4">
-                                        {isUploading ? `Subiendo ${uploadProgress}%` : formatFileSize(selectedFile.size) + ' • LISTO PARA PROCESAR'}
-                                    </p>
-
-                                    {/* Progress Bar */}
-                                    {isUploading && (
-                                        <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-[#FF9800] transition-all duration-300 ease-out"
-                                                style={{ width: `${uploadProgress}%` }}
-                                            />
+                            {/* 2. SELECTED / UPLOADING STATE */}
+                            {selectedFile && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-20">
+                                    <div className="w-16 h-16 mb-4 relative">
+                                        {/* Spinner */}
+                                        {isUploading && (
+                                            <div className="absolute inset-0 border-4 border-white/10 border-t-[#FF9800] rounded-full animate-spin"></div>
+                                        )}
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                            <FileVideo className="w-6 h-6 text-white" />
                                         </div>
-                                    )}
+                                    </div>
 
-                                    {!isUploading && (
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
-                                            className="text-white/30 hover:text-white text-xs underline decoration-dotted transition-colors"
-                                        >
-                                            Cambiar archivo
-                                        </button>
-                                    )}
+                                    <div className="text-center w-full px-12">
+                                        <h3 className="text-lg font-bold text-white mb-1 truncate w-full">{selectedFile.name.toUpperCase()}</h3>
+                                        <p className="text-[#FF9800] text-xs font-bold tracking-widest uppercase mb-4">
+                                            {isUploading ? `Subiendo ${uploadProgress}%` : formatFileSize(selectedFile.size) + ' • LISTO PARA PROCESAR'}
+                                        </p>
+
+                                        {/* Progress Bar */}
+                                        {isUploading && (
+                                            <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
+                                                <div
+                                                    className="h-full bg-[#FF9800] transition-all duration-300 ease-out"
+                                                    style={{ width: `${uploadProgress}%` }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {!isUploading && (
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }}
+                                                className="text-white/30 hover:text-white text-xs underline decoration-dotted transition-colors"
+                                            >
+                                                Cambiar archivo
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* MODE B: EXTERNAL LINK IMPORT */}
+                    {mode === 'link' && (
+                        <div className="relative w-full aspect-video rounded-3xl border border-white/10 bg-white/5 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
+                            <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-red-500">
+                                    <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                                </svg>
                             </div>
-                        )}
-                    </div>
+                            <h3 className="text-xl font-bold text-white mb-4">Importar desde YouTube</h3>
+                            <input
+                                type="url"
+                                placeholder="Pega el enlace aquí (https://youtube.com/...)"
+                                value={videoUrl}
+                                onChange={(e) => setVideoUrl(e.target.value)}
+                                className="w-full max-w-md bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm transition-colors mb-2"
+                            />
+                            <p className="text-white/40 text-xs">Soporta YouTube, Vimeo o enlaces directos MP4.</p>
+                        </div>
+                    )}
 
                     {/* MODE SWITCHER */}
                     <div className="flex gap-8 justify-center lg:justify-start pt-2">
                         <button
+                            onClick={() => setMode('direct')}
                             className={`text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-colors ${mode === 'direct' ? 'text-white border-[#FF9800]' : 'text-white/30 border-transparent hover:text-white'}`}
                         >
                             Archivo Directo
                         </button>
                         <button
+                            onClick={() => setMode('link')}
                             className={`text-xs font-bold uppercase tracking-widest pb-2 border-b-2 transition-colors ${mode === 'link' ? 'text-white border-[#FF9800]' : 'text-white/30 border-transparent hover:text-white'}`}
-                            onClick={() => {
-                                // Simple toggle logic if we ever re-enable link mode UI properly
-                                // For now it's just a visual tab
-                                setMode(prev => prev === 'direct' ? 'link' : 'direct');
-                            }}
                         >
                             Importar Link
                         </button>
@@ -384,11 +410,11 @@ export default function UploadReelPage() {
                         </div>
 
                         <button
-                            disabled={!selectedFile || isUploading}
+                            disabled={isUploading || (mode === 'direct' && !selectedFile) || (mode === 'link' && !videoUrl)}
                             onClick={handleSubmit}
                             className={`
                                 w-full py-5 rounded-xl font-bold uppercase tracking-widest text-sm transition-all duration-300 relative overflow-hidden group/btn shadow-xl
-                                ${(!selectedFile || isUploading) ? 'bg-white/5 text-white/20 cursor-not-allowed' : 'bg-[#FF9800] text-black hover:scale-[1.02] hover:shadow-[#FF9800]/20'}
+                                ${isUploading || (mode === 'direct' && !selectedFile) || (mode === 'link' && !videoUrl) ? 'bg-white/5 text-white/20 cursor-not-allowed' : 'bg-[#FF9800] text-black hover:scale-[1.02] hover:shadow-[#FF9800]/20'}
                             `}
                         >
                             <div className="relative z-10 flex items-center justify-center gap-2">
