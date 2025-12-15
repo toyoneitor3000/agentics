@@ -36,7 +36,36 @@ export default function AppHeader() {
     }, [user?.id, supabase]);
 
     const isAdmin = userRole === 'CEO' || userRole === 'ADMIN';
-    const showBackButton = pathname !== '/' && pathname !== null;
+    // --- NAVIGATION LOGIC ---
+    // Define main pages where Back Button should NOT appear
+    const mainPages = ['/', '/cinema', '/projects', '/gallery', '/marketplace', '/academy', '/workshops', '/events', '/autostudio', '/search', '/notifications'];
+    const showBackButton = pathname && !mainPages.includes(pathname);
+
+    const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+
+    // --- INTELLIGENCE AT THE EDGE: NOTIFICATIONS ---
+    useEffect(() => {
+        // Simple logic: Check localStorage for a 'last_read' timestamp vs a 'latest_content' timestamp shim
+        // In a real app, 'latest_content' comes from the server. Here we simulate it or check feed.
+        const checkNotifications = () => {
+            // Example: If user hasn't checked notifications in 24h, show dot.
+            const lastChecked = localStorage.getItem('last_notification_check');
+            const now = Date.now();
+
+            if (!lastChecked) {
+                setHasUnreadNotifications(true);
+            } else {
+                const diffHours = (now - parseInt(lastChecked)) / (1000 * 60 * 60);
+                if (diffHours > 24) setHasUnreadNotifications(true);
+            }
+        };
+        checkNotifications();
+    }, []);
+
+    const handleNotificationClick = () => {
+        setHasUnreadNotifications(false);
+        localStorage.setItem('last_notification_check', Date.now().toString());
+    };
 
     const handleSignOut = async () => {
         await signOut({
@@ -53,7 +82,7 @@ export default function AppHeader() {
             {/* Cinematic Deep Fade Gradient (Background) */}
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
-            {/* Left: Back Button (Global) or Bell (Mobile Home) / Logo (Desktop) */}
+            {/* Left: Back Button (Deep Nav) OR Notifications (Main Nav) */}
             <div className="flex items-center gap-4 z-10 pointer-events-auto">
                 {showBackButton ? (
                     <button
@@ -64,9 +93,16 @@ export default function AppHeader() {
                         <ChevronLeft className="w-8 h-8 md:w-6 md:h-6" />
                     </button>
                 ) : (
-                    /* Mobile: Notification Bell (Only on Home) */
-                    <Link href="/notifications" className="md:hidden text-white/80 hover:text-[#FF9800] transition-colors p-2">
+                    /* Mobile: Message/Notification Icon on Main Pages */
+                    <Link
+                        href="/notifications"
+                        onClick={handleNotificationClick}
+                        className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative"
+                    >
                         <Bell className="w-6 h-6" />
+                        {hasUnreadNotifications && (
+                            <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border border-black animate-pulse" />
+                        )}
                     </Link>
                 )}
 
@@ -99,11 +135,20 @@ export default function AppHeader() {
 
             {/* Right: Profile / Auth */}
             <div className="flex items-center gap-4 z-10 pointer-events-auto">
-                {/* Desktop: Extra Actions (e.g. Notifications) */}
+                {/* Desktop: Extra Actions (e.g. Notifications also here for consistency) */}
                 <div className="hidden md:flex items-center gap-2 mr-2">
-                    <Link href="/notifications" className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative">
-                        <Bell className="w-5 h-5" />
-                    </Link>
+                    {!showBackButton && (
+                        <Link
+                            href="/notifications"
+                            onClick={handleNotificationClick}
+                            className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
+                        >
+                            <Bell className="w-5 h-5" />
+                            {hasUnreadNotifications && (
+                                <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                            )}
+                        </Link>
+                    )}
                 </div>
 
                 {/* Auth Status */}
