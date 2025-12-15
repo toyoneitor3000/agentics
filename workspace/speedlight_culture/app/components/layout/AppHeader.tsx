@@ -102,20 +102,31 @@ export default function AppHeader() {
 
     return (
         <>
-            {/* INSTAGRAM BROWSER WARNING */}
+            {/* INSTAGRAM BROWSER WARNING / ACTION (LIQUID GLASS) */}
             {showIgWarning && (
-                <div className="fixed top-0 left-0 right-0 z-[100] bg-[#FF9800] text-black px-4 py-3 flex items-center justify-between text-xs font-bold font-mono shadow-xl animate-in slide-in-from-top duration-500">
-                    <span className="flex-1 mr-2">
-                        ⚠️ Estás en el navegador de Instagram. Para la mejor experiencia (y pantalla completa), abre el menú (...) y elige "Abrir en navegador".
-                    </span>
-                    <button onClick={() => setShowIgWarning(false)} className="p-1 bg-black/10 rounded hover:bg-black/20">
-                        <span className="sr-only">Cerrar</span>
-                        ✕
-                    </button>
-                </div>
+                <button
+                    onClick={() => {
+                        const doc = window.document as any;
+                        const docEl = doc.documentElement as any;
+                        const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+                        if (requestFullScreen) {
+                            requestFullScreen.call(docEl).catch((e: any) => console.log("Fullscreen blocked", e));
+                        }
+                        setShowIgWarning(false);
+                    }}
+                    className="fixed top-0 left-0 right-0 z-[100] bg-[#FF9800]/20 hover:bg-[#FF9800]/30 backdrop-blur-xl border-b border-[#FF9800]/50 text-[#FF9800] h-14 flex items-center justify-center px-4 shadow-[0_0_30px_rgba(255,152,0,0.2)] animate-in slide-in-from-top duration-700 cursor-pointer group"
+                >
+                    <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 font-oswald font-bold uppercase tracking-widest text-[10px] md:text-sm drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] text-center">
+                        <span className="animate-pulse hidden md:inline">⚠️</span>
+                        <span className="text-white group-hover:text-[#FF9800] transition-colors">
+                            NAVEGADOR LIMITADO DETECTADO. ABRE EL MENÚ <span className="text-[#FF9800] text-lg leading-none">•••</span> Y ELIGE "ABRIR EN NAVEGADOR"
+                        </span>
+                        <span className="animate-pulse hidden md:inline">⚠️</span>
+                    </div>
+                </button>
             )}
 
-            <header className={`fixed top-0 left-0 right-0 z-[60] flex justify-between items-center px-4 md:px-8 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-10' : ''}`}>
+            <header className={`fixed top-0 left-0 right-0 z-[60] flex justify-between items-center px-4 md:px-8 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-14' : ''}`}>
                 {/* Cinematic Deep Fade Gradient (Background) */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
