@@ -40,12 +40,22 @@ const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string,
   </div>
 );
 
+// ... imports
+import HomeIntro from "@/app/components/home/HomeIntro";
+
+// ... (previous imports)
+
 export default function Home() {
   const supabase = createClient();
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [featuredItems, setFeaturedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+
+  // INTRO LOGIC STATE
+  const [showIntro, setShowIntro] = useState(false);
+  const [isCheckingIntro, setIsCheckingIntro] = useState(true);
+
   const feedAd = getAdByType('feed_card');
   const { language } = useLanguage();
 
@@ -88,9 +98,25 @@ export default function Home() {
     async function init() {
       const { data: { session } } = await supabase.auth.getSession();
       setCurrentUserId(session?.user?.id);
+
+      // --- INTRO LOGIC CHECK ---
+      const hasVisited = localStorage.getItem('speedlight_visited');
+      const isLogged = !!session?.user;
+
+      // Rule: Show Intro if NOT visited AND NOT logged in
+      // Rule: If logged in, always show feed (dashboard)
+      // Rule: If visited before but not logged, show feed? User said "no debería ver otra vez la introducción".
+
+      if (!isLogged && !hasVisited) {
+        setShowIntro(true);
+      } else {
+        setShowIntro(false);
+      }
+      setIsCheckingIntro(false);
+
       fetchFeed(session?.user?.id);
     }
-
+    // ... (fetchFeed implementation remains same) ...
     async function fetchFeed(userId?: string) {
       try {
         setLoading(true);
@@ -286,7 +312,7 @@ export default function Home() {
         items.sort((a, b) => b.date.getTime() - a.date.getTime());
 
         if (items.length > 2 && feedAd) {
-          items.splice(2, 0, { id: 'native_ad_1', type: 'ad', data: feedAd, date: new Date() });
+          items.splice(2, 0, { id: 'native_ad_1', uniqueId: 'native_ad_1', type: 'ad', data: feedAd, date: new Date() });
         }
 
         setFeedItems(items);
@@ -300,6 +326,7 @@ export default function Home() {
     init();
   }, []);
 
+  // ... (timeAgo remains same) ...
   const timeAgo = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
     // Simple logic for brevity
@@ -325,8 +352,29 @@ export default function Home() {
     return `${value}${unit}`;
   };
 
+  const handleEnterApp = () => {
+    localStorage.setItem('speedlight_visited', 'true');
+    setShowIntro(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (isCheckingIntro) {
+    return (
+      <div className="flex justify-center items-center pb-20 pt-20 h-screen bg-black">
+        <Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" />
+      </div>
+    );
+  }
+
+  // --- RENDER INTRO MODE ---
+  if (showIntro) {
+    return <HomeIntro onEnterApp={handleEnterApp} featuredItems={featuredItems} recentActivity={feedItems} />;
+  }
+
+  // --- RENDER FEED MODE (Standard Home) ---
   return (
     <div className="max-w-[700px] mx-auto min-h-screen pb-20 pt-20 overflow-x-hidden">
+      {/* ... (Existing Feed JSX) ... */}
 
 
 
