@@ -115,17 +115,35 @@ export default function UploadReelPage() {
                     throw new Error("Sin Cloudflare configurado, el límite es 50MB. Añade las claves API o reduce el archivo.");
                 }
 
-                const fileName = `${Date.now()}-${selectedFile.name.replace(/[^a-zA-Z0-9.-]/g, '')}`;
+                // Normalize filename to lowercase extension to ensure correct MIME type detection on storage
+                const originalName = selectedFile.name;
+                const extIndex = originalName.lastIndexOf('.');
+                let cleanName = originalName.replace(/[^a-zA-Z0-9.-]/g, '');
+
+                if (extIndex !== -1) {
+                    const namePart = originalName.substring(0, extIndex).replace(/[^a-zA-Z0-9.-]/g, '');
+                    const extPart = originalName.substring(extIndex).toLowerCase();
+                    cleanName = `${namePart}${extPart}`;
+                }
+
+                const fileName = `${Date.now()}-${cleanName}`;
+
                 const { signedUrl, path } = await getSignedUploadUrl(fileName);
 
                 const interval = setInterval(() => {
                     setUploadProgress(prev => Math.min(prev + 10, 90));
                 }, 500);
 
+                // Ensure strict video/mp4 for .mp4 files if browser missed it
+                let contentType = selectedFile.type;
+                if ((!contentType || contentType === '') && cleanName.endsWith('.mp4')) {
+                    contentType = 'video/mp4';
+                }
+
                 const uploadRes = await fetch(signedUrl, {
                     method: 'PUT',
                     body: selectedFile,
-                    headers: { 'Content-Type': selectedFile.type }
+                    headers: { 'Content-Type': contentType || 'application/octet-stream' }
                 });
 
                 clearInterval(interval);

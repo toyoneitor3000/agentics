@@ -154,6 +154,7 @@ export async function getCinemaFeed() {
                 v.thumbnail_url,
                 v.category,
                 v.created_at,
+                v.format,
                 u.name as creator_name,
                 u.image as creator_avatar
              FROM cinema_videos v
@@ -161,17 +162,25 @@ export async function getCinemaFeed() {
              ORDER BY v.created_at DESC`
         );
 
-        return rows.map(row => ({
-            id: row.id,
-            title: row.title,
-            creator: row.creator_name || "Unknown Driver",
-            avatar: row.creator_avatar || "",
-            videoUrl: row.video_url,
-            poster: row.thumbnail_url || "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop", // Fallback
-            likes: Math.floor(Math.random() * 1000), // Mock for now
-            comments: Math.floor(Math.random() * 100), // Mock for now
-            description: row.description
-        }));
+        return rows.map(row => {
+            // Safety Heuristic: If title is purely numeric (mobile upload default), assume Vertical/Social
+            // unless explicitly marked horizontal manually later.
+            const isNumericTitle = /^\d+$/.test(row.title);
+            const effectiveFormat = isNumericTitle ? 'vertical' : (row.format || 'horizontal');
+
+            return {
+                id: row.id,
+                title: row.title,
+                creator: row.creator_name || "Unknown Driver",
+                avatar: row.creator_avatar || "",
+                videoUrl: row.video_url,
+                poster: row.thumbnail_url || "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop",
+                likes: Math.floor(Math.random() * 1000),
+                comments: Math.floor(Math.random() * 100),
+                description: row.description,
+                format: effectiveFormat
+            };
+        });
     } catch (e) {
         console.error("Error fetching cinema feed:", e);
         return [];

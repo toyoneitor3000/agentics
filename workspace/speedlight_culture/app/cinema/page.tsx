@@ -22,85 +22,241 @@ export default function CinemaSocialPage() {
     const [activeMovie, setActiveMovie] = useState<any>(null); // Full movie player state
     const [isMuted, setIsMuted] = useState(true); // Sound OFF by default (Autoplay compliance)
 
+    // ----------------------------------------------------------------------
+    // DUAL MODE ARCHITECTURE
+    // ----------------------------------------------------------------------    // State for View Mode ('cinema' or 'social')
+    const [viewMode, setViewMode] = useState<'cinema' | 'social'>('social');
+    const [isLoading, setIsLoading] = useState(true);
+
     // Load Data
     useEffect(() => {
         const loadContent = async () => {
-            const feed = await getCinemaFeed() || [];
+            setIsLoading(true);
+            try {
+                const feed = await getCinemaFeed() || [];
 
-            // "Featured" is actually just the top trending USER POST
-            if (feed.length > 0) setFeaturedPost(feed[0]);
+                // 1. USE REAL DB FORMAT
+                const processedFeed = feed;
 
-            // Distribute mock feed into categories
-            setCategories({
-                trending: feed.slice(0, 5),
-                originals: feed.slice(2, 6),
-                builds: feed.slice(0, 3),
-                street: feed.slice(1, 4),
-                jdm: feed.slice(0, 4)
-            });
+                // 2. FILTERING
+                const horizontalFeed = processedFeed.filter((p: any) => p.format === 'horizontal');
+                const verticalFeed = processedFeed.filter((p: any) => p.format === 'vertical');
+
+                // "Featured" for Cinema is the top HORIZONTAL trending post
+                if (horizontalFeed.length > 0) {
+                    setFeaturedPost(horizontalFeed[0]);
+                } else {
+                    // Fallback if user has ONLY vertical videos
+                    setFeaturedPost(processedFeed[0]);
+                }
+
+                // Distribute into categories
+                setCategories({
+                    all: processedFeed,
+                    horizontal: horizontalFeed,
+                    vertical: verticalFeed,
+
+                    // Classic Categories (Filtered to Horizontal for Cinema Rows)
+                    trending: horizontalFeed.slice(0, 5),
+                    originals: horizontalFeed.slice(2, 6),
+                    builds: horizontalFeed.slice(0, 3)
+                });
+            } catch (e) {
+                console.error("Failed loading cinema feed", e);
+            } finally {
+                setIsLoading(false);
+            }
         };
         loadContent();
     }, []);
 
+    // Keyboard Navigation for Social Mode (TikTok Style)
+    const socialFeedRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (viewMode !== 'social') return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!socialFeedRef.current) return;
+
+            // Arrow Down: Next Video
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                socialFeedRef.current.scrollBy({ top: window.innerHeight, behavior: 'smooth' });
+            }
+            // Arrow Up: Previous Video
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                socialFeedRef.current.scrollBy({ top: -window.innerHeight, behavior: 'smooth' });
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [viewMode]);
+
     return (
-        <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-x-hidden selection:bg-[#FF9800] selection:text-black">
+        <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
 
-            {/* 1. HERO SECTION: THE ACTUAL VIDEO POST (Not a Banner) */}
-            <div className="relative h-[100dvh] w-full bg-black z-20 shadow-2xl">
-                {featuredPost && (
-                    <SocialHeroPlayer
-                        post={featuredPost}
-                        isMuted={isMuted}
-                        toggleMute={() => setIsMuted(!isMuted)}
-                        onOpenFull={() => setActiveMovie(featuredPost)}
-                    />
-                )}
+            {/* INLINE STYLES FOR LOADING ANIMATION (Copied from Preloader) */}
+            <style>{`
+                @keyframes shimmer {
+                    0% { transform: translateX(-100%); }
+                    100% { transform: translateX(100%); }
+                }
+                .animate-shimmer {
+                    animation: shimmer 1s infinite linear;
+                }
+            `}</style>
 
-                {/* Scroll indicator */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 animate-bounce z-30 opacity-50 pointer-events-none">
-                    <ChevronDown className="w-8 h-8 text-white" />
+            {/* ----------------------------------------------------------------------
+                NEW UI: STICKY SUB-HEADER (Clean, Professional, Doesn't block Logo)
+                Assumes Main Navbar is approx 80px-100px tall. We stick below it or at top.
+            ---------------------------------------------------------------------- */}
+            <div className={`fixed top-[70px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-300 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'}`}>
+
+                {/* CENTERED TOGGLE (Now Integrated) */}
+                <div className="absolute left-1/2 -translate-x-1/2">
+                    <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-1 shadow-2xl">
+                        <button
+                            onClick={() => setViewMode('cinema')}
+                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black shadow-lg shadow-[#FF9800]/20' : 'text-white/40 hover:text-white'}`}
+                        >
+                            Cinema
+                        </button>
+                        <button
+                            onClick={() => setViewMode('social')}
+                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
+                        >
+                            Social
+                        </button>
+                    </div>
+                </div>
+
+                {/* RIGHT ACTION */}
+                <div className="ml-auto">
+                    <Link href="/cinema/upload" className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-[#FF9800] backdrop-blur-md rounded-full border border-white/10 text-white hover:text-black transition-all shadow-lg group">
+                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
+                    </Link>
                 </div>
             </div>
 
-            {/* 2. DISCOVERY SECTION: USER CONTENT LIBRARY */}
-            <div className="relative z-10 bg-[#050505] pb-24 pt-12">
-                <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black to-transparent -mt-32 pointer-events-none"></div>
 
-                <div className="px-4 md:px-12 space-y-12">
-                    {/* Section Header */}
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-white mb-2 font-oswald uppercase tracking-wide">Explora Cinema</h2>
-                        <div className="h-1 w-20 bg-[#FF9800] rounded-full"></div>
+            {/* =================================================================================
+                MODE A: CINEMA (Netflix/YouTube Style) - Horizontal Focused, Discovery Rows
+               ================================================================================= */}
+            {viewMode === 'cinema' && (
+                <div className="animate-in fade-in duration-500 pt-[70px]"> {/* Add Padding Top to clear Navbar area */}
+
+                    {/* 1. HERO SECTION - STRICT 16:9 RATIO (No more full height vertical bleeds) */}
+                    <div className="w-full max-w-[1800px] mx-auto relative group">
+                        {/* Aspect Ratio Container */}
+                        <div className="aspect-video w-full max-h-[85vh] relative bg-black overflow-hidden shadow-2xl rounded-b-3xl border-b border-white/5">
+                            {featuredPost ? (
+                                <AmbientCinemaPlayer
+                                    post={featuredPost}
+                                    isMuted={isMuted}
+                                    toggleMute={() => setIsMuted(!isMuted)}
+                                    onOpenFull={() => setActiveMovie(featuredPost)}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-neutral-900">
+                                    {/* If Loading, we can show a mini spinner here too if desired, 
+                                       but the full page loader handles the initial wait. */}
+                                    <div className="w-10 h-10 border-2 border-[#FF9800] border-t-transparent rounded-full animate-spin" />
+                                </div>
+                            )}
+
+                            {/* Explore Hint */}
+                            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 opacity-40 animate-pulse">
+                                <ChevronDown className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
                     </div>
 
-                    {CATEGORIES.map((cat) => (
-                        <CategoryRow
-                            key={cat.id}
-                            title={cat.title}
-                            posts={categories[cat.id] || []}
-                            onPostClick={(post: any) => setActiveMovie(post)}
-                        />
-                    ))}
+                    {/* 2. DISCOVERY ROWS (Only Horizontal) */}
+                    <div className="relative z-10 bg-[#050505] pb-24 pt-12 min-h-screen">
+                        <div className="px-4 md:px-12 space-y-12">
+                            {/* We use specific filtered categories or fallbacks */}
+                            <CategoryRow title="Tendencias Globales" posts={categories.trending} onPostClick={setActiveMovie} />
+                            <CategoryRow title="Speedlight Originals" posts={categories.originals} onPostClick={setActiveMovie} />
+                            <CategoryRow title="Build Documentaries" posts={categories.builds} onPostClick={setActiveMovie} />
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
 
-            {/* 3. IMMERSIVE PLAYER OVERLAY (Cinema Mode) */}
-            {activeMovie && (
+
+            {/* =================================================================================
+                MODE B: SOCIAL (TikTok Style) - Vertical Scroll, Fullscreen Feed
+               ================================================================================= */}
+            {viewMode === 'social' && (
+                <div className="fixed inset-0 z-10 bg-black animate-in slide-in-from-bottom-10 duration-500">
+
+                    {/* LOADING STATE - PRELOADER VISUAL */}
+                    {isLoading && (
+                        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050302]">
+                            <div className="relative">
+                                <div className="absolute -inset-10 bg-[#FF9800]/20 blur-3xl animate-pulse"></div>
+                                <Image
+                                    src="/logonavbar-new.png"
+                                    alt="Speedlight Culture"
+                                    width={300}
+                                    height={100}
+                                    className="w-48 md:w-64 h-auto relative z-10"
+                                    priority
+                                />
+                            </div>
+                            {/* Loading Bar */}
+                            <div className="w-48 h-[2px] bg-[#333] rounded-full overflow-hidden mt-8 relative">
+                                <div className="absolute top-0 left-0 h-full w-full bg-gradient-to-r from-transparent via-[#FF9800] to-transparent animate-shimmer"></div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div ref={socialFeedRef} className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar pt-[0px]"> {/* We use full screen vertical, header floats on top */}
+                        {/* Feed: ONLY VERTICAL POSTS. If none, show a placeholder or mix */}
+                        {(categories.vertical && categories.vertical.length > 0 ? categories.vertical : []).map((post: any, i: number) => (
+                            <div key={i} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
+                                <ImmersiveCinemaMode
+                                    post={post}
+                                    onClose={() => { }} // No close in feed mode
+                                    isFeedMode={true}
+                                />
+                            </div>
+                        ))}
+
+                        {/* Empty State for Social if no verticals AND NOT loading */}
+                        {!isLoading && (!categories.vertical || categories.vertical.length === 0) && (
+                            <div className="h-screen flex items-center justify-center text-white/50">
+                                <div className="text-center">
+                                    <p>No hay contenido social vertical aún.</p>
+                                    <Link href="/cinema/upload" className="text-[#FF9800] underline mt-2 block">¡Sube el primero!</Link>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+
+            {/* =================================================================================
+                GLOBAL: IMMERSIVE PLAYER (For Cinema Mode expansion)
+               ================================================================================= */}
+            {activeMovie && viewMode === 'cinema' && (
                 <ImmersiveCinemaMode
                     post={activeMovie}
                     onClose={() => setActiveMovie(null)}
+                    isFeedMode={false}
                 />
             )}
 
-            {/* Header Actions (Floating always visible) */}
-            <div className="fixed top-6 right-6 z-50 flex gap-4">
-                <Link href="/cinema/upload" className="w-12 h-12 flex items-center justify-center bg-black/40 backdrop-blur-md rounded-full border border-white/20 text-white hover:text-[#FF9800] hover:bg-white/10 transition-colors shadow-lg group">
-                    <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" />
-                </Link>
-            </div>
         </div>
     );
 }
+
+
+
+
 
 // ----------------------------------------------------------------------
 // SOCIAL HERO PLAYER (The Core Component)
@@ -408,127 +564,112 @@ function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: a
 }
 
 // ----------------------------------------------------------------------
-// SHARED UI COMPONENT
+// 3. AMBIENT CINEMA PLAYER (The Fix for Vertical Vids in Horizontal Mode)
 // ----------------------------------------------------------------------
-function SocialInterface({ post, isMuted, toggleMute, onOpenFull, isIdle = false, duration = 0 }: any) {
-    const showFullMovieButton = duration > 15;
+function AmbientCinemaPlayer({ post, isMuted, toggleMute, onOpenFull }: any) {
+    const cloudflareId = getCloudflareId(post.videoUrl || '');
+    const posterUrl = post.poster || post.thumbnail_url;
 
     return (
-        <>
-            <div className={`absolute bottom-0 left-0 p-6 md:p-12 z-30 max-w-[80%] md:max-w-2xl pointer-events-none transition-all duration-700 ease-in-out ${isIdle ? 'translate-y-20 opacity-0' : 'translate-y-0 opacity-100'}`}>
-                <div className="space-y-4 animate-in slide-in-from-bottom-10 duration-700">
-                    <div className="flex items-center gap-3 pointer-events-auto w-fit">
-                        <div className="relative w-12 h-12 rounded-full p-[2px] bg-gradient-to-tr from-[#FF9800] to-yellow-400">
-                            <div className="w-full h-full rounded-full overflow-hidden relative border-2 border-black">
-                                <Image src={post.avatar} alt={post.creator} fill className="object-cover" />
-                            </div>
-                        </div>
-                        <div className="flex flex-col">
-                            <h3 className="text-white font-bold text-lg leading-none shadow-black drop-shadow-md">{post.creator}</h3>
-                            <button className="text-[#FF9800] text-xs font-bold uppercase tracking-wider hover:text-white transition-colors text-left">
-                                + Seguir
-                            </button>
-                        </div>
-                    </div>
+        <div className="relative w-full h-full overflow-hidden bg-black group">
 
-                    <div>
-                        <h1 className="text-3xl md:text-5xl font-black text-white font-oswald uppercase leading-tight shadow-black drop-shadow-lg mb-2">
-                            {post.title}
-                        </h1>
-                        <p className="text-white/80 text-sm md:text-base font-light line-clamp-2 shadow-black drop-shadow-md">
-                            {post.description}
-                        </p>
+            {/* LAYER 1: AMBIENT BACKGROUND (Blurred & Zoomed) */}
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                {cloudflareId ? (
+                    <iframe
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=true&controls=false`}
+                        className="w-full h-full object-cover scale-150 blur-2xl opacity-40 brightness-50"
+                        allow="autoplay; encrypted-media"
+                    />
+                ) : (
+                    <div className="w-full h-full relative">
+                        <Image src={posterUrl} alt="bg" fill className="object-cover blur-2xl opacity-40 brightness-50" />
                     </div>
+                )}
+            </div>
 
-                    {/* ONLY SHOW IF DURATION > 15s */}
-                    {showFullMovieButton && (
-                        <div className="pt-4 pointer-events-auto">
-                            <button
-                                onClick={onOpenFull}
-                                className="group relative pl-3 pr-8 py-3 bg-white/10 hover:bg-[#FF9800] backdrop-blur-xl border border-white/20 hover:border-[#FF9800] rounded-2xl flex items-center gap-4 transition-all duration-300 hover:scale-[1.02] shadow-[0_8px_32px_0_rgba(0,0,0,0.36)] overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-transparent opacity-50 pointer-events-none"></div>
-                                <div className="relative z-10 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
-                                    <Play className="w-4 h-4 fill-black translate-x-0.5" />
-                                </div>
-                                <div className="relative z-10 text-left text-white group-hover:text-black transition-colors duration-300">
-                                    <span className="block text-[9px] font-black tracking-[0.2em] uppercase opacity-80 mb-0.5 group-hover:text-black/70">PELÍCULA +15s</span>
-                                    <span className="block text-base font-bold leading-none uppercase tracking-wide">Ver Completa</span>
-                                </div>
-                            </button>
-                        </div>
+            {/* LAYER 2: MAIN CONTENT (Contained, Never Cropped) */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center p-4">
+                <div className="relative w-full h-full max-w-5xl aspect-video shadow-2xl bg-black rounded-lg overflow-hidden border border-white/10 ring-1 ring-white/5">
+                    {cloudflareId ? (
+                        <iframe
+                            src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=${isMuted}&controls=false`}
+                            className="w-full h-full object-contain"
+                            allow="autoplay; encrypted-media"
+                        />
+                    ) : (
+                        <video
+                            src={post.videoUrl}
+                            poster={posterUrl}
+                            autoPlay
+                            loop
+                            muted={isMuted}
+                            className="w-full h-full object-contain"
+                        />
                     )}
+
+                    {/* CLICK TO EXPAND */}
+                    <div className="absolute inset-0 z-20 cursor-pointer" onClick={onOpenFull} />
                 </div>
             </div>
 
-            <div className={`absolute bottom-24 right-4 md:right-8 z-30 flex flex-col gap-6 items-center pointer-events-auto transition-all duration-700 ease-in-out ${isIdle ? 'translate-x-20 opacity-0' : 'translate-x-0 opacity-100'}`}>
-                <div className="flex flex-col items-center gap-1 group cursor-pointer">
-                    <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 group-hover:border-red-500 group-hover:text-red-500 transition-all shadow-lg">
-                        <Heart className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-bold shadow-black drop-shadow-md">{formatNumber(post.likes)}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1 group cursor-pointer">
-                    <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 group-hover:border-[#FF9800] group-hover:text-[#FF9800] transition-all shadow-lg">
-                        <MessageCircle className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-bold shadow-black drop-shadow-md">{post.comments}</span>
-                </div>
-                <div className="flex flex-col items-center gap-1 group cursor-pointer">
-                    <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-white border border-white/10 group-hover:bg-white/20 transition-all shadow-lg">
-                        <Share2 className="w-6 h-6" />
-                    </div>
-                    <span className="text-xs font-bold shadow-black drop-shadow-md">Share</span>
-                </div>
-                <div className="mt-4">
-                    <button onClick={toggleMute} className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-white/80 border border-white/10 hover:bg-white/20 transition-all">
-                        {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                    </button>
-                </div>
-            </div>
-        </>
+            {/* LAYER 3: UI OVERLAY */}
+            <SocialInterface
+                post={post}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+                onOpenFull={onOpenFull}
+                duration={100} // Force full controls
+            />
+        </div>
     );
 }
 
+
 // ----------------------------------------------------------------------
-// CATEGORY ROW (Clean, Speedlight Style)
+// CATEGORY ROW (Horizontal 16:9 for Cinema)
 // ----------------------------------------------------------------------
 function CategoryRow({ title, posts, onPostClick }: any) {
     if (!posts || posts.length === 0) return null;
 
     return (
-        <div className="space-y-4 group">
-            <h3 className="text-white/90 font-bold text-lg md:text-xl flex items-center gap-2 font-oswald tracking-wide uppercase">
+        <div className="space-y-4 group px-2">
+            <h3 className="text-white/90 font-bold text-lg md:text-xl flex items-center gap-2 font-oswald tracking-wide uppercase border-l-4 border-[#FF9800] pl-3">
                 {title}
             </h3>
 
-            <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
+            <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
                 {posts.map((post: any) => (
                     <div
                         key={post.id}
                         onClick={() => onPostClick(post)}
-                        className="flex-none w-[200px] md:w-[260px] aspect-[9/16] relative rounded-xl overflow-hidden bg-neutral-900 cursor-pointer transform hover:scale-[1.02] hover:z-10 transition-all duration-300 group/card border border-white/5 hover:border-[#FF9800]/50 shadow-lg"
+                        // CHANGED: aspect-[9/16] -> aspect-video (16:9)
+                        // This makes the thumbnails horizontal rectangles
+                        className="flex-none w-[200px] md:w-[320px] aspect-video relative rounded-lg overflow-hidden bg-neutral-900 cursor-pointer transform hover:scale-[1.03] hover:z-10 transition-all duration-300 group/card border border-white/10 hover:border-[#FF9800] shadow-xl"
                     >
+                        {/* Image: Cover ensures it fills the 16:9 box nicely */}
                         <Image
                             src={post.poster || "/placeholder-cinema.jpg"}
                             alt={post.title}
                             fill
                             className="object-cover"
                         />
-                        {/* Creator Overlay */}
-                        <div className="absolute top-3 left-3 flex items-center gap-2 z-10">
-                            <div className="w-6 h-6 rounded-full bg-black/50 border border-white/20 overflow-hidden relative">
-                                {post.avatar ? <Image src={post.avatar} alt="user" fill className="object-cover" /> : null}
+
+                        {/* Dark Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+
+                        {/* Creator Badge (Top Left) */}
+                        <div className="absolute top-2 left-2 flex items-center gap-2 z-10">
+                            <div className="px-2 py-0.5 bg-black/60 backdrop-blur-md rounded-md flex items-center gap-1 border border-white/5">
+                                <span className="text-[9px] font-bold text-white uppercase tracking-wider">{post.creator}</span>
                             </div>
-                            <span className="text-[10px] font-bold text-white shadow-black drop-shadow-md">{post.creator}</span>
                         </div>
 
-                        {/* Info Gradient */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/50 to-transparent">
-                            <h4 className="text-white font-bold text-sm leading-tight mb-1 line-clamp-2">{post.title}</h4>
-                            <div className="flex items-center gap-3 text-[10px] text-white/60">
-                                <span className="flex items-center gap-1"><Heart className="w-3 h-3" /> {formatNumber(post.likes)}</span>
-                                <span className="flex items-center gap-1"><Play className="w-3 h-3" /> Ver</span>
+                        {/* Info (Bottom) */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                            <h4 className="text-white font-bold text-sm leading-none mb-1 shadow-black drop-shadow-md truncate">{post.title}</h4>
+                            <div className="flex items-center gap-3 text-[10px] text-zinc-400">
+                                <span className="flex items-center gap-1"><Play className="w-3 h-3 fill-current" /> Ver ahora</span>
                             </div>
                         </div>
                     </div>
@@ -539,298 +680,456 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 }
 
 // ----------------------------------------------------------------------
-// IMMERSIVE CINEMA MODE (The "Full Movie" Player)
+// IMMERSIVE CINEMA MODE (The "TikTok/Netflix" Hybrid Player)
 // ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-// IMMERSIVE CINEMA MODE (The "Full Movie" Player)
-// ----------------------------------------------------------------------
-// ----------------------------------------------------------------------
-// IMMERSIVE CINEMA MODE (The "Full Movie" Player)
-// ----------------------------------------------------------------------
-function ImmersiveCinemaMode({ post, onClose }: any) {
-    const [isIdle, setIsIdle] = useState(false);
-    const [player, setPlayer] = useState<any>(null);
-    const [isReady, setIsReady] = useState(false); // New explicit ready state
-
-    // Player State
-    const [isPlaying, setIsPlaying] = useState(true);
+function ImmersiveCinemaMode({ post, onClose, isFeedMode = false }: any) {
+    const [isUiVisible, setIsUiVisible] = useState(true);
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [player, setPlayer] = useState<any>(null);
+    const [isReady, setIsReady] = useState(false);
+    const [isEnded, setIsEnded] = useState(false);
+    const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
 
-    // Feedback State
-    const [showActionIcon, setShowActionIcon] = useState<'play' | 'pause' | 'forward' | 'rewind' | null>(null);
+    // Track visibility for keyboard shortcuts
+    const [isInView, setIsInView] = useState(!isFeedMode); // Cinema mode starts true
 
-    const timerRef = useRef<NodeJS.Timeout | null>(null);
-    const clickTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-    const iframeRef = useRef<HTMLIFrameElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const isLongPress = useRef(false);
+    const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastTapTime = useRef(0);
 
-    const youtubeId = getYoutubeId(post.videoUrl);
     const cloudflareId = getCloudflareId(post.videoUrl || '');
-    const isYoutube = !!youtubeId;
-    const isCloudflare = !!cloudflareId;
 
-    // Idle Logic
+    // ----------------------------------------------------------------------
+    // SMART SCROLL OBSERVER (The "Pause on Scroll" Logic)
+    // ----------------------------------------------------------------------
     useEffect(() => {
-        const resetTimer = () => {
-            setIsIdle(false);
-            if (timerRef.current) clearTimeout(timerRef.current);
-            timerRef.current = setTimeout(() => setIsIdle(true), 3000);
-        };
-        window.addEventListener('mousemove', resetTimer);
-        window.addEventListener('click', resetTimer);
-        window.addEventListener('keydown', resetTimer);
-        resetTimer();
-        return () => {
-            window.removeEventListener('mousemove', resetTimer);
-            window.removeEventListener('click', resetTimer);
-            window.removeEventListener('keydown', resetTimer);
-            if (timerRef.current) clearTimeout(timerRef.current);
-        };
-    }, []);
+        if (!isFeedMode || !containerRef.current || !player) return;
 
-    // ⚡️ ROBUST MANUAL SCRIPT INJECTION & INIT ⚡️
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Debug Log to see what's happening
+                console.log(`Video ${post.title} visibility: around ${Math.round(entry.intersectionRatio * 100)}% | Intersecting: ${entry.isIntersecting}`);
+
+                setIsInView(entry.isIntersecting);
+                if (entry.isIntersecting) {
+                    player.play().catch(() => { });
+                } else {
+                    player.pause();
+                }
+            });
+        }, { threshold: 0.5 }); // Lowered to 50% for better mobile detection
+
+        observer.observe(containerRef.current);
+        return () => observer.disconnect();
+    }, [isFeedMode, player, post.title]);
+
+    // ----------------------------------------------------------------------
+    // KEYBOARD CONTROL (Space to Pause)
+    // ----------------------------------------------------------------------
     useEffect(() => {
-        if (!isCloudflare) return;
+        if (!isInView || !player) return;
 
-        let pollInterval: NodeJS.Timeout;
-
-        const initSDK = () => {
-            if (iframeRef.current && (window as any).Stream) {
-                // Prevent Double Init
-                if (iframeRef.current.getAttribute('data-init') === 'true') return;
-
-                try {
-                    console.log("⚡️ Cloudflare SDK Found. Initializing...");
-                    const streamPlayer = (window as any).Stream(iframeRef.current);
-
-                    iframeRef.current.setAttribute('data-init', 'true');
-                    setPlayer(streamPlayer);
-
-                    // Robust Listeners
-                    const onTime = () => setCurrentTime(streamPlayer.currentTime);
-                    const onDur = () => setDuration(streamPlayer.duration);
-                    const onPlayState = () => setIsPlaying(!streamPlayer.paused);
-
-                    streamPlayer.addEventListener('timeupdate', onTime);
-                    streamPlayer.addEventListener('durationchange', onDur);
-                    streamPlayer.addEventListener('loadedmetadata', onDur);
-                    streamPlayer.addEventListener('play', onPlayState);
-                    streamPlayer.addEventListener('pause', onPlayState);
-
-                    // Bootup
-                    if (streamPlayer.duration) setDuration(streamPlayer.duration);
-                    streamPlayer.muted = false;
-                    streamPlayer.play().catch((e: any) => console.log("Auto-Play Blocked via SDK:", e));
-
-                    setIsReady(true);
-                    clearInterval(pollInterval); // Init complete
-                } catch (e) {
-                    console.error("SDK Init Failed", e);
+        const handleSpace = (e: KeyboardEvent) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Stop page scroll
+                if (player.paused) { // Check if currently paused
+                    player.play();
+                    setShowActionIcon('unmute'); // Or play icon
+                    setTimeout(() => setShowActionIcon(null), 600);
+                } else {
+                    player.pause();
+                    setShowActionIcon('pause'); // Show pause icon
                 }
             }
         };
 
-        // 1. Check if script exists, if not inject it
-        if (!(window as any).Stream) {
-            const script = document.createElement('script');
-            script.src = "https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js";
-            script.async = true;
-            script.onload = () => {
-                // Script loaded, start polling for iframe readiness
-                pollInterval = setInterval(initSDK, 200);
-            };
-            document.body.appendChild(script);
-        } else {
-            // Script already there, just poll
-            pollInterval = setInterval(initSDK, 200);
-        }
+        window.addEventListener('keydown', handleSpace);
+        return () => window.removeEventListener('keydown', handleSpace);
+    }, [isInView, player]);
 
-        // Failsafe timeout
-        const failsafe = setTimeout(() => clearInterval(pollInterval), 8000);
+    // Setup Cloudflare Player (Standard setup code below...)
+    useEffect(() => {
+        if (!cloudflareId) return;
+        let interval: NodeJS.Timeout;
 
-        return () => {
-            clearInterval(pollInterval);
-            clearTimeout(failsafe);
-        };
-    }, [isCloudflare]);
+        const init = () => {
+            if (iframeRef.current && (window as any).Stream) {
+                if (iframeRef.current.getAttribute('data-init') === 'true') return;
+                try {
+                    const sp = (window as any).Stream(iframeRef.current);
+                    iframeRef.current.setAttribute('data-init', 'true');
+                    setPlayer(sp);
+                    // Force Config: Start Muted for auto-play policy, but we intend sound ON manually later or via tap
+                    // Actually, let's try starting unmuted.
+                    sp.muted = false;
 
+                    if (isFeedMode) sp.loop = true; // Loop social vids
+                    else sp.loop = false; // Don't loop cinema movies
 
-    /* --- MODERN INTERACTION HANDLER --- */
-    const handleSmartClick = (e: React.MouseEvent<HTMLDivElement>) => {
-        // If player isn't ready, ignore interactions to prevent frustration bugs
-        if (!player && isCloudflare) return;
+                    sp.addEventListener('timeupdate', () => setCurrentTime(sp.currentTime));
+                    sp.addEventListener('durationchange', () => setDuration(sp.duration));
+                    sp.addEventListener('ended', () => setIsEnded(true));
 
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const width = rect.width;
-        const third = width / 3;
+                    // In Feed Mode, we let the Observer handle play/pause.
+                    // In Cinema Mode (Modal), we auto-play immediately.
+                    if (!isFeedMode) {
+                        sp.play().catch(() => {
+                            sp.muted = true;
+                            sp.play();
+                        });
+                    }
 
-        // DOUBLE CLICK DETECTED
-        if (clickTimeoutRef.current) {
-            clearTimeout(clickTimeoutRef.current);
-            clickTimeoutRef.current = null;
-
-            // Interaction Zones
-            if (x < third) {
-                handleRewind();
-            } else if (x > width - third) {
-                handleForward();
-            } else {
-                // CENTER DOUBLE TAP: Just ensure playing
-                togglePlay();
+                    setIsReady(true);
+                    clearInterval(interval);
+                } catch (e) { }
             }
-        } else {
-            // SINGLE CLICK WAIT
-            clickTimeoutRef.current = setTimeout(() => {
-                clickTimeoutRef.current = null;
-                togglePlay(); // SINGLE -> PLAY/PAUSE
-            }, 250);
+        };
+
+        if ((window as any).Stream) interval = setInterval(init, 200);
+        else {
+            const s = document.createElement('script');
+            s.src = "https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js";
+            s.onload = () => { interval = setInterval(init, 200); };
+            document.body.appendChild(s);
         }
-    };
+        return () => clearInterval(interval);
+    }, [cloudflareId, isFeedMode]);
 
-    const triggerFeedback = (type: 'play' | 'pause' | 'forward' | 'rewind') => {
-        setShowActionIcon(type);
-        setTimeout(() => setShowActionIcon(null), 600);
-    };
 
+    // GESTURES
     const togglePlay = () => {
         if (!player) return;
         if (player.paused) {
             player.play();
-            setIsPlaying(true); // Optimistic
-            triggerFeedback('play');
+            setShowActionIcon(null);
         } else {
             player.pause();
-            setIsPlaying(false); // Optimistic
-            triggerFeedback('pause');
+            setShowActionIcon('pause');
         }
     };
 
-    const handleForward = () => {
-        if (!player) return;
-        player.currentTime = Math.min(player.currentTime + 10, duration);
-        triggerFeedback('forward');
+    const handleTap = () => {
+        if (isLongPress.current) return;
+        const now = Date.now();
+        // Always try to unmute on interaction if muted, regardless of tap speed for better UX
+        if (player && player.muted) {
+            player.muted = false;
+            setShowActionIcon('unmute');
+            setTimeout(() => setShowActionIcon(null), 600);
+            lastTapTime.current = now;
+            return;
+        }
+
+        if (now - lastTapTime.current < 300) {
+            // For now, let's just toggle UI visibility if not muted, or pause/play if already unmuted.
+            // The primary goal of single tap is to unmute if muted.
+            // If not muted, a single tap should toggle UI visibility.
+            setIsUiVisible(prev => !prev);
+        }
+        lastTapTime.current = now;
     };
 
-    const handleRewind = () => {
-        if (!player) return;
-        player.currentTime = Math.max(player.currentTime - 10, 0);
-        triggerFeedback('rewind');
+    const handleDown = () => {
+        isLongPress.current = false;
+        pressTimerRef.current = setTimeout(() => {
+            isLongPress.current = true;
+            if (player) {
+                player.pause();
+                setShowActionIcon('pause');
+                setIsUiVisible(false); // Hide UI while holding for clean view
+            }
+        }, 200);
     };
 
-    const handleSeek = (e: any) => {
-        e.stopPropagation();
-        if (!player) return;
-        const time = parseFloat(e.target.value);
-        player.currentTime = time;
-        setCurrentTime(time);
-        setIsIdle(false);
+    const handleUp = () => {
+        if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
+        if (isLongPress.current && player) {
+            player.play();
+            setIsUiVisible(true);
+            setShowActionIcon(null);
+        }
+        isLongPress.current = false;
     };
 
-    // Calculate progress
-    const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-    // Params
-    const playerParams = `?autoplay=1&mute=0&controls=0&version=3&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&fs=0`;
-    const cfSrc = `https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=false&muted=false&controls=false&preload=true`;
+    // Native Video Ref for fallback
+    // ----------------------------------------------------------------------
+    // NATIVE VIDEO ADAPTER LOGIC (Moved to top of component really, but for this patch context)
+    // ----------------------------------------------------------------------
+    const nativeVideoRef = useRef<HTMLVideoElement>(null);
+
+    // Initialize Native Player Adapter
+    useEffect(() => {
+        if (!cloudflareId && nativeVideoRef.current) {
+            const video = nativeVideoRef.current;
+            // Short delay to ensure ref is ready and avoid race conditions
+            const t = setTimeout(() => {
+                const adapter = {
+                    play: () => video.play().catch(() => { }),
+                    pause: () => video.pause(),
+                    get muted() { return video.muted; },
+                    set muted(val: boolean) { video.muted = val; },
+                    get currentTime() { return video.currentTime; },
+                    get duration() { return video.duration; },
+                    get paused() { return video.paused; } // Added paused getter
+                };
+                setPlayer(adapter);
+            }, 100);
+            return () => clearTimeout(t);
+        }
+    }, [cloudflareId]);
+
+    // FORCE READY STATE (Fix for persistent spinner)
+    useEffect(() => {
+        // If native video exists, we can consider it ready faster
+        if (!cloudflareId && nativeVideoRef.current) {
+            const t = setTimeout(() => setIsReady(true), 500); // Force ready after 500ms for responsiveness
+            return () => clearTimeout(t);
+        }
+        // Fallback safety
+        const safety = setTimeout(() => setIsReady(true), 3000);
+        return () => clearTimeout(safety);
+    }, [cloudflareId]);
 
     return (
-        <div ref={containerRef} className={`fixed inset-0 z-[100] bg-black flex items-center justify-center animate-in fade-in duration-500 ${isIdle ? 'cursor-none' : 'cursor-default'}`}>
+        <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden group">
 
-            {/* LOADING STATE - VISIBLE UNTIL READY */}
-            {isCloudflare && !isReady && (
-                <div className="absolute inset-0 flex items-center justify-center z-[110] bg-black/80">
-                    <div className="flex flex-col items-center gap-3">
-                        <div className="w-10 h-10 border-4 border-[#FF9800] border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-[#FF9800] text-xs font-bold tracking-widest uppercase animate-pulse">Cargando...</span>
+            {/* 1. END SCREEN (Cinema Mode Only) */}
+            {isEnded && !isFeedMode && (
+                <div className="absolute inset-0 z-[150] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in">
+                    <h3 className="text-2xl font-oswald text-white mb-6 uppercase">A continuación</h3>
+                    <div className="flex gap-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="w-32 h-48 bg-white/10 rounded-xl animate-pulse"></div>
+                        ))}
                     </div>
+                    <button onClick={onClose} className="mt-8 text-white/50 hover:text-white underline">Volver al Catálogo</button>
                 </div>
             )}
 
-            {/* ACTION FEEDBACK OVERLAY (Centered) */}
+            {/* 2. LOADING SPINNER */}
+            {/* Only show if NOT ready AND NOT playing (currentTime near 0) */}
+            {!isReady && currentTime < 0.2 && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
+                    <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
+                </div>
+            )}
+
+            {/* 3. FEEDBACK ICONS */}
             {showActionIcon && (
-                <div className="absolute inset-0 z-[130] flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
-                    <div className="w-20 h-20 bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-white/90">
-                        {showActionIcon === 'play' && <Play className="w-10 h-10 fill-current" />}
-                        {showActionIcon === 'pause' && <div className="flex gap-2"><div className="w-3 h-8 bg-white rounded-sm" /><div className="w-3 h-8 bg-white rounded-sm" /></div>}
-                        {showActionIcon === 'forward' && <div className="flex flex-col items-center"><div className="flex"><Play className="w-6 h-6 fill-current" /><Play className="w-6 h-6 fill-current -ml-3" /></div><span className="text-[10px] font-bold">+10s</span></div>}
-                        {showActionIcon === 'rewind' && <div className="flex flex-col items-center"><div className="flex"><Play className="w-6 h-6 fill-current rotate-180" /><Play className="w-6 h-6 fill-current rotate-180 -ml-3" /></div><span className="text-[10px] font-bold">-10s</span></div>}
+                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
+                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-full text-white">
+                        {showActionIcon === 'pause' && <div className="flex gap-1"><div className="w-2 h-6 bg-white rounded-full" /><div className="w-2 h-6 bg-white rounded-full" /></div>}
+                        {showActionIcon === 'mute' && <VolumeX className="w-8 h-8" />}
+                        {showActionIcon === 'unmute' && <Volume2 className="w-8 h-8" />}
                     </div>
                 </div>
             )}
 
-            {/* BACK BUTTON */}
-            <div className={`absolute top-6 left-6 z-[120] transition-all duration-700 ${isIdle ? '-translate-y-20 opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'}`}>
-                <button
-                    onClick={onClose}
-                    className="group flex items-center gap-3 text-white hover:text-[#FF9800] transition-colors bg-black/20 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 hover:bg-black/40"
-                >
-                    <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                    <span className="font-bold text-xs tracking-widest uppercase opacity-0 group-hover:opacity-100 transition-opacity -ml-2 group-hover:ml-0 delay-100 block w-0 group-hover:w-auto overflow-hidden">Cerrar</span>
-                </button>
-            </div>
-
-            {/* VIDEO PLAYER ENGINE + GESTURE LAYER */}
-            <div className="w-full h-full relative group" onClick={handleSmartClick}>
-                {/* A. CLOUDFLARE ENGINE */}
-                {isCloudflare ? (
+            {/* 4. PLAYER LAYER */}
+            <div
+                className="w-full h-full"
+                onMouseDown={handleDown}
+                onMouseUp={handleUp}
+                onMouseLeave={handleUp}
+                onTouchStart={handleDown}
+                onTouchEnd={handleUp}
+                onClick={handleTap}
+            >
+                {cloudflareId ? (
                     <iframe
                         ref={iframeRef}
-                        src={cfSrc}
-                        className="w-full h-full object-contain pointer-events-none" // Events handled by parent div
-                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                        allowFullScreen
-                    />
-                ) : isYoutube ? (
-                    <iframe
-                        src={`https://www.youtube.com/embed/${youtubeId}${playerParams}`}
+                        // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=false&controls=false`}
                         className="w-full h-full object-contain pointer-events-none"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
                     />
                 ) : (
+                    // NATIVE FALLBACK (For non-Cloudflare URLs)
                     <video
+                        ref={nativeVideoRef}
                         src={post.videoUrl}
                         className="w-full h-full object-contain pointer-events-none"
-                        autoPlay
-                        loop
+                        autoPlay={!isFeedMode} // Only autoplay in Cinema Mode
+                        loop={isFeedMode}
+                        muted={false}
+                        playsInline
+                        onTimeUpdate={(e) => {
+                            setCurrentTime(e.currentTarget.currentTime);
+                            if (e.currentTarget.currentTime > 0.1) setIsReady(true); // Remove spinner immediately on play
+                        }}
+                        onLoadedMetadata={(e) => {
+                            setDuration(e.currentTarget.duration);
+                            setIsReady(true);
+                        }}
+                        onEnded={() => setIsEnded(true)}
                     />
                 )}
             </div>
 
-            {/* MODERN PROGRESS BAR (Bottom Floating) */}
-            {isCloudflare && (
-                <div
-                    className={`absolute bottom-8 left-8 right-8 z-[120] transition-all duration-500 ${isIdle && isPlaying ? 'translate-y-20 opacity-0' : 'translate-y-0 opacity-100'}`}
-                    onClick={(e) => e.stopPropagation()} // Prevent play toggle when scrubbing
-                >
-                    <div className="flex items-center justify-between mb-2 px-1">
-                        <span className="text-[10px] font-bold font-mono text-white/80">{formatTime(currentTime)}</span>
-                        <span className="text-[10px] font-bold font-mono text-white/50">{formatTime(duration)}</span>
-                    </div>
+            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */}
+            {!isFeedMode && (
+                <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
+                    <div className="pointer-events-auto">
+                        <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
+                        <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
 
-                    <div className="group/progress relative w-full h-1 bg-white/20 rounded-full cursor-pointer hover:h-2 transition-all duration-300">
-                        <div
-                            className="absolute left-0 top-0 h-full bg-[#FF9800] rounded-full relative transition-all duration-100 ease-linear" // Linear ease for smooth progress
-                            style={{ width: `${progressPercent}%` }}
-                        >
-                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg scale-0 group-hover/progress:scale-100 transition-transform" />
+                        {/* Progress Bar only for direct control mode */}
+                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                            <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
                         </div>
-                        <input
-                            type="range"
-                            min={0}
-                            max={duration || 100}
-                            value={currentTime}
-                            onChange={handleSeek}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        />
                     </div>
                 </div>
             )}
+
+            {/* 6. SOCIAL INTERFACE (Feed Mode Overlay) */}
+            {isFeedMode && (
+                <SocialInterface
+                    post={post}
+                    isMuted={player ? player.muted : false}
+                    toggleMute={() => { if (player) player.muted = !player.muted; }}
+                    duration={duration}
+                />
+            )}
+
         </div>
     );
 }
+
+// ----------------------------------------------------------------------
+// 2. SOCIAL INTERFACE (Overlay UI for TikTok/Reels style)
+// ----------------------------------------------------------------------
+function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: any) {
+    const [liked, setLiked] = useState(false);
+    const [saved, setSaved] = useState(false);
+    const [likeCount, setLikeCount] = useState(post.likes || 0);
+
+    const handleLike = (e: any) => {
+        e.stopPropagation();
+        setLiked(!liked);
+        setLikeCount((prev: number) => liked ? prev - 1 : prev + 1);
+        // TODO: Call Server Action to persist like
+    };
+
+    const handleSave = (e: any) => {
+        e.stopPropagation();
+        setSaved(!saved);
+    };
+
+    const handleShare = async (e: any) => {
+        e.stopPropagation();
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: post.title,
+                    text: `Mira este video increíble en Speedlight: ${post.title}`,
+                    url: window.location.href
+                });
+            } catch (err) { console.log('Share error:', err); }
+        } else {
+            alert('Enlace copiado al portapapeles');
+        }
+    };
+
+    return (
+        <div className="absolute inset-0 pointer-events-none z-20 flex flex-col justify-between">
+
+            {/* TOP BAR: Transparent */}
+            <div className="w-full p-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
+                {/* Mute button moved to bottom right */}
+            </div>
+
+            {/* BOTTOM AREA: Actions & Info */}
+            <div className={`w-full flex items-end justify-between px-4 pb-4`}> {/* Raised PB to clear Nav */}
+
+                {/* LEFT: INFO */}
+                <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative">
+                            {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
+                        </div>
+                        <span className="font-bold text-sm text-white drop-shadow-md">@{post.creator || 'SpeedlightUser'}</span>
+                        <button className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded text-[10px] font-bold text-white uppercase ml-1 border border-white/20">Seguir</button>
+                    </div>
+                    <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
+                    <p className="text-white/80 text-xs line-clamp-2 drop-shadow-md mb-2">{post.description}</p>
+
+                    {/* Tags / Music ticker placeholder */}
+                    <div className="flex items-center gap-2 text-[10px] text-white/70">
+                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                            <span className="animate-pulse">♫</span> Sonido Original - {post.creator}
+                        </div>
+                    </div>
+                </div>
+
+                {/* RIGHT: ACTIONS SIDEBAR */}
+                <div className="flex flex-col items-center gap-4 pointer-events-auto">
+
+                    {/* MUTE TOGGLE */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white/80 hover:bg-black/40 hover:text-white transition-all">
+                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Unmute' : 'Mute'}</span>
+                    </button>
+
+                    {/* LIKE */}
+                    <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
+                            <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
+                    </button>
+
+                    {/* COMMENT */}
+                    <button className="flex flex-col items-center gap-1 group">
+                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <MessageCircle className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(post.comments || 0)}</span>
+                    </button>
+
+                    {/* SAVE / BOOKMARK */}
+                    <button onClick={handleSave} className="flex flex-col items-center gap-1 group">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all ${saved ? 'bg-[#FF9800]/20 text-[#FF9800]' : 'bg-black/20 hover:bg-black/40'}`}>
+                            {saved ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
+                            )}
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{saved ? 'Guardado' : 'Guardar'}</span>
+                    </button>
+
+                    {/* SHARE */}
+                    <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
+                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Compartir</span>
+                    </button>
+
+                    {/* MORE (Cinema Mode Trigger) or DISK */}
+                    <div className="mt-2 animate-spin-slow">
+                        <div className="w-10 h-10 rounded-full bg-black border-4 border-black overflow-hidden relative shadow-lg">
+                            <Image src="/logo-icon.png" alt="disk" fill className="object-cover opacity-80" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ----------------------------------------------------------------------
+// UTILITIES
+// ----------------------------------------------------------------------
 
 function formatTime(seconds: number) {
     if (!seconds || isNaN(seconds)) return "0:00";
@@ -839,12 +1138,8 @@ function formatTime(seconds: number) {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-// UTILS
 const getCloudflareId = (url: string) => {
     if (!url) return null;
-    // Handle "watch" URLs or direct ID
-    // Logic: Look for 'cloudflarestream.com/' OR 'videodelivery.net/' followed by ID
-    // Example: https://watch.cloudflarestream.com/6b446a...
     const regExp = /(?:cloudflarestream\.com|videodelivery\.net)\/([a-zA-Z0-9]+)/;
     const match = url.match(regExp);
     return match ? match[1] : null;
