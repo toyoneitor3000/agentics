@@ -20,6 +20,7 @@ interface CinemaVideoData {
     video_url: string;
     thumbnail_url?: string;
     category?: string;
+    format?: 'horizontal' | 'vertical';
 }
 
 export async function submitVideo(data: CinemaVideoData) {
@@ -28,15 +29,16 @@ export async function submitVideo(data: CinemaVideoData) {
 
     try {
         await query(
-            `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, status) 
-             VALUES ($1, $2, $3, $4, $5, $6, 'pending')`,
+            `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, format, status) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')`,
             [
                 user.id,
                 data.title,
                 data.description,
                 data.video_url,
                 data.thumbnail_url || null,
-                data.category || 'General'
+                data.category || 'General',
+                data.format || 'horizontal'
             ]
         );
 

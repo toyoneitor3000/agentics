@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import AppHeader from "./AppHeader";
 import BottomNav from "./BottomNav";
 import InstallPrompt from "../pwa/InstallPrompt";
+import OnboardingGuide from "../onboarding/OnboardingGuide";
 import { UiProvider, useUi } from "../../context/UiContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
@@ -41,6 +42,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
             {/* PWA Install Prompt */}
             <InstallPrompt />
+            <OnboardingGuide />
         </div>
     );
 }

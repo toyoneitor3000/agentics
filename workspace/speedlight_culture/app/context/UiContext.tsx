@@ -9,6 +9,9 @@ interface UiContextType {
     isSocialMode: boolean;
     setIsSocialMode: (value: boolean) => void;
     resetIdleTimer: () => void;
+    autoHideMode: 'always' | 'cinema-only' | 'never';
+    autoHideDuration: number;
+    updateSettings: (mode: 'always' | 'cinema-only' | 'never', duration: number) => void;
 }
 
 const UiContext = createContext<UiContextType | undefined>(undefined);
@@ -18,10 +21,31 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
     const [isSocialMode, setIsSocialMode] = useState(false);
 
+    // Settings
+    const [autoHideMode, setAutoHideMode] = useState<'always' | 'cinema-only' | 'never'>('cinema-only');
+    const [autoHideDuration, setAutoHideDuration] = useState(4000);
+
     const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
     const navTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const pathname = usePathname();
+    const isCinema = pathname?.startsWith('/cinema');
+
+    // Load Settings
+    useEffect(() => {
+        const savedMode = localStorage.getItem('autoHideMode');
+        const savedDuration = localStorage.getItem('autoHideDuration');
+        if (savedMode) setAutoHideMode(savedMode as any);
+        if (savedDuration) setAutoHideDuration(parseInt(savedDuration));
+    }, []);
+
+    const updateSettings = (mode: 'always' | 'cinema-only' | 'never', duration: number) => {
+        setAutoHideMode(mode);
+        setAutoHideDuration(duration);
+        localStorage.setItem('autoHideMode', mode);
+        localStorage.setItem('autoHideDuration', duration.toString());
+        resetIdleTimer();
+    };
 
     const resetIdleTimer = () => {
         setIsUiVisible(true);
@@ -30,43 +54,57 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
         if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
         if (navTimerRef.current) clearTimeout(navTimerRef.current);
 
-        // General UI (Cinema Overlay, Top Header in Cinema) - 4 Seconds
-        idleTimerRef.current = setTimeout(() => {
-            setIsUiVisible(false);
-        }, 4000);
+        // Determine if we should hide based on Mode and Route
+        let shouldHide = false;
+        if (autoHideMode === 'always') shouldHide = true;
+        if (autoHideMode === 'cinema-only' && isCinema) shouldHide = true;
+        if (autoHideMode === 'never') shouldHide = false;
 
-        // Bottom Navbar - 4 Seconds
-        navTimerRef.current = setTimeout(() => {
-            setIsBottomNavVisible(false);
-        }, 4000);
+        if (shouldHide) {
+            // General UI
+            idleTimerRef.current = setTimeout(() => {
+                setIsUiVisible(false);
+            }, autoHideDuration);
+
+            // Bottom Navbar
+            navTimerRef.current = setTimeout(() => {
+                setIsBottomNavVisible(false);
+            }, autoHideDuration);
+        }
     };
 
+    // Re-run timer logic if route or settings change
     useEffect(() => {
-        // Events to detect activity
+        resetIdleTimer();
+    }, [pathname, autoHideMode, autoHideDuration, isCinema]);
+
+    useEffect(() => {
         const events = ['mousemove', 'click', 'touchstart', 'keydown', 'scroll'];
         const handleActivity = () => resetIdleTimer();
-
         events.forEach(e => window.addEventListener(e, handleActivity));
-        resetIdleTimer(); // Init
-
         return () => {
             events.forEach(e => window.removeEventListener(e, handleActivity));
             if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
             if (navTimerRef.current) clearTimeout(navTimerRef.current);
         };
-    }, []);
+    }, [autoHideMode, autoHideDuration, isCinema]); // Dependencies for event listener closure
 
-    // Always ensure UI is visible on route change
-    // Also reset SocialMode to false on route change (navigation away from cinema)
+    // Reset SocialMode on navigation away from cinema
     useEffect(() => {
-        setIsUiVisible(true);
-        setIsBottomNavVisible(true);
-        setIsSocialMode(false);
-        resetIdleTimer();
-    }, [pathname]);
+        if (!isCinema) setIsSocialMode(false);
+    }, [pathname, isCinema]);
 
     return (
-        <UiContext.Provider value={{ isUiVisible, isBottomNavVisible, isSocialMode, setIsSocialMode, resetIdleTimer }}>
+        <UiContext.Provider value={{
+            isUiVisible,
+            isBottomNavVisible,
+            isSocialMode,
+            setIsSocialMode,
+            resetIdleTimer,
+            autoHideMode,
+            autoHideDuration,
+            updateSettings
+        }}>
             {children}
         </UiContext.Provider>
     );

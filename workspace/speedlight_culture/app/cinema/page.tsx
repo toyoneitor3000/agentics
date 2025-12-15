@@ -25,7 +25,7 @@ export default function CinemaSocialPage() {
     // ----------------------------------------------------------------------
     // DUAL MODE ARCHITECTURE
     // ----------------------------------------------------------------------    // State for View Mode ('cinema' or 'social')
-    const [viewMode, setViewMode] = useState<'cinema' | 'social'>('cinema'); // Default: Cinema (Netflix)
+    const [viewMode, setViewMode] = useState<'cinema' | 'social'>('social'); // Default: Social (Vertical First)
     const [activeMovie, setActiveMovie] = useState<any>(null); // For Cinema Modal
     const [activeSocialPost, setActiveSocialPost] = useState<any>(null); // For Social Feed Fixed UId Data
     const [isLoading, setIsLoading] = useState(true);
@@ -806,6 +806,16 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         return () => window.removeEventListener('keydown', handleSpace);
     }, [isInView, player]);
 
+    // ANALYTICS REF (To avoid re-triggering)
+    const analyticsRef = useRef({
+        hasStarted: false,
+        q25: false,
+        q50: false,
+        q75: false,
+        complete: false,
+        lastHeartbeat: 0
+    });
+
     // Setup Cloudflare Player (Standard setup code below...)
     useEffect(() => {
         if (!cloudflareId) return;
@@ -825,9 +835,57 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     if (isFeedMode) sp.loop = true; // Loop social vids
                     else sp.loop = false; // Don't loop cinema movies
 
-                    sp.addEventListener('timeupdate', () => setCurrentTime(sp.currentTime));
+                    // --- ANALYTICS ENGINE INJECTION ---
+                    // Lazy import to avoid server-side issues inside Client Component context if needed
+                    // But we can import actions directly.
+                    const { logWatchEvent } = require('@/app/actions/analytics');
+
+                    sp.addEventListener('play', () => {
+                        if (!analyticsRef.current.hasStarted) {
+                            logWatchEvent(post.id, 'start', 0);
+                            analyticsRef.current.hasStarted = true;
+                        }
+                    });
+
+                    sp.addEventListener('timeupdate', () => {
+                        setCurrentTime(sp.currentTime);
+                        const t = sp.currentTime;
+                        const d = sp.duration;
+                        if (!d) return;
+
+                        const pct = (t / d) * 100;
+
+                        // Quartile Tracking
+                        if (pct > 25 && !analyticsRef.current.q25) {
+                            logWatchEvent(post.id, 'quartile_25', t);
+                            analyticsRef.current.q25 = true;
+                        }
+                        if (pct > 50 && !analyticsRef.current.q50) {
+                            logWatchEvent(post.id, 'quartile_50', t);
+                            analyticsRef.current.q50 = true;
+                        }
+                        if (pct > 75 && !analyticsRef.current.q75) {
+                            logWatchEvent(post.id, 'quartile_75', t);
+                            analyticsRef.current.q75 = true;
+                        }
+
+                        // Heartbeat (Every 5 seconds)
+                        // Only if playing and actively watching
+                        const now = Date.now();
+                        if (now - analyticsRef.current.lastHeartbeat > 5000) {
+                            logWatchEvent(post.id, 'heartbeat', t);
+                            analyticsRef.current.lastHeartbeat = now;
+                        }
+                    });
+
                     sp.addEventListener('durationchange', () => setDuration(sp.duration));
-                    sp.addEventListener('ended', () => setIsEnded(true));
+                    sp.addEventListener('ended', () => {
+                        setIsEnded(true);
+                        if (!analyticsRef.current.complete) {
+                            logWatchEvent(post.id, 'complete', sp.duration);
+                            analyticsRef.current.complete = true;
+                        }
+                    });
 
                     // Listen for volume change events from player to sync upstream? 
                     // (Optional, complicated for now, sticky global state is handled by parent prop)

@@ -28,6 +28,7 @@ export default function UploadReelPage() {
     const [videoUrl, setVideoUrl] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [format, setFormat] = useState<'horizontal' | 'vertical'>('horizontal'); // Auto-detected
 
     // UI STATES
     const [isUploading, setIsUploading] = useState(false);
@@ -41,14 +42,26 @@ export default function UploadReelPage() {
     // DROPZONE CONFIG
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles?.length > 0) {
-            setSelectedFile(acceptedFiles[0]);
+            const file = acceptedFiles[0];
+            setSelectedFile(file);
             setMode('direct');
 
-            // Auto-fill title if empty
+            // 1. Auto-fill title
             if (!title) {
-                const name = acceptedFiles[0].name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+                const name = file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
                 setTitle(name);
             }
+
+            // 2. DETECT ORIENTATION (Python-like logic, but faster in browser)
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                const isVertical = video.videoHeight > video.videoWidth;
+                setFormat(isVertical ? 'vertical' : 'horizontal');
+                console.log(`🎥 Detected Format: ${isVertical ? 'Vertical (Social)' : 'Horizontal (Cinema)'} [${video.videoWidth}x${video.videoHeight}]`);
+            };
+            video.src = URL.createObjectURL(file);
         }
     }, [title]);
 
@@ -204,12 +217,15 @@ export default function UploadReelPage() {
             }
 
             // Save to DB
+            const finalFormat = format; // Use the auto-detected format
+
             await submitVideo({
                 title: title,
                 description: description,
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
-                category: 'Native'
+                category: 'Native',
+                format: finalFormat // <-- NEW FIELD
             });
 
             // SUCCESS!
