@@ -13,11 +13,15 @@ export default function InstallPrompt() {
         if (typeof window === 'undefined') return;
 
         // Check if already in standalone mode
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone;
+        const isStandalone =
+            window.matchMedia('(display-mode: standalone)').matches ||
+            (window.navigator as any).standalone ||
+            document.referrer.includes('android-app://');
+
         if (isStandalone) return;
 
-        // Check dismissal
-        const hasDismissed = localStorage.getItem('pwa_prompt_dismissed');
+        // Check dismissal (Session based: use sessionStorage to nag only once per session)
+        const hasDismissed = sessionStorage.getItem('pwa_prompt_dismissed_session');
         if (hasDismissed) return;
 
         const ua = window.navigator.userAgent.toLowerCase();
@@ -61,7 +65,7 @@ export default function InstallPrompt() {
 
     const handleDismiss = () => {
         setShowPrompt(false);
-        localStorage.setItem('pwa_prompt_dismissed', 'true');
+        sessionStorage.setItem('pwa_prompt_dismissed_session', 'true');
     };
 
     if (!showPrompt) return null;
