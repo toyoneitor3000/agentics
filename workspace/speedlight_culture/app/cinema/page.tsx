@@ -31,7 +31,12 @@ export default function CinemaSocialPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     // GLOBAL UI SYNC (Replaces Local Timer)
-    const { isUiVisible, resetIdleTimer } = useUi();
+    const { isUiVisible, resetIdleTimer, setIsSocialMode } = useUi();
+
+    // Sync View Mode with Global Context for Header Hiding
+    useEffect(() => {
+        setIsSocialMode(viewMode === 'social');
+    }, [viewMode, setIsSocialMode]);
 
     // Load Data
     useEffect(() => {
@@ -220,7 +225,7 @@ export default function CinemaSocialPage() {
                     {/* FIXED OVERLAY UI (Global for Feed) */}
                     {/* Includes Gradient & Auto-Hide Logic */}
                     <div
-                        className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-500 ease-in-out ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}
+                        className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-1000 ease-in-out ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}
                     >
                         {/* Gradient: "0 to 100 hacia abajo" - Full vertical gradient subtle */}
                         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />

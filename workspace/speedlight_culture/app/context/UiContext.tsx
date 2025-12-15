@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 interface UiContextType {
     isUiVisible: boolean;
     isBottomNavVisible: boolean;
+    isSocialMode: boolean;
+    setIsSocialMode: (value: boolean) => void;
     resetIdleTimer: () => void;
 }
 
@@ -14,6 +16,7 @@ const UiContext = createContext<UiContextType | undefined>(undefined);
 export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isUiVisible, setIsUiVisible] = useState(true);
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
+    const [isSocialMode, setIsSocialMode] = useState(false);
 
     const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
     const navTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,15 +30,15 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
         if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
         if (navTimerRef.current) clearTimeout(navTimerRef.current);
 
-        // General UI (Cinema Overlay, Top Header in Cinema) - 3 Seconds
+        // General UI (Cinema Overlay, Top Header in Cinema) - 4 Seconds
         idleTimerRef.current = setTimeout(() => {
             setIsUiVisible(false);
-        }, 3000);
+        }, 4000);
 
-        // Bottom Navbar - 5 Seconds
+        // Bottom Navbar - 4 Seconds
         navTimerRef.current = setTimeout(() => {
             setIsBottomNavVisible(false);
-        }, 5000);
+        }, 4000);
     };
 
     useEffect(() => {
@@ -54,14 +57,16 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     // Always ensure UI is visible on route change
+    // Also reset SocialMode to false on route change (navigation away from cinema)
     useEffect(() => {
         setIsUiVisible(true);
         setIsBottomNavVisible(true);
+        setIsSocialMode(false);
         resetIdleTimer();
     }, [pathname]);
 
     return (
-        <UiContext.Provider value={{ isUiVisible, isBottomNavVisible, resetIdleTimer }}>
+        <UiContext.Provider value={{ isUiVisible, isBottomNavVisible, isSocialMode, setIsSocialMode, resetIdleTimer }}>
             {children}
         </UiContext.Provider>
     );

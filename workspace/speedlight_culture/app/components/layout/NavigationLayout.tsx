@@ -8,7 +8,7 @@ import { UiProvider, useUi } from "../../context/UiContext";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
-    const { isUiVisible, isBottomNavVisible } = useUi();
+    const { isUiVisible, isBottomNavVisible, isSocialMode } = useUi();
 
     // Check if we are on an auth page
     const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/auth') || pathname?.startsWith('/sign-in') || pathname?.startsWith('/sign-up');
@@ -20,9 +20,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex flex-col min-h-screen bg-transparent relative">
             {/* Universal Top Header (Fixed Top) */}
-            {/* Fades out ONLY on /cinema when idle. Stays visible elsewhere. 
+            {/* Fades out ONLY on Social Mode when idle. Stays visible elsewhere. 
                 Using isUiVisible (3s) for strict cinema immersion. */}
-            <div className={`transition-opacity duration-500 ease-in-out ${pathname === '/cinema' && !isUiVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            <div className={`transition-opacity duration-1000 ease-in-out ${isSocialMode && !isUiVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 <AppHeader />
             </div>
 
@@ -34,8 +34,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             {/* Universal Bottom Navigation "Island" (Fixed Bottom) */}
             {/* Fades out globally when idle (5s delay per user request) */}
             <div
-                className={`transition-opacity ease-in-out ${isBottomNavVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-                style={{ transitionDuration: isBottomNavVisible ? '300ms' : '3000ms' }}
+                className={`transition-opacity duration-1000 ease-in-out ${isBottomNavVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
             >
                 <BottomNav />
             </div>
