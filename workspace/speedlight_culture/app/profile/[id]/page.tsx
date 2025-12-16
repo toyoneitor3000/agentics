@@ -33,12 +33,13 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
         return <div className="min-h-screen bg-black text-white flex items-center justify-center">Usuario no encontrado</div>;
     }
 
-    // 2. Fetch Content (Projects, Albums, Events, Followers)
-    const [projectsRes, albumsRes, eventsRes, followersRes] = await Promise.all([
+    // 2. Fetch Content (Projects, Albums, Events, Followers, Videos)
+    const [projectsRes, albumsRes, eventsRes, followersRes, videosRes] = await Promise.all([
         supabase.from('projects').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         supabase.from('gallery_albums').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         supabase.from('events').select('*').eq('created_by', id).order('date', { ascending: true }),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', id)
+        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', id),
+        supabase.from('cinema_videos').select('*').eq('user_id', id).eq('status', 'approved').order('created_at', { ascending: false })
     ]);
 
     // 3. Calculate Total Likes Received on User's Projects
@@ -66,7 +67,8 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     const content = {
         projects: projects,
         albums: albumsRes.data || [],
-        events: eventsRes.data || []
+        events: eventsRes.data || [],
+        videos: videosRes.data || []
     };
 
     // 4. Check if following
