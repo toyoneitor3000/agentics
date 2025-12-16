@@ -1,6 +1,6 @@
 # AGENTIC DEVELOPMENT PROTOCOL
 > **Status:** Active
-> **Version:** 1.0 (Integration Era)
+> **Version:** 1.1 (Integration Era - Cinema Social+)
 
 This document defines the "Agentic" architecture of Speedlight Culture. It serves as the hand-over protocol between sessions, ensuring the "Brain" of the project persists.
 
@@ -16,6 +16,7 @@ We run this project not as clear code, but as a virtual organization.
 | **Data Scientist** | Python Script (`scripts/analytics_agent.py`) | Local Execution | **Ready** |
 | **Sensor (Eye)** | Client Logic (`onDrop` metadata reader) | `app/cinema/upload` | **Active** |
 | **Sensor (Watch)** | Analytics Probe (`logWatchEvent`) | `app/cinema/page.tsx` | **Active** |
+| **Engagement Engine** | Social Interactive Layer | `app/cinema/page.tsx` | **Active (New)** |
 
 ---
 
@@ -31,6 +32,7 @@ We have successfully implemented a Dual-Mode engine for video:
     *   Optimized for 9:16 mobile-first content (TikTok style).
     *   **Auto-Scroll** and snap features.
     *   **Vertical-Only Feed**: Filters out horizontal content automatically.
+    *   **Interactive Overlay**: Full social suite (Like, Comment, Share, Gift).
 
 ### B. Intelligent Ingestion
 1.  **Format Detection:** The upload page `app/cinema/upload` automatically detects video aspect ratio (Client-side) and tags it as `horizontal` or `vertical` in the DB.
@@ -48,6 +50,15 @@ We moved from "guessing" to "measuring".
 1.  **OS-Like Dock:** A floating, glassmorphic dock.
 2.  **Customizable:** User can "Swap" apps in the dock. Settings persist in `localStorage`.
 3.  **Modes:** Supports `Always Visible`, `Cinema Only` (Auto-hide), and `Never Hide`.
+
+### E. Social & Monetization Layer (New)
+1.  **Unified Auth Context**: All social components (`CommentsSection`, `GiftingSystem`) now use `@/app/lib/auth-client` for seamless state detection.
+2.  **Comments Drawer**: A "Liquid Glass" bottom sheet for real-time discussion on videos.
+    *   Features: Like Comment, Reply, Gift, User Avatar display.
+    *   Empty State: Engaging "Welcome" message that teaches feature usage.
+3.  **Gifting System**: A direct monetization avenue ("Premiar") allowing users to send virtual items (Nut, Oil, Nitro, etc.) to creators.
+    *   Accessible via main Sidebar or Comment actions.
+    *   Full checkout flow (mock simulated).
 
 ---
 

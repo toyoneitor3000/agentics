@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/app/utils/supabase/client';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Heart, Reply, Gift } from 'lucide-react';
+import { useSession } from '@/app/lib/auth-client';
+import Image from "next/image";
 
 interface Comment {
     id: string;
@@ -15,16 +17,22 @@ interface Comment {
     };
 }
 
-export const CommentsSection = ({ targetId, targetType }: { targetId: string, targetType: 'project' | 'lesson' | 'post' }) => {
+export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targetId: string, targetType: 'project' | 'lesson' | 'post', onCommentAdded?: () => void }) => {
+    console.log("CommentsSection mounted for:", { targetId, targetType });
     const supabase = createClient();
     const [comments, setComments] = useState<Comment[]>([]);
+    const [activeGiftMenu, setActiveGiftMenu] = useState<string | null>(null);
     const [newComment, setNewComment] = useState('');
-    const [user, setUser] = useState<any>(null);
+    const { data: session } = useSession(); // Unified Auth
+    const user = session?.user;
+
+    const MINI_GIFTS = [
+        { id: 'tuerca', icon: '🔧', price: '2k' },
+        { id: 'gas', icon: '⛽', price: '10k' },
+        { id: 'nitro', icon: '🚀', price: '20k' },
+    ];
 
     useEffect(() => {
-        // Fetch User
-        supabase.auth.getUser().then(({ data }) => setUser(data.user));
-
         // Fetch Comments
         fetchComments();
 
@@ -51,17 +59,35 @@ export const CommentsSection = ({ targetId, targetType }: { targetId: string, ta
         if (data) setComments(data as any);
     };
 
+    const [isPosting, setIsPosting] = useState(false);
+
     const handlePost = async () => {
         if (!newComment.trim() || !user) return;
+        setIsPosting(true);
 
-        await supabase.from('comments').insert({
-            user_id: user.id,
-            target_id: targetId,
-            target_type: targetType,
-            content: newComment
-        });
+        try {
+            console.log("Posting comment...", { user_id: user.id, target_id: targetId, content: newComment });
 
-        setNewComment('');
+            const { error } = await supabase.from('comments').insert({
+                user_id: user.id,
+                target_id: targetId,
+                target_type: targetType,
+                content: newComment
+            });
+
+            if (error) {
+                console.error("Error posting comment:", error);
+                alert("Error al publicar: " + error.message);
+            } else {
+                setNewComment('');
+                await fetchComments(); // Force immediate update
+                onCommentAdded?.();
+            }
+        } catch (err) {
+            console.error("Unexpected error:", err);
+        } finally {
+            setIsPosting(false);
+        }
     };
 
     return (
@@ -73,18 +99,39 @@ export const CommentsSection = ({ targetId, targetType }: { targetId: string, ta
 
             {/* List */}
             <div className="space-y-6 mb-8">
+                {/* Pinned Welcome Message */}
+                <div className="flex gap-4 mb-6 pb-6 border-b border-white/5 bg-[#FF9800]/5 p-4 rounded-2xl border border-[#FF9800]/10">
+                    <div className="w-10 h-10 rounded-full bg-[#FF9800]/20 flex items-center justify-center text-[#FF9800] border border-[#FF9800]/20 shrink-0">
+                        <span className="font-bold text-xs">SC</span>
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-bold text-white">Speedlight Culture</span>
+                            <span className="text-xs text-white/40">Ahora</span>
+                        </div>
+                        <p className="text-white/80 text-sm leading-relaxed bg-[#111] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-[#222]">
+                            ¡Bienvenido a los comentarios! Aquí puedes opinar, dar me gusta y premiar a la comunidad.
+                        </p>
+                        <div className="flex items-center gap-6 mt-2 ml-1">
+                            <button className="flex items-center gap-1.5 text-xs text-white/40"><Heart className="w-3.5 h-3.5" /> <span>Me gusta</span></button>
+                            <button className="flex items-center gap-1.5 text-xs text-white/40"><Reply className="w-3.5 h-3.5" /> <span>Responder</span></button>
+                            <button className="flex items-center gap-1.5 text-xs text-[#FF9800]/70"><Gift className="w-3.5 h-3.5" /> <span>Premiar</span></button>
+                        </div>
+                    </div>
+                </div>
+
                 {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="w-10 h-10 rounded-full bg-[#333] overflow-hidden flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#333] overflow-hidden flex-shrink-0 relative">
                             {comment.profiles?.avatar_url ? (
-                                <img src={comment.profiles.avatar_url} alt="Ava" className="w-full h-full object-cover" />
+                                <Image src={comment.profiles.avatar_url} alt="Ava" fill className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
                                     {comment.profiles?.full_name?.charAt(0) || 'U'}
                                 </div>
                             )}
                         </div>
-                        <div>
+                        <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                                 <span className="text-sm font-bold text-white">{comment.profiles?.full_name || 'Usuario'}</span>
                                 <span className="text-xs text-white/40">{new Date(comment.created_at).toLocaleDateString()}</span>
@@ -92,6 +139,49 @@ export const CommentsSection = ({ targetId, targetType }: { targetId: string, ta
                             <p className="text-white/80 text-sm leading-relaxed bg-[#111] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-[#222]">
                                 {comment.content}
                             </p>
+
+                            {/* COMMENT ACTIONS: Like, Reply, Gift */}
+                            <div className="flex items-center gap-6 mt-2 ml-1">
+                                <button className="flex items-center gap-1.5 text-xs text-white/40 hover:text-red-500 transition-colors group">
+                                    <Heart className="w-3.5 h-3.5 group-hover:fill-current" />
+                                    <span>Me gusta</span>
+                                </button>
+                                <button className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white transition-colors">
+                                    <Reply className="w-3.5 h-3.5" />
+                                    <span>Responder</span>
+                                </button>
+                                {/* GIFT TO COMMENT (Micro-tipping) & MINI MENU */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setActiveGiftMenu(activeGiftMenu === comment.id ? null : comment.id)}
+                                        className={`flex items-center gap-1.5 text-xs transition-colors ${activeGiftMenu === comment.id ? 'text-[#FF9800]' : 'text-[#FF9800]/70 hover:text-[#FF9800]'}`}
+                                    >
+                                        <Gift className="w-3.5 h-3.5" />
+                                        <span>Premiar</span>
+                                    </button>
+
+                                    {/* MINI POPUP MENU */}
+                                    {activeGiftMenu === comment.id && (
+                                        <div className="absolute bottom-full left-0 mb-2 bg-[#1A0F08] border border-[#FF9800]/30 rounded-xl shadow-xl p-2 flex gap-2 z-50 animate-in zoom-in-50 slide-in-from-bottom-2">
+                                            {MINI_GIFTS.map(gift => (
+                                                <button
+                                                    key={gift.id}
+                                                    onClick={() => {
+                                                        alert(`Enviaste ${gift.icon} a ${comment.profiles?.full_name}`);
+                                                        setActiveGiftMenu(null);
+                                                    }}
+                                                    className="flex flex-col items-center justify-center w-10 h-12 bg-white/5 hover:bg-[#FF9800]/20 rounded-lg transition-colors border border-transparent hover:border-[#FF9800]/50"
+                                                    title={`Enviar por ${gift.price}`}
+                                                >
+                                                    <span className="text-lg leading-none mb-1">{gift.icon}</span>
+                                                    <span className="text-[9px] font-bold text-[#FF9800]">{gift.price}</span>
+                                                </button>
+                                            ))}
+                                            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-[#1A0F08] border-b border-r border-[#FF9800]/30 rotate-45 transform"></div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -100,10 +190,19 @@ export const CommentsSection = ({ targetId, targetType }: { targetId: string, ta
             {/* Input */}
             {user ? (
                 <div className="flex gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden flex-shrink-0">
-                        {/* Current User Avatar Placeholder */}
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden flex-shrink-0 relative border border-white/10">
+                            {user.image ? (
+                                <Image src={user.image} alt="User" fill className="object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold">
+                                    {user.name?.charAt(0) || 'T'}
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="flex-1 relative">
+                        <div className="text-xs text-white/50 mb-1 ml-1 font-bold">{user.name}</div>
                         <textarea
                             value={newComment}
                             onChange={(e) => setNewComment(e.target.value)}
@@ -113,16 +212,19 @@ export const CommentsSection = ({ targetId, targetType }: { targetId: string, ta
                         />
                         <button
                             onClick={handlePost}
-                            disabled={!newComment.trim()}
+                            disabled={!newComment.trim() || isPosting}
                             className="absolute bottom-3 right-3 bg-[#FF9800] text-black p-2 rounded-lg hover:bg-[#F57C00] disabled:opacity-50 transition-all"
                         >
-                            <Send className="w-4 h-4" />
+                            {isPosting ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
                         </button>
                     </div>
                 </div>
             ) : (
-                <div className="bg-[#111] p-4 rounded-xl text-center border border-[#222]">
-                    <p className="text-white/50 text-sm mb-2">Inicia sesión para unirte a la discusión.</p>
+                <div className="bg-[#111]/50 backdrop-blur-md p-6 rounded-2xl text-center border border-dashed border-white/10 flex flex-col items-center gap-3">
+                    <p className="text-white/60 text-sm">Debes iniciar sesión para comentar.</p>
+                    <a href="/login" className="px-6 py-2 bg-[#FF9800] text-black text-sm font-bold uppercase tracking-wider rounded-lg hover:bg-[#F57C00] transition-colors shadow-lg shadow-[#FF9800]/20">
+                        Iniciar Sesión
+                    </a>
                 </div>
             )}
         </div>

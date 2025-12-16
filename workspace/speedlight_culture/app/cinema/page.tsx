@@ -1,13 +1,20 @@
 "use client";
 
 import { useRef, useEffect, useState, startTransition, useTransition } from 'react';
-import { Gamepad2, VolumeX, Volume2, Heart, MessageCircle, MoreVertical, Plus, ChevronDown, Monitor, EyeOff, Music, Play, Maximize2 } from "lucide-react";
+import {
+    Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
+    Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
+    ArrowLeft, Plus, Image as ImageIcon, Video, X, Gift, Gamepad2, ChevronDown
+} from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
 import { getCinemaFeed, toggleLike } from '@/app/actions/cinema';
 import { useUi } from '@/app/context/UiContext';
 import { useGamepad } from '@/app/hooks/useGamepad';
+import { motion, AnimatePresence } from "framer-motion";
+import { CommentsSection } from "../components/CommentsSection";
+import { GiftingSystem } from "../components/GiftingSystem";
 
 // MOCK DATA FOR CATEGORIES
 const CATEGORIES = [
@@ -155,10 +162,10 @@ export default function CinemaSocialPage() {
 
 
             {/* ----------------------------------------------------------------------
-                NEW UI: STICKY SUB-HEADER (Clean, Professional, Doesn't block Logo)
-                Assumes Main Navbar is approx 70px tall (h-[70px] in AppHeader). We stick below it.
+                NEW UI: STICKY SUB-HEADER (Tightened per user request)
+                Matches AppHeader height (~70px) but overlaps slightly to save space
             ---------------------------------------------------------------------- */}
-            <div className={`fixed top-[72px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed top-[60px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-2 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
                 {/* CENTERED TOGGLE (Now Integrated) */}
                 <div className="absolute left-1/2 -translate-x-1/2">
@@ -275,7 +282,7 @@ export default function CinemaSocialPage() {
                         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />
 
                         {/* Safe Area Padding for Navbar */}
-                        <div className="w-full h-full pb-20 md:pb-24 relative">
+                        <div className="w-full h-full pb-14 md:pb-16 relative">
                             {activeSocialPost && (
                                 <SocialInterface
                                     post={activeSocialPost}
@@ -1261,10 +1268,33 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
     const [liked, setLiked] = useState(post.liked_by_user || false);
     const [saved, setSaved] = useState(false);
     const [likeCount, setLikeCount] = useState(post.likes || 0);
+    const [commentCount, setCommentCount] = useState(post.comments || 0);
 
     const [following, setFollowing] = useState(post.isFollowing || false);
     const [isPending, startTransition] = useTransition();
 
+    // NEW: Comments & Gifting State
+    const [showComments, setShowComments] = useState(false);
+    const [showGifting, setShowGifting] = useState(false);
+
+    // NEW: Sync Real Comment Count on Mount
+    useEffect(() => {
+        const fetchRealCount = async () => {
+            const { createClient } = await import('@/app/utils/supabase/client');
+            const supabase = createClient();
+            const { count, error } = await supabase
+                .from('comments')
+                .select('*', { count: 'exact', head: true })
+                .eq('target_id', post.id);
+
+            if (!error && count !== null) {
+                setCommentCount(count);
+            }
+        };
+        fetchRealCount();
+    }, [post.id]);
+
+    // EXISTING LIKES SYNC
     useEffect(() => {
         setLiked(post.liked_by_user);
         setLikeCount(post.likes);
@@ -1406,12 +1436,15 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
                     </button>
 
-                    {/* COMMENT */}
-                    <button className="flex flex-col items-center gap-1 group">
+                    {/* COMMENT (UPDATED WITH CLICK HANDLER) */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
                         <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
                             <MessageCircle className="w-6 h-6" />
                         </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(post.comments || 0)}</span>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(commentCount)}</span>
                     </button>
 
                     {/* SAVE / BOOKMARK */}
@@ -1434,12 +1467,92 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Compartir</span>
                     </button>
 
-
-
-
+                    {/* GIFT (NEW - FUNCTIONAL) */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setShowGifting(true); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
+                            <Gift className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
+                    </button>
 
                 </div>
             </div>
+
+            {/* COMMENTS DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
+            <AnimatePresence>
+                {showComments && (
+                    <div
+                        className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
+                        onClick={(e) => { e.stopPropagation(); setShowComments(false); }}
+                    >
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="w-full h-[70vh] bg-[#050505]/85 backdrop-blur-2xl rounded-t-[32px] overflow-hidden relative border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Glass Shine Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+                            {/* Handle */}
+                            <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowComments(false)}>
+                                <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+                            </div>
+
+                            {/* Content Container (Scrollable) */}
+                            <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
+                                <div className="-mt-8"> {/* Negative margin to pull headline up if needed, or just let it sit */}
+                                    <CommentsSection
+                                        targetId={post.id}
+                                        targetType="post"
+                                        onCommentAdded={() => setCommentCount((prev: number) => prev + 1)}
+                                    />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* GIFTING DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
+            <AnimatePresence>
+                {showGifting && (
+                    <div
+                        className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
+                        onClick={(e) => { e.stopPropagation(); setShowGifting(false); }}
+                    >
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                            className="w-full h-[70vh] bg-[#050505]/90 backdrop-blur-3xl rounded-t-[32px] overflow-hidden relative border-t border-[#FF9800]/20 shadow-[0_-10px_50px_rgba(255,152,0,0.1)] flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Glass Shine Effect */}
+                            <div className="absolute inset-0 bg-gradient-to-br from-[#FF9800]/5 to-transparent pointer-events-none" />
+
+                            {/* Handle */}
+                            <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowGifting(false)}>
+                                <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+                            </div>
+
+                            {/* Content Container (Scrollable) */}
+                            <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
+                                <div className="mt-2">
+                                    <GiftingSystem projectTitle={post.title} />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
         </div>
     );
 }
