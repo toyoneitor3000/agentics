@@ -988,8 +988,8 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             tapTimeoutRef.current = null;
 
             // Toggle Mute
+            toggleMute();
             const newMuted = !isMuted;
-            setIsMuted(newMuted);
             if (player) player.muted = newMuted;
 
             // Show Icon Feedback
