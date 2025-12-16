@@ -5,45 +5,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
 
-import { MoreHorizontal, Camera, Wrench, ShoppingBag, Loader2, Zap, Play, ChevronRight } from "lucide-react";
+import { Wrench, Play, ChevronRight, Zap, Loader2 } from "lucide-react";
 import { AdFeedCard } from "@/app/components/AdBanners";
 import { getAdByType } from "@/app/data/ads";
-import SocialActions from "@/app/components/feed/SocialActions";
 import { useLanguage } from "@/app/context/LanguageContext";
-
-// --- PREMIUM FEED COMPONENTS ---
-
-const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string, action?: string, type: string }) => (
-  <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/20 relative overflow-hidden shadow-lg">
-        {user.avatar ? (
-          <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold">{user.name.charAt(0)}</div>
-        )}
-      </div>
-      <div>
-        <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md">
-          {user.name}
-        </Link>
-        <div className="flex items-center gap-2 text-[10px] text-white/80 font-roboto-mono tracking-wide drop-shadow-sm">
-          <span>{time}</span>
-          <span className="w-1 h-1 bg-[#FF9800] rounded-full"></span>
-          <span className="uppercase tracking-wider text-[#FF9800]">{action}</span>
-        </div>
-      </div>
-    </div>
-    <button className="text-white/60 hover:text-white transition-colors bg-black/20 backdrop-blur-md p-2 rounded-full">
-      <MoreHorizontal className="w-5 h-5" />
-    </button>
-  </div>
-);
-
-// ... imports
 import HomeIntro from "@/app/components/home/HomeIntro";
-
-// ... (previous imports)
+import FeedCard from "@/app/components/feed/FeedCard";
+import { getCinemaFeed } from "@/app/actions/cinema";
 
 export default function Home() {
   const supabase = createClient();
@@ -103,10 +71,6 @@ export default function Home() {
       const hasVisited = localStorage.getItem('speedlight_visited');
       const isLogged = !!session?.user;
 
-      // Rule: Show Intro if NOT visited AND NOT logged in
-      // Rule: If logged in, always show feed (dashboard)
-      // Rule: If visited before but not logged, show feed? User said "no debería ver otra vez la introducción".
-
       if (!isLogged && !hasVisited) {
         setShowIntro(true);
       } else {
@@ -116,206 +80,208 @@ export default function Home() {
 
       fetchFeed(session?.user?.id);
     }
-    // ... (fetchFeed implementation remains same) ...
+
     async function fetchFeed(userId?: string) {
       try {
         setLoading(true);
 
-        // Helper to fetch stats
         const getStats = async (id: string, type: string) => {
           try {
-            // Count Likes
-            const { count: likesCount, error: likesError } = await supabase
-              .from('likes')
-              .select('*', { count: 'exact', head: true })
-              .eq('target_id', id)
-              .eq('target_type', type);
+            const { count: likesCount } = await supabase.from('likes').select('*', { count: 'exact', head: true }).eq('target_id', id).eq('target_type', type);
+            const { count: commentsCount } = await supabase.from('comments').select('*', { count: 'exact', head: true }).eq('target_id', id).eq('target_type', type);
 
-            // Count Comments
-            const { count: commentsCount, error: commentsError } = await supabase
-              .from('comments')
-              .select('*', { count: 'exact', head: true })
-              .eq('target_id', id)
-              .eq('target_type', type);
-
-            if (likesError || commentsError) throw new Error("Stats fetch failed");
-
-            // Allow user queries if logged in
             let isLiked = false;
             if (userId) {
-              const { data } = await supabase
-                .from('likes')
-                .select('id')
-                .eq('target_id', id)
-                .eq('target_type', type)
-                .eq('user_id', userId)
-                .single();
+              const { data } = await supabase.from('likes').select('id').eq('target_id', id).eq('target_type', type).eq('user_id', userId).single();
               isLiked = !!data;
             }
-
             return { likes: likesCount || 0, comments: commentsCount || 0, isLiked };
           } catch (err) {
-            // Fail silently for UI stability if tables lack
             return { likes: 0, comments: 0, isLiked: false };
           }
         };
 
-        // 1. Fetch Projects (Limit 15 to have enough for both sections)
+        // 1. Projects
         const { data: projects } = await supabase
           .from('projects')
           .select('id, title, description, cover_image, created_at, profiles(id, full_name, avatar_url)')
           .order('created_at', { ascending: false })
-          .limit(15);
+          .limit(10);
 
-        // 2. Fetch Albums
+        // 2. Albums
         const { data: albums } = await supabase
           .from('gallery_albums')
           .select('id, title, cover_url, created_at, user_id')
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(5);
 
-        // Enrich Albums
-        let albumWithAuthors: any[] = [];
-        if (albums) {
-          const userIds = [...new Set(albums.map(a => a.user_id).filter(Boolean))];
-          const { data: users } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
-          const userMap = new Map(users?.map(u => [u.id, u]) || []);
-
-          albumWithAuthors = albums.map(a => ({
-            ...a,
-            profiles: userMap.get(a.user_id) || { full_name: 'Speedlight User', avatar_url: null, id: null }
-          }));
-        }
-
-        // 3. Fetch Marketplace
+        // 3. Marketplace
         const { data: market } = await supabase
           .from('marketplace_listings')
           .select('id, title, description, images, price, created_at, profile_id')
           .order('created_at', { ascending: false })
-          .limit(10);
+          .limit(5);
 
-        // Enrich Market
-        let marketWithAuthors: any[] = [];
-        if (market) {
-          const userIds = [...new Set(market.map(m => m.profile_id).filter(Boolean))];
+        // 4. Videos (Server Action) -> Enriched with Unified Stats
+        const videos = await getCinemaFeed();
+
+        // Process Videos with Unified Stats (Parallel)
+        const videoPromises = videos.map(async (v) => {
+          const type = v.format === 'vertical' ? 'social' : 'cinema';
+          // OVERRIDE: Fetch stats from 'likes' table to match SocialActions behavior
+          const stats = await getStats(v.id, type);
+
+          return {
+            id: v.id,
+            uniqueId: `vid_${v.id}`,
+            type: type,
+            date: new Date(v.created_at || Date.now()), // Use real date if available or fallback
+            user: { id: null, name: v.creator, avatar: v.avatar },
+            content: { title: v.title, text: v.description, image: v.poster, video_poster: v.poster, video: v.videoUrl },
+            stats // Use Unified Stats
+          };
+        });
+
+        const normalizedVideos = await Promise.all(videoPromises);
+
+        // 5. Articles (New)
+        const { data: articles } = await supabase
+          .from('articles')
+          .select('id, title, summary, content, cover_image, category, created_at, author_id')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        // 6. Events (New)
+        const { data: events } = await supabase
+          .from('events')
+          .select('id, title, date_text, location, description, image, type, created_at, user_id')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        // 7. Workshops / Businesses (New)
+        const { data: workshops } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url, business_category, custom_links, bio')
+          .eq('account_type', 'business')
+          .limit(3);
+
+        // --- ENRICHMENT helper ---
+        const enrichUsers = async (rawItems: any[], idField: string) => {
+          if (!rawItems || rawItems.length === 0) return [];
+          const userIds = [...new Set(rawItems.map(i => i[idField]).filter(Boolean))];
+          if (userIds.length === 0) return rawItems;
           const { data: users } = await supabase.from('profiles').select('id, full_name, avatar_url').in('id', userIds);
           const userMap = new Map(users?.map(u => [u.id, u]) || []);
-
-          marketWithAuthors = market.map(m => ({
-            ...m,
-            profiles: userMap.get(m.profile_id) || { full_name: 'Vendedor', avatar_url: null, id: null }
+          return rawItems.map(i => ({
+            ...i,
+            profiles: userMap.get(i[idField]) || { full_name: 'Usuario', avatar_url: null, id: i[idField] }
           }));
-        }
+        };
 
-        // --- SEPARATE CONTENT TYPES ---
+        const albumWithAuthors = await enrichUsers(albums || [], 'user_id');
+        const marketWithAuthors = await enrichUsers(market || [], 'profile_id');
+        const articlesWithAuthors = await enrichUsers(articles || [], 'author_id');
+        const eventsWithAuthors = await enrichUsers(events || [], 'user_id');
 
-        // 1. Featured: Only Top 5 projects WITH images (Premium Look)
+        // --- NORMALIZE CONTENT ---
+
+        // FEATURED: Top Projects
         const featuredCandidates = projects ? projects.filter(p => p.cover_image) : [];
         const featuredRaw = featuredCandidates.slice(0, 5);
-
-        // 2. Feed: Everything else (Rest of image-projects + ALL image-less projects)
-        // We filter out the exact IDs that made it to Featured
         const featuredIds = new Set(featuredRaw.map(p => p.id));
         const feedProjects = projects ? projects.filter(p => !featuredIds.has(p.id)) : [];
 
-        // Process Featured Items
+        // Featured Items
         const featured: any[] = [];
         await Promise.all(featuredRaw.map(async (p) => {
+          // ... stats ...
           const stats = await getStats(p.id, 'project');
           featured.push({
-            id: p.id,
-            uniqueId: `feat_${p.id}`,
-            type: 'project',
-            date: new Date(p.created_at),
-            user: {
-              id: (p.profiles as any)?.id,
-              name: (p.profiles as any)?.full_name || 'Constructor',
-              avatar: (p.profiles as any)?.avatar_url
-            },
-            content: {
-              title: p.title,
-              text: p.description,
-              image: p.cover_image
-            },
+            id: p.id, uniqueId: `feat_${p.id}`, type: 'project', date: new Date(p.created_at),
+            user: { id: (p.profiles as any)?.id, name: (p.profiles as any)?.full_name, avatar: (p.profiles as any)?.avatar_url },
+            content: { title: p.title, text: p.description, image: p.cover_image },
             stats
           });
         }));
         setFeaturedItems(featured);
 
 
-        // Process Vertical Feed Items
+        // FEED ITEMS
         const items: any[] = [];
+        const pushItem = async (raw: any, type: string, mapFn: any) => {
+          const stats = await getStats(raw.id, type); // Normalize video stats type
+          items.push({ ...mapFn(raw), stats });
+        };
 
         await Promise.all([
-          ...(feedProjects.map(async (p) => {
-            const stats = await getStats(p.id, 'project');
-            items.push({
-              id: p.id,
-              uniqueId: `proj_${p.id}`,
-              type: 'project',
-              date: new Date(p.created_at),
-              user: {
-                id: (p.profiles as any)?.id,
-                name: (p.profiles as any)?.full_name || 'Constructor',
-                avatar: (p.profiles as any)?.avatar_url
-              },
-              content: {
-                title: p.title,
-                text: p.description,
-                image: p.cover_image
-              },
-              stats
-            });
-          })),
-          ...(albumWithAuthors?.map(async (a) => {
-            const stats = await getStats(a.id, 'gallery');
-            items.push({
-              id: a.id,
-              uniqueId: `album_${a.id}`,
-              type: 'gallery',
-              date: new Date(a.created_at),
-              user: {
-                id: a.profiles?.id,
-                name: a.profiles?.full_name || 'Fotógrafo',
-                avatar: a.profiles?.avatar_url
-              },
-              content: {
-                title: a.title,
-                text: 'Nuevo álbum publicado en la galería.',
-                image: a.cover_url
-              },
-              stats
-            });
-          }) || []),
-          ...(marketWithAuthors?.map(async (m) => {
-            const stats = await getStats(m.id, 'marketplace');
-            items.push({
-              id: m.id,
-              uniqueId: `market_${m.id}`,
-              type: 'marketplace',
-              date: new Date(m.created_at),
-              user: {
-                id: m.profiles?.id,
-                name: m.profiles?.full_name || 'Vendedor',
-                avatar: m.profiles?.avatar_url
-              },
-              content: {
-                title: m.title,
-                text: `${m.description?.substring(0, 100)}... Precio: $${m.price?.toLocaleString()}`,
-                image: m.images && m.images.length > 0 ? m.images[0] : null
-              },
-              stats
-            });
-          }) || [])
+          // Projects
+          ...feedProjects.map(p => pushItem(p, 'project', (x: any) => ({
+            id: x.id, uniqueId: `proj_${x.id}`, type: 'project', date: new Date(x.created_at),
+            user: { id: x.profiles?.id, name: x.profiles?.full_name, avatar: x.profiles?.avatar_url },
+            content: { title: x.title, text: x.description, image: x.cover_image }
+          }))),
+          // Albums
+          ...albumWithAuthors.map(a => pushItem(a, 'gallery', (x: any) => ({
+            id: x.id, uniqueId: `album_${x.id}`, type: 'gallery', date: new Date(x.created_at),
+            user: { id: x.profiles?.id, name: x.profiles?.full_name, avatar: x.profiles?.avatar_url },
+            content: { title: x.title, text: 'Álbum Fotográfico', image: x.cover_url }
+          }))),
+          // Market
+          ...marketWithAuthors.map(m => pushItem(m, 'marketplace', (x: any) => ({
+            id: x.id, uniqueId: `market_${x.id}`, type: 'marketplace', date: new Date(x.created_at),
+            user: { id: x.profiles?.id, name: x.profiles?.full_name, avatar: x.profiles?.avatar_url },
+            content: { title: x.title, text: `$${x.price?.toLocaleString()}`, image: x.images?.[0] }
+          }))),
+          // Articles
+          ...articlesWithAuthors.map(a => pushItem(a, 'article', (x: any) => ({
+            id: x.id, uniqueId: `art_${x.id}`, type: 'article', date: new Date(x.created_at),
+            user: { id: x.profiles?.id, name: x.profiles?.full_name, avatar: x.profiles?.avatar_url },
+            content: { title: x.title, text: x.summary, image: x.cover_image }
+          }))),
+          // Events
+          ...eventsWithAuthors.map(e => pushItem(e, 'event', (x: any) => ({
+            id: x.id, uniqueId: `evt_${x.id}`, type: 'event', date: new Date(x.created_at),
+            user: { id: x.profiles?.id, name: x.profiles?.full_name, avatar: x.profiles?.avatar_url },
+            content: { title: x.title, text: `${x.date_text} • ${x.location}`, image: x.image, description: x.description }
+          }))),
+          // Workshops (as specialized cards)
+          ...(workshops || []).map(w => pushItem(w, 'workshop', (x: any) => ({
+            id: x.id, uniqueId: `workshop_${x.id}`, type: 'workshop', date: new Date(), // Pinned
+            user: { id: x.id, name: x.full_name, avatar: x.avatar_url },
+            content: { title: x.full_name, text: x.bio || 'Taller Certificado', image: x.avatar_url }
+          })))
         ]);
 
+        items.push(...normalizedVideos);
+
+        // Sort by Date
+        // Note: videos have fake date now. Ideally sort mixes them well.
         items.sort((a, b) => b.date.getTime() - a.date.getTime());
 
+        // Inject Ad & AutoStudio
         if (items.length > 2 && feedAd) {
           items.splice(2, 0, { id: 'native_ad_1', uniqueId: 'native_ad_1', type: 'ad', data: feedAd, date: new Date() });
         }
+        if (items.length > 5) {
+          items.splice(5, 0, {
+            id: 'autostudio_promo',
+            uniqueId: 'autostudio_promo',
+            type: 'article', // Reuse article card for nice layout
+            date: new Date(),
+            user: { name: 'AutoStudio AI', avatar: null }, // Placeholder
+            content: {
+              title: '¿Buscas Taller?',
+              text: 'Usa nuestra IA para encontrar los mejores especialistas en tu ciudad.',
+              image: 'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?q=80&w=2070',
+              summary: 'Asistente Inteligente'
+            },
+            ctaLink: '/autostudio'
+          });
+        }
 
         setFeedItems(items);
+
       } catch (error) {
         console.error("Error loading feed:", error);
       } finally {
@@ -324,31 +290,19 @@ export default function Home() {
     }
 
     init();
-  }, []);
+  }, [language]);
 
-  // ... (timeAgo remains same) ...
+
   const timeAgo = (date: Date) => {
+    if (!date) return '';
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    // Simple logic for brevity
     let value = 0;
     let unit = "";
-
     if (seconds < 60) return language === 'es' ? "ahora" : "now";
-
-    if (seconds < 3600) {
-      value = Math.floor(seconds / 60);
-      unit = language === 'es' ? 'm' : 'm';
-    } else if (seconds < 86400) {
-      value = Math.floor(seconds / 3600);
-      unit = language === 'es' ? 'h' : 'h';
-    } else if (seconds < 2592000) {
-      value = Math.floor(seconds / 86400);
-      unit = language === 'es' ? 'd' : 'd';
-    } else {
-      value = Math.floor(seconds / 2592000);
-      unit = language === 'es' ? 'mo' : 'mo';
-    }
-
+    if (seconds < 3600) { value = Math.floor(seconds / 60); unit = 'm'; }
+    else if (seconds < 86400) { value = Math.floor(seconds / 3600); unit = 'h'; }
+    else if (seconds < 2592000) { value = Math.floor(seconds / 86400); unit = 'd'; }
+    else { value = Math.floor(seconds / 2592000); unit = 'mo'; }
     return `${value}${unit}`;
   };
 
@@ -366,17 +320,12 @@ export default function Home() {
     );
   }
 
-  // --- RENDER INTRO MODE ---
   if (showIntro) {
     return <HomeIntro onEnterApp={handleEnterApp} featuredItems={featuredItems} recentActivity={feedItems} />;
   }
 
-  // --- RENDER FEED MODE (Standard Home) ---
   return (
     <div className="max-w-[700px] mx-auto min-h-screen pb-20 pt-20 overflow-x-hidden">
-      {/* ... (Existing Feed JSX) ... */}
-
-
 
       {loading ? (
         <div className="flex justify-center p-12">
@@ -386,7 +335,7 @@ export default function Home() {
         <>
           {/* HORIZONTAL SCROLL - Featured Machines */}
           {featuredItems.length > 0 && (
-            <div className="mb-2">
+            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
               <div className="px-4 flex items-center justify-between mb-2">
                 <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
                   <span className="w-1 h-3 bg-[#FF9800] rounded-full"></span>
@@ -397,7 +346,7 @@ export default function Home() {
                 </Link>
               </div>
 
-              <div className="flex overflow-x-auto gap-4 px-4 pb-2 snap-x snap-mandatory scrollbar-hide">
+              <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
                 {featuredItems.map((item) => (
                   <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[85vw] max-w-[340px]">
                     <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
@@ -416,7 +365,6 @@ export default function Home() {
                         </div>
                       )}
 
-                      {/* Clean Overlay */}
                       <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
 
                       <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 hover:bg-[#FF9800] hover:text-black hover:border-[#FF9800] transition-all group-hover:scale-105">
@@ -438,8 +386,8 @@ export default function Home() {
           )}
 
 
-          {/* VERTICAL SCROLL - Main Feed */}
-          <div className="px-4 space-y-6">
+          {/* MAIN FEED */}
+          <div className="px-4 space-y-8">
             <div className="flex items-center gap-2 mb-4 px-1">
               <Zap className="w-4 h-4 text-[#FF9800]" />
               <h2 className="text-white text-sm font-bold uppercase tracking-wider">{labels.latest}</h2>
@@ -461,79 +409,25 @@ export default function Home() {
               }
 
               return (
-                <div key={item.uniqueId} className="bg-black/10 backdrop-blur-3xl rounded-3xl overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.6)] border border-white/5 hover:border-[#FF9800]/20 transition-all duration-500 group relative">
-
-                  {/* HEADER OVERLAY - Now inside image context */}
-                  <FeedPostHeader
-                    user={item.user}
-                    time={timeAgo(item.date)}
-                    action={
-                      item.type === 'project' ? labels.project :
-                        item.type === 'gallery' ? labels.gallery :
-                          labels.marketplace
-                    }
-                    type={item.type}
-                  />
-
-                  {/* Main Visual Content */}
-                  {item.content?.image ? (
-                    <div className="relative w-full aspect-[3/4] bg-[#050505] overflow-hidden">
-                      <Image
-                        src={item.content.image}
-                        alt="Content"
-                        fill
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-1000 group-hover:scale-105"
-                      />
-
-                      {/* IMMERSIVE GRADIENT OVERLAY */}
-                      <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6 pb-24">
-                        <div className="flex items-center gap-2 mb-3">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border ${item.type === 'project' ? 'border-[#FF9800] text-[#FF9800] bg-[#FF9800]/10' :
-                            item.type === 'marketplace' ? 'border-green-500 text-green-500 bg-green-500/10' :
-                              'border-blue-500 text-blue-500 bg-blue-500/10'
-                            }`}>
-                            {item.type}
-                          </span>
-                        </div>
-                        <h3 className="font-oswald font-bold text-3xl md:text-4xl text-white leading-[0.9] mb-3 drop-shadow-lg">
-                          {item.content.title}
-                        </h3>
-                        {item.content.text && (
-                          <p className="text-white/70 text-sm md:text-base font-light line-clamp-2 drop-shadow-md max-w-lg mb-2">
-                            {item.content.text}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    /* Text Only Fallback */
-                    <div className="relative w-full aspect-[4/3] flex flex-col justify-end p-8 bg-black/20 backdrop-blur-md">
-                      <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-[#FF9800]/5 to-transparent"></div>
-                      <h3 className="font-oswald font-bold text-3xl text-white mb-4 relative z-10">
-                        {item.content?.title || labels.untitled}
-                      </h3>
-                      <p className="text-white/70 text-lg font-light leading-relaxed relative z-10">
-                        {item.content?.text}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* ACTIONS - FLOATING/INTEGRATED */}
-                  <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xl border-t border-white/5">
-                    <SocialActions
-                      entityId={item.id}
-                      entityType={item.type}
-                      initialLikes={item.stats.likes}
-                      initialComments={item.stats.comments}
-                      initialIsLiked={item.stats.isLiked}
-                      currentUserId={currentUserId}
-                    />
-                  </div>
-
-                </div>
+                <FeedCard
+                  key={item.uniqueId}
+                  item={item}
+                  labels={labels}
+                  currentUserId={currentUserId}
+                  timeAgo={timeAgo}
+                />
               );
             })}
+
+            {/* End of Feed Spacer */}
+            <div className="h-24 flex flex-col items-center justify-center text-white/20 text-xs uppercase tracking-widest gap-2">
+              <span>End of Transmission</span>
+              <span className="text-[10px] normal-case tracking-normal">
+                Diseñado y desarrollado por <span className="text-[#A855F7] font-bold">Purpur.dev</span>
+                <span className="mx-1">•</span>
+                Bogotá, Colombia
+              </span>
+            </div>
           </div>
         </>
       )}

@@ -5,8 +5,20 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 
 export default function GlobalBackground() {
-    const { mode, staticImage, slideshowImages, interval, overlayOpacity } = useBackground();
+    const { mode, staticImage, slideshowImages, interval, overlayOpacity, themeColor, brightness, saturation } = useBackground();
     const [currentIndex, setCurrentIndex] = useState(0);
+
+    // Theme Colors
+    const colors = {
+        coffee: '#1A0F08', // Default Dark Coffee
+        amber: '#1A1400',  // Dark Amber/Ochre
+        emerald: '#001A08', // Dark Racing Green
+        cobalt: '#050A1A',  // Deep Cobalt (Negative Light)
+        crimson: '#1A0000', // Deep Red
+        violet: '#10001A', // Deep Purple
+    };
+
+    const activeColor = colors[themeColor || 'coffee'];
 
     // Slideshow Logic
     useEffect(() => {
@@ -24,40 +36,49 @@ export default function GlobalBackground() {
     const hasImage = !!currentImage;
 
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none">
+        <div
+            className="fixed inset-0 z-[-1] overflow-hidden pointer-events-none transition-all duration-300"
+            style={{
+                filter: `brightness(${brightness}) saturate(${saturation})`
+            }}
+        >
 
-            {/* Layer 1: Base Dark Coffee Background (Fallback) */}
-            <div className="absolute inset-0 bg-[#1A0F08]" />
+            {/* Layer 1: Base CSS Variable Background (Fallback) */}
+            <div className="absolute inset-0 bg-[var(--color-bg-primary)] transition-colors duration-1000" style={{ backgroundColor: activeColor }} />
 
             {/* Layer 2: Image / Slideshow */}
             {hasImage && (
                 <div className="absolute inset-0 transition-opacity duration-1000 ease-in-out">
-                    {/* We use key-based rendering for cross-fading or just a single image with CSS transition */}
-                    {/* For a true crossfade, we might render two images, but for MVP opacity transition on single node is tricky without double buffering. 
-               Let's simply render the image. For smoother slideshows, we'd need a more complex carousel component. 
-               For now, simple switching. */}
                     <div
-                        key={currentImage} // Key change triggers animation if we used animation, but here we just want content update. 
+                        key={currentImage}
                         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000"
                         style={{
                             backgroundImage: `url('${currentImage}')`,
                         }}
                     />
+                    {/* Hard Dark Overlay for Readability */}
+                    <div className="absolute inset-0 bg-black/70" />
                 </div>
             )}
 
-            {/* Layer 3: Coffee Overlay (The "Liquid Glass" base tint) */}
+            {/* Layer 3: Color Overlay (Tint) */}
             <div
-                className="absolute inset-0 bg-[#4A2C1A]" // Lighter Coffee Color (Card/Medium Brown) for visibility
-                style={{ opacity: overlayOpacity, mixBlendMode: 'multiply' }} // Multiply blends color into image better
+                className="absolute inset-0 transition-colors duration-1000"
+                style={{
+                    backgroundColor: activeColor,
+                    opacity: overlayOpacity,
+                    mixBlendMode: 'multiply'
+                }}
             />
 
-            {/* Layer 4: Satin/Glass Finish (Noise/Blur optional, but user asked for "Liquid Glass") */}
-            {/* This layer provides the frosted feel over the background image before the content sits on top */}
+            {/* Layer 4: Satin/Glass Finish */}
             <div className="absolute inset-0 backdrop-blur-[2px]" />
 
-            {/* Optional: Vignette for depth */}
-            <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/40" />
+            {/* Spotlight / Glow Effect */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/10 via-transparent to-transparent opacity-50 mix-blend-overlay pointer-events-none" />
+
+            {/* Vignette for depth */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-transparent via-black/20 to-black/80" />
         </div>
     );
 }

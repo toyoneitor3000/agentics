@@ -9,6 +9,7 @@ interface UiContextType {
     isSocialMode: boolean;
     setIsSocialMode: (value: boolean) => void;
     resetIdleTimer: () => void;
+    toggleUiVisibility: () => void;
     autoHideMode: 'always' | 'cinema-only' | 'never';
     autoHideDuration: number;
     updateSettings: (mode: 'always' | 'cinema-only' | 'never', duration: number) => void;
@@ -22,8 +23,8 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isSocialMode, setIsSocialMode] = useState(false);
 
     // Settings
-    const [autoHideMode, setAutoHideMode] = useState<'always' | 'cinema-only' | 'never'>('cinema-only');
-    const [autoHideDuration, setAutoHideDuration] = useState(4000);
+    const [autoHideMode, setAutoHideMode] = useState<'always' | 'cinema-only' | 'never'>('never');
+    const [autoHideDuration, setAutoHideDuration] = useState(10000);
 
     const idleTimerRef = useRef<NodeJS.Timeout | null>(null);
     const navTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -47,18 +48,26 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
         resetIdleTimer();
     };
 
+    const toggleUiVisibility = () => {
+        setIsUiVisible(prev => !prev);
+        setIsBottomNavVisible(prev => !prev); // Sync bottom nav with general UI
+    };
+
     const resetIdleTimer = () => {
+        // Always SHOW UI on activity (restore if hidden manually)
         setIsUiVisible(true);
         setIsBottomNavVisible(true);
 
         if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
         if (navTimerRef.current) clearTimeout(navTimerRef.current);
 
+        // If mode is NEVER, we stop here (don't schedule auto-hide)
+        if (autoHideMode === 'never') return;
+
         // Determine if we should hide based on Mode and Route
         let shouldHide = false;
         if (autoHideMode === 'always') shouldHide = true;
         if (autoHideMode === 'cinema-only' && isCinema) shouldHide = true;
-        if (autoHideMode === 'never') shouldHide = false;
 
         if (shouldHide) {
             // General UI
@@ -101,6 +110,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
             isSocialMode,
             setIsSocialMode,
             resetIdleTimer,
+            toggleUiVisibility,
             autoHideMode,
             autoHideDuration,
             updateSettings

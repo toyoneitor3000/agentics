@@ -86,7 +86,7 @@
 
 @layer base {
   body {
-    background-color: transparent;
+    background-color: var(--color-bg-primary);
     color: var(--color-text-primary);
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }

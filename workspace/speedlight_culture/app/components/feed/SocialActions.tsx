@@ -8,7 +8,7 @@ import Image from "next/image";
 
 interface SocialActionsProps {
     entityId: string;
-    entityType: 'project' | 'gallery' | 'marketplace';
+    entityType: 'project' | 'gallery' | 'marketplace' | 'cinema' | 'social' | 'article';
     initialLikes: number;
     initialComments: number;
     initialIsLiked: boolean;
@@ -158,7 +158,22 @@ export default function SocialActions({
                         <span className="text-xs font-bold text-white/60 group-hover:text-white">{commentsCount}</span>
                     </button>
                 </div>
-                <button className="text-white/40 hover:text-white transition-colors">
+                <button
+                    onClick={() => {
+                        const url = `${window.location.origin}/${entityType === 'project' ? 'projects' : 'view'}/${entityId}`;
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'Speedlight Culture',
+                                text: 'Mira esta publicación en Speedlight Culture',
+                                url: url
+                            }).catch(console.error);
+                        } else {
+                            navigator.clipboard.writeText(url);
+                            alert("Enlace copiado al portapapeles");
+                        }
+                    }}
+                    className="text-white/40 hover:text-white transition-colors"
+                >
                     <Share2 className="w-5 h-5" />
                 </button>
             </div>

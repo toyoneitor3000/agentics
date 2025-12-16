@@ -146,7 +146,7 @@ export default function AppHeader() {
                             <Link
                                 href="/notifications"
                                 onClick={handleNotificationClick}
-                                className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative"
+                                className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
                             >
                                 <Bell className="w-6 h-6" />
                                 {hasUnreadNotifications && (
@@ -185,6 +185,11 @@ export default function AppHeader() {
 
                 {/* Right: Profile / Auth */}
                 <div className="flex items-center gap-4 z-10 pointer-events-auto">
+                    {/* Search Icon (Moved from Bottom Nav) */}
+                    <Link href="/search" className="text-white hover:text-[#FF9800] transition-colors p-1">
+                        <Search className="w-6 h-6" />
+                    </Link>
+
                     {/* Desktop: Extra Actions (e.g. Notifications) */}
                     <div className="hidden md:flex items-center gap-2 mr-2">
                         {!showBackButton && user && (

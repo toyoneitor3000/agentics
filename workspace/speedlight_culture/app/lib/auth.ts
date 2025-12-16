@@ -11,7 +11,10 @@ export const auth = betterAuth({
         connectionString: process.env.DATABASE_URL?.replace("sslmode=require", ""),
         ssl: {
             rejectUnauthorized: false
-        }
+        },
+        max: 5, // Limit pool size for serverless/dev
+        connectionTimeoutMillis: 5000, // Fail fast (5s) instead of hanging
+        idleTimeoutMillis: 30000 // Close idle connections
     }),
     socialProviders: {
         google: {

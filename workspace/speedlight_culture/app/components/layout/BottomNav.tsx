@@ -20,7 +20,6 @@ const ALL_APPS: Record<string, { name: string, icon: any, path: string }> = {
     '/workshops': { name: "Talleres", icon: Wrench, path: '/workshops' },
     '/events': { name: "Eventos", icon: Calendar, path: '/events' },
     '/autostudio': { name: "AutoStudio", icon: MessageSquare, path: '/autostudio' },
-    '/search': { name: "Buscar", icon: Search, path: '/search' },
 };
 
 export default function BottomNav() {

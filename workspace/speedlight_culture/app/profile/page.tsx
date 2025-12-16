@@ -1,14 +1,17 @@
-import { createClient } from "@/app/utils/supabase/server";
+import { createClient } from '@supabase/supabase-js';
 import { redirect } from "next/navigation";
 import UserProfile from "@/app/components/profile/UserProfile";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Edit3 } from "lucide-react";
 
-
-
 export default async function ProfilePage() {
-    const supabase = await createClient();
+    // USE SERVICE ROLE to bypass RLS (Since BetterAuth owns the session, not Supabase Auth)
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     const { auth } = await import("@/app/lib/auth");
 
     const session = await auth.api.getSession({
@@ -57,19 +60,21 @@ export default async function ProfilePage() {
     // Using Promise.all assumes all tables exist. If 'reels' doesn't exist, I'll skip it in this query.
     // I know projects, gallery_albums, events, follows, likes exist.
 
-    const [projectsRes, albumsRes, eventsRes, followersRes, followingRes, likesRes] = await Promise.all([
+    const [projectsRes, albumsRes, eventsRes, followersRes, followingRes, likesRes, videosRes, cinemaLikesRes] = await Promise.all([
         supabase.from('projects').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('gallery_albums').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('events').select('*').eq('created_by', user.id).order('date', { ascending: true }),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
         supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
-        supabase.from('likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+        supabase.from('likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('cinema_videos').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+        supabase.from('cinema_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
     ]);
 
     const stats = {
         followers: followersRes.count || 0,
         following: followingRes.count || 0,
-        likes_given: likesRes.count || 0,
+        likes_given: (likesRes.count || 0) + (cinemaLikesRes.count || 0),
         xp: profile?.xp || 0,
         level: profile?.level || 1,
         join_date: new Date(user.createdAt || Date.now()).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })
@@ -78,7 +83,8 @@ export default async function ProfilePage() {
     const content = {
         projects: projectsRes.data || [],
         albums: albumsRes.data || [],
-        events: eventsRes.data || []
+        events: eventsRes.data || [],
+        videos: videosRes.data || []
     };
 
     return (

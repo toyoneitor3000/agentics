@@ -42,16 +42,31 @@ export const activeCampaigns: AdCampaign[] = [
     {
         id: 'camp_002',
         type: 'feed_card',
-        clientName: 'Motul',
+        clientName: 'Taller 911',
         isActive: true,
         content: {
-            brandName: 'Motul Colombia',
-            title: 'Kit Sintético 8100',
-            description: 'Maximiza el rendimiento con la fórmula 100% sintética. Oferta exclusiva para miembros.',
-            badgeText: 'Partner Speedlight',
+            brandName: 'Taller 911',
+            title: 'Especialistas Porsche',
+            description: 'Mantenimiento preventivo y correctivo para tu deportivo Alemán.',
+            badgeText: 'Verified Workshop',
+            ctaText: 'Agendar Cita',
+            ctaLink: '/workshops/taller-911',
+            imageUrl: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?q=80&w=1000&auto=format&fit=crop', // Porsche/Garage image
+        }
+    },
+    {
+        id: 'camp_002_b',
+        type: 'feed_card',
+        clientName: 'Promo Mes',
+        isActive: true,
+        content: {
+            brandName: 'Speedlight Store',
+            title: '20% OFF Aceites',
+            description: 'Solo por este mes, descuentos en toda la línea de sintéticos.',
+            badgeText: 'Oferta Flash',
             ctaText: 'Ver Oferta',
-            ctaLink: '/marketplace/motul-8100',
-            imageUrl: 'https://images.unsplash.com/photo-1596425121695-1262d5a37466?q=80&w=1000&auto=format&fit=crop', // Engine oil placeholder
+            ctaLink: '/marketplace/oils',
+            imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?q=80&w=1000&auto=format&fit=crop', // Oil/Work image
         }
     },
     {
@@ -109,7 +124,7 @@ export const activeCampaigns: AdCampaign[] = [
             badgeText: 'Education',
             ctaText: 'Ver Cursos',
             ctaLink: 'https://speedlightacademy.com',
-            imageUrl: '/images/ads/academy-promo.jpg',
+            imageUrl: 'https://images.unsplash.com/photo-1498889444388-e67ea62c464b?q=80&w=1000&auto=format&fit=crop', // Mechanic/Education
         },
         styling: {
             highlightColor: '#D32F2F' // Red branding for Academy

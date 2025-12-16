@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Heart, MessageCircle, Share2, Volume2, VolumeX, Play, Plus, Star, X, Info, Maximize, Minimize, ChevronDown, MoreVertical } from 'lucide-react';
+import { useRef, useEffect, useState, startTransition, useTransition } from 'react';
+import { Gamepad2, VolumeX, Volume2, Heart, MessageCircle, MoreVertical, Plus, ChevronDown, Monitor, EyeOff, Music, Play } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
 import { getCinemaFeed, toggleLike } from '@/app/actions/cinema';
 import { useUi } from '@/app/context/UiContext';
+import { useGamepad } from '@/app/hooks/useGamepad';
 
 // MOCK DATA FOR CATEGORIES
 const CATEGORIES = [
@@ -31,7 +32,7 @@ export default function CinemaSocialPage() {
     const [isLoading, setIsLoading] = useState(true);
 
     // GLOBAL UI SYNC (Replaces Local Timer)
-    const { isUiVisible, resetIdleTimer, setIsSocialMode } = useUi();
+    const { isUiVisible, resetIdleTimer, isSocialMode, setIsSocialMode, updateSettings, toggleUiVisibility } = useUi();
 
     // Sync View Mode with Global Context for Header Hiding
     useEffect(() => {
@@ -51,6 +52,13 @@ export default function CinemaSocialPage() {
                 // 2. FILTERING
                 const horizontalFeed = processedFeed.filter((p: any) => p.format === 'horizontal');
                 const verticalFeed = processedFeed.filter((p: any) => p.format === 'vertical');
+
+                console.log("Feed loaded:", processedFeed.length, "items");
+                console.log("Horizontal:", horizontalFeed.length, "Vertical:", verticalFeed.length);
+
+                if (verticalFeed.length > 0) {
+                    setActiveSocialPost(verticalFeed[0]);
+                }
 
                 // "Featured" for Cinema is the top HORIZONTAL trending post
                 if (horizontalFeed.length > 0) {
@@ -104,46 +112,82 @@ export default function CinemaSocialPage() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [viewMode]);
 
+    // ----------------------------------------------------------------------
+    // GAMEPAD SUPPORT (8BitDo Ultimate 2C & Others)
+    // ----------------------------------------------------------------------
+    const { isConnected: isGamepadConnected, gamepadId } = useGamepad({
+        onDown: () => {
+            if (viewMode === 'social' && socialFeedRef.current) {
+                // Scroll down one viewport height (Snap)
+                const h = window.innerHeight;
+                socialFeedRef.current.scrollBy({ top: h, behavior: 'smooth' });
+                resetIdleTimer();
+            }
+        },
+        onUp: () => {
+            if (viewMode === 'social' && socialFeedRef.current) {
+                // Scroll up one viewport height (Snap)
+                const h = window.innerHeight;
+                socialFeedRef.current.scrollBy({ top: -h, behavior: 'smooth' });
+                resetIdleTimer();
+            }
+        },
+        onSelect: () => {
+            // A Button: Toggle Mute for now (or Like?)
+            setIsMuted(prev => !prev);
+            resetIdleTimer();
+        },
+        onBack: () => {
+            // B Button: Close active movie if open, or switch to Social Mode if in Cinema
+            if (activeMovie) {
+                setActiveMovie(null);
+            } else if (viewMode === 'cinema') {
+                setViewMode('social');
+            }
+            resetIdleTimer();
+        }
+    });
+
     return (
         <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
 
             {/* INLINE STYLES FOR LOADING ANIMATION (Copied from Preloader) */}
-            <style>{`
-                @keyframes shimmer {
-                    0% { transform: translateX(-100%); }
-                    100% { transform: translateX(100%); }
-                }
-                .animate-shimmer {
-                    animation: shimmer 1s infinite linear;
-                }
-            `}</style>
+
 
             {/* ----------------------------------------------------------------------
                 NEW UI: STICKY SUB-HEADER (Clean, Professional, Doesn't block Logo)
-                Assumes Main Navbar is approx 80px-100px tall. We stick below it or at top.
+                Assumes Main Navbar is approx 70px tall (h-[70px] in AppHeader). We stick below it.
             ---------------------------------------------------------------------- */}
-            <div className={`fixed top-[70px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed top-[72px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-4 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
                 {/* CENTERED TOGGLE (Now Integrated) */}
                 <div className="absolute left-1/2 -translate-x-1/2">
                     <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-1 shadow-2xl">
-                        <button
-                            onClick={() => setViewMode('cinema')}
-                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black shadow-lg shadow-[#FF9800]/20' : 'text-white/40 hover:text-white'}`}
-                        >
-                            Cinema
-                        </button>
                         <button
                             onClick={() => setViewMode('social')}
                             className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
                         >
                             Social
                         </button>
+                        <button
+                            onClick={() => setViewMode('cinema')}
+                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black shadow-lg shadow-[#FF9800]/20' : 'text-white/40 hover:text-white'}`}
+                        >
+                            Films
+                        </button>
                     </div>
                 </div>
 
                 {/* RIGHT ACTION */}
-                <div className="ml-auto">
+                <div className="ml-auto flex items-center gap-4">
+                    {/* Gamepad Indicator */}
+                    {isGamepadConnected && (
+                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#FF9800]/20 border border-[#FF9800]/50 rounded-full text-[#FF9800] animate-pulse">
+                            <Gamepad2 className="w-3 h-3" />
+                            <span className="text-[9px] font-bold uppercase tracking-wider">Mando Activo</span>
+                        </div>
+                    )}
+
                     <Link href="/cinema/upload" className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-[#FF9800] backdrop-blur-md rounded-full border border-white/10 text-white hover:text-black transition-all shadow-lg group">
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
                     </Link>
@@ -238,6 +282,7 @@ export default function CinemaSocialPage() {
                                     isMuted={isMuted}
                                     toggleMute={() => setIsMuted(!isMuted)}
                                     duration={0}
+                                    toggleUiVisibility={toggleUiVisibility}
                                 />
                             )}
                         </div>
@@ -287,6 +332,7 @@ export default function CinemaSocialPage() {
                     post={activeMovie}
                     onClose={() => setActiveMovie(null)}
                     isFeedMode={false}
+                    toggleUiVisibility={toggleUiVisibility}
                 />
             )}
 
@@ -725,7 +771,7 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 // IMMERSIVE CINEMA MODE (The "TikTok/Netflix" Hybrid Player)
 // ----------------------------------------------------------------------
 function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = false, toggleMute, onView }: any) {
-    const [isUiVisible, setIsUiVisible] = useState(true);
+    const { isUiVisible, setIsSocialMode, resetIdleTimer, toggleUiVisibility } = useUi();
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
     const [player, setPlayer] = useState<any>(null);
@@ -741,6 +787,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     const isLongPress = useRef(false);
     const pressTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastTapTime = useRef(0);
+    const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const cloudflareId = getCloudflareId(post.videoUrl || '');
 
@@ -928,32 +975,45 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         }
     };
 
-    const handleTap = () => {
+    const handleTap = (e?: any) => {
+        if (e && e.stopPropagation) e.stopPropagation();
         if (isLongPress.current) return;
+
         const now = Date.now();
+        const doubleTapThreshold = 300;
 
-        // UNMUTE LOGIC
-        // If current state is Muted, Tap = Unmute (and thus unmute ALL via prop)
-        if (isMuted) {
-            if (toggleMute) toggleMute(); // Update Global State
-            if (player) {
-                player.muted = false; // Immediate local update
-                player.play(); // Ensure playing
-            }
-            setShowActionIcon('unmute');
+        if (tapTimeoutRef.current) {
+            clearTimeout(tapTimeoutRef.current);
+            tapTimeoutRef.current = null;
+        }
+
+        // 1. DOUBLE TAP DETECTED
+        if (now - lastTapTime.current < doubleTapThreshold) {
+            // Toggle Mute
+            toggleMute();
+
+            // Note: isMuted is the OLD state here usually.
+            const newMutedState = !isMuted;
+            if (player) player.muted = newMutedState;
+
+            setShowActionIcon(newMutedState ? 'mute' : 'unmute');
             setTimeout(() => setShowActionIcon(null), 600);
-            lastTapTime.current = now;
-            return;
-        }
 
-        // DOUBLE TAP / SINGLE TAP UI TOGGLE
-        if (now - lastTapTime.current < 300) {
-            // For now, let's just toggle UI visibility if not muted, or pause/play if already unmuted.
-            // The primary goal of single tap is to unmute if muted.
-            // If not muted, a single tap should toggle UI visibility.
-            setIsUiVisible(prev => !prev);
+            lastTapTime.current = 0; // Reset
         }
-        lastTapTime.current = now;
+        // 2. SINGLE TAP CANDIDATE (Wait for second tap)
+        else {
+            lastTapTime.current = now;
+
+            tapTimeoutRef.current = setTimeout(() => {
+                if (!isUiVisible) {
+                    resetIdleTimer(); // Show UI if hidden
+                } else {
+                    toggleUiVisibility(); // Hide UI if visible
+                }
+                tapTimeoutRef.current = null;
+            }, doubleTapThreshold);
+        }
     };
 
     const handleDown = () => {
@@ -963,7 +1023,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             if (player) {
                 player.pause();
                 setShowActionIcon('pause');
-                setIsUiVisible(false); // Hide UI while holding for clean view
+                if (isUiVisible && toggleUiVisibility) toggleUiVisibility(); // Hide UI while holding for clean view
             }
         }, 200);
     };
@@ -972,7 +1032,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
         if (isLongPress.current && player) {
             player.play();
-            setIsUiVisible(true);
+            resetIdleTimer();
             setShowActionIcon(null);
         }
         isLongPress.current = false;
@@ -993,20 +1053,48 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             // Sync initial mute state immediately to prevent "unmuted autoplay" blocking
             video.muted = isMuted;
 
+            let playingPromise: Promise<void> | undefined;
+
             const adapter = {
                 play: async () => {
                     try {
-                        await video.play();
-                    } catch (e) {
+                        playingPromise = video.play();
+                        await playingPromise;
+                        playingPromise = undefined;
+                    } catch (e: any) {
+                        // Ignore AbortError - this happens when pause() is called while play is pending (e.g. fast scroll)
+                        if (e.name === 'AbortError') {
+                            playingPromise = undefined;
+                            return;
+                        }
+
                         console.warn("Native Play Interrupted/Failed", e);
                         // Auto-recover if it was a permission issue by muting
                         if (!video.muted) {
                             video.muted = true;
-                            await video.play().catch(e => console.error("Recovery failed", e));
+                            // Retry play muted
+                            try {
+                                playingPromise = video.play();
+                                await playingPromise;
+                            } catch (retryErr) {
+                                console.error("Recovery failed", retryErr);
+                            }
+                            playingPromise = undefined;
                         }
                     }
                 },
-                pause: () => video.pause(),
+                pause: () => {
+                    if (playingPromise !== undefined) {
+                        playingPromise.then(() => {
+                            video.pause();
+                        }).catch(() => {
+                            // If play failed, we don't need to pause really, but let's be safe
+                            video.pause()
+                        });
+                    } else {
+                        video.pause();
+                    }
+                },
                 get muted() { return video.muted; },
                 set muted(val: boolean) { video.muted = val; },
                 get currentTime() { return video.currentTime; },
@@ -1053,11 +1141,32 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                 </div>
             )}
 
-            {/* 2. LOADING SPINNER */}
-            {/* Only show if NOT ready AND NOT playing (currentTime near 0) */}
-            {!isReady && currentTime < 0.2 && (
+            {/* 2. LOADING SPINNER - Show if video is NOT ready and NOT timed out */}
+            {!isReady && !player?.paused && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
                     <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
+                </div>
+            )}
+
+            {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
+            {/* We use a simple boolean flag 'isPaused' synced with state or ref to be 100% sure */}
+            {player?.paused && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer bg-black/10 hover:bg-black/30 transition-colors group"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Force Mute on First Play to satisfy Autoplay Policies if needed, 
+                        // but normally user interaction (click) allows unmuted.
+                        player.play().catch((e: any) => {
+                            console.log("Autoplay blocked, trying muted...", e);
+                            player.muted = true;
+                            player.play();
+                        });
+                    }}
+                >
+                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
+                        <Play className="w-6 h-6 text-white fill-white ml-1" />
+                    </div>
                 </div>
             )}
 
@@ -1099,8 +1208,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         key={post.videoUrl} // Force recreation if URL changes
                         ref={nativeVideoRef}
                         className="w-full h-full object-contain pointer-events-none"
+                        poster={post.poster}
                         preload="auto"
-                        crossOrigin="anonymous"
+                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
                         autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
                         loop={isFeedMode}
                         muted={isMuted}
@@ -1116,7 +1226,16 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         onCanPlay={() => setIsReady(true)} // Better signal
                         onEnded={() => setIsEnded(true)}
                         onError={(e) => {
-                            console.error("Native Video Error:", e.currentTarget.error);
+                            // React bubbles 'error' events from <source> tags, 
+                            // but at that point the <video> element itself might not have an error yet (it tries the next source).
+                            // We only care if the VIDEO element itself has failed.
+                            const target = e.target as HTMLElement;
+                            if (target.tagName === 'SOURCE') {
+                                return;
+                            }
+                            if (e.currentTarget.error) {
+                                console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
+                            }
                         }}
                     >
                         <source src={post.videoUrl} type="video/mp4" />
@@ -1151,16 +1270,37 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
 // 2. SOCIAL INTERFACE (Overlay UI for TikTok/Reels style)
 // ----------------------------------------------------------------------
 
-function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: any) {
+function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, toggleUiVisibility }: any) {
     const [liked, setLiked] = useState(post.liked_by_user || false);
     const [saved, setSaved] = useState(false);
     const [likeCount, setLikeCount] = useState(post.likes || 0);
 
-    // Sync state if post prop updates (e.g. revalidation)
+    const [following, setFollowing] = useState(post.isFollowing || false);
+    const [isPending, startTransition] = useTransition();
+
     useEffect(() => {
         setLiked(post.liked_by_user);
         setLikeCount(post.likes);
-    }, [post.liked_by_user, post.likes]);
+        setFollowing(post.isFollowing);
+    }, [post.liked_by_user, post.likes, post.isFollowing]);
+
+    const handleFollow = (e: any) => {
+        e.stopPropagation();
+        if (!post.creatorId) return;
+
+        const newState = !following;
+        setFollowing(newState); // Optimistic
+
+        startTransition(async () => {
+            try {
+                const { toggleFollow } = await import('@/app/actions/social');
+                await toggleFollow(post.creatorId);
+            } catch (err) {
+                console.error("Follow failed", err);
+                setFollowing(!newState); // Revert
+            }
+        });
+    };
 
     const handleLike = async (e: any) => {
         e.stopPropagation();
@@ -1222,15 +1362,32 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: an
                             {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
                         </div>
                         <span className="font-bold text-sm text-white drop-shadow-md">@{post.creator || 'SpeedlightUser'}</span>
-                        <button className="px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded text-[10px] font-bold text-white uppercase ml-1 border border-white/20">Seguir</button>
+                        <button
+                            onClick={handleFollow}
+                            disabled={isPending}
+                            className={`px-3 py-1 rounded text-[10px] font-bold uppercase ml-2 border transition-all ${following
+                                ? 'bg-white text-black border-white hover:bg-white/90'
+                                : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
+                                }`}
+                        >
+                            {following ? 'Siguiendo' : 'Seguir'}
+                        </button>
                     </div>
                     <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
                     <p className="text-white/80 text-xs line-clamp-2 drop-shadow-md mb-2">{post.description}</p>
 
-                    {/* Tags / Music ticker placeholder */}
+                    {/* Tags / Music ticker */}
                     <div className="flex items-center gap-2 text-[10px] text-white/70">
-                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                            <span className="animate-pulse">♫</span> Sonido Original - {post.creator}
+                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm max-w-[200px]">
+                            <span className="animate-pulse flex-shrink-0">♫</span>
+                            <div className="overflow-hidden min-w-0">
+                                <span className={`whitespace-nowrap ${post.music_metadata ? 'animate-marquee' : ''} inline-block`}>
+                                    {post.music_metadata
+                                        ? `${post.music_metadata.name} - ${post.music_metadata.artist} `
+                                        : `Sonido Original - ${post.creator || 'Speedlight'}`
+                                    }
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1238,16 +1395,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: an
                 {/* RIGHT: ACTIONS SIDEBAR */}
                 <div className="flex flex-col items-center gap-4 pointer-events-auto">
 
-                    {/* MUTE TOGGLE */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                        className="flex flex-col items-center gap-1 group"
-                    >
-                        <div className="w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white/80 hover:bg-black/40 hover:text-white transition-all">
-                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Unmute' : 'Mute'}</span>
-                    </button>
+                    {/* ... (Existing Like, Comment, Save, Share, Hide UI) ... */}
 
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
@@ -1285,10 +1433,33 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration }: an
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Compartir</span>
                     </button>
 
-                    {/* MORE (Cinema Mode Trigger) or DISK */}
+                    {/* HIDE UI TOGGLE */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <EyeOff className="w-6 h-6" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Ocultar</span>
+                    </button>
+
+                    {/* MUSIC DISK ANIMATION */}
                     <div className="mt-2 animate-spin-slow">
-                        <div className="w-10 h-10 rounded-full bg-black border-4 border-black overflow-hidden relative shadow-lg">
-                            <Image src="/logo-icon.png" alt="disk" fill className="object-cover opacity-80" />
+                        <div className="w-10 h-10 rounded-full bg-black border-4 border-[#222] flex items-center justify-center relative shadow-lg overflow-hidden">
+                            {post.music_metadata?.cover ? (
+                                <Image
+                                    src={post.music_metadata.cover}
+                                    alt="Album Art"
+                                    fill
+                                    className="object-cover rounded-full"
+                                />
+                            ) : (
+                                <>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-[#FF9800] to-black opacity-50"></div>
+                                    <Music className="w-5 h-5 text-white relative z-10" />
+                                </>
+                            )}
                         </div>
                     </div>
 

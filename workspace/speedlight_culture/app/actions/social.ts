@@ -17,6 +17,11 @@ export async function toggleLike(projectId: string) {
     if (!user) throw new Error("Unauthorized");
 
     try {
+        // 1. Get Project Owner
+        const { rows: projectRows } = await query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRows.length === 0) throw new Error("Project not found");
+        const ownerId = projectRows[0].user_id;
+
         // Check if liked
         const { rows } = await query(
             'SELECT * FROM project_likes WHERE project_id = $1 AND user_id = $2',
@@ -29,6 +34,10 @@ export async function toggleLike(projectId: string) {
                 'DELETE FROM project_likes WHERE project_id = $1 AND user_id = $2',
                 [projectId, user.id]
             );
+            // Decrease XP (-1) for GIVER
+            if (ownerId !== user.id) {
+                await query('UPDATE profiles SET xp = GREATEST(0, xp - 1) WHERE id = $1', [user.id]);
+            }
             revalidatePath(`/projects/${projectId}`);
             return false;
         } else {
@@ -37,6 +46,10 @@ export async function toggleLike(projectId: string) {
                 'INSERT INTO project_likes (project_id, user_id) VALUES ($1, $2)',
                 [projectId, user.id]
             );
+            // Increase XP (+1) for GIVER
+            if (ownerId !== user.id) {
+                await query('UPDATE profiles SET xp = xp + 1 WHERE id = $1', [user.id]);
+            }
             revalidatePath(`/projects/${projectId}`);
             return true;
         }
@@ -79,7 +92,6 @@ export async function toggleSave(projectId: string) {
 
 export async function logShare(projectId: string) {
     const user = await getSessionUser();
-    // Share doesn't strictly require auth, but if logged in we track it
     const userId = user?.id || null;
 
     await query(
@@ -106,6 +118,8 @@ export async function toggleFollow(targetUserId: string) {
                 'DELETE FROM follows WHERE follower_id = $1 AND following_id = $2',
                 [user.id, targetUserId]
             );
+            // Decrease XP (-20) for GIVER (Follower)
+            await query('UPDATE profiles SET xp = GREATEST(0, xp - 20) WHERE id = $1', [user.id]);
             revalidatePath(`/profile/${targetUserId}`);
             return false;
         } else {
@@ -114,6 +128,8 @@ export async function toggleFollow(targetUserId: string) {
                 'INSERT INTO follows (follower_id, following_id) VALUES ($1, $2)',
                 [user.id, targetUserId]
             );
+            // Increase XP (+20) for GIVER (Follower)
+            await query('UPDATE profiles SET xp = xp + 20 WHERE id = $1', [user.id]);
             revalidatePath(`/profile/${targetUserId}`);
             return true;
         }
@@ -132,10 +148,49 @@ export async function postComment(projectId: string, content: string, rating: nu
             'INSERT INTO project_comments (project_id, user_id, content, rating, parent_id) VALUES ($1, $2, $3, $4, $5)',
             [projectId, user.id, content, rating, parentId || null]
         );
+
+        // Increase XP (+1) for GIVER (Commenter)
+        const { rows: projectRows } = await query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRows.length > 0) {
+            const ownerId = projectRows[0].user_id;
+            if (ownerId !== user.id) {
+                await query('UPDATE profiles SET xp = xp + 1 WHERE id = $1', [user.id]);
+            }
+        }
+
         revalidatePath(`/projects/${projectId}`);
         return true;
     } catch (e) {
         console.error('postComment Error:', e);
+        throw e;
+    }
+}
+
+// ... existing imports ...
+
+export async function sendGift(projectId: string, giftId: string) {
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    try {
+        await query(
+            'INSERT INTO project_gifts (project_id, gift_id, sender_id) VALUES ($1, $2, $3)',
+            [projectId, giftId, user.id]
+        );
+
+        // Increase XP (+50) for GIVER (Sender) of the gift
+        const { rows: projectRows } = await query('SELECT user_id FROM projects WHERE id = $1', [projectId]);
+        if (projectRows.length > 0) {
+            const ownerId = projectRows[0].user_id;
+            if (ownerId !== user.id) {
+                await query('UPDATE profiles SET xp = xp + 50 WHERE id = $1', [user.id]);
+            }
+        }
+
+        revalidatePath(`/projects/${projectId}`);
+        return true;
+    } catch (e) {
+        console.error('sendGift Error:', e);
         throw e;
     }
 }
@@ -219,20 +274,4 @@ export async function toggleCommentLike(commentId: string) {
     }
 }
 
-export async function sendGift(projectId: string, giftId: string) {
-    const user = await getSessionUser();
-    if (!user) throw new Error("Unauthorized");
 
-    try {
-        // Client code used sender_id. I will use sender_id.
-        await query(
-            'INSERT INTO project_gifts (project_id, gift_id, sender_id) VALUES ($1, $2, $3)',
-            [projectId, giftId, user.id]
-        );
-        revalidatePath(`/projects/${projectId}`);
-        return true;
-    } catch (e) {
-        console.error('sendGift Error:', e);
-        throw e;
-    }
-}

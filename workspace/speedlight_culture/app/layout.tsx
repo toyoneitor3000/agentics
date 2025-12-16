@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { Inter, Roboto_Mono, Oswald } from "next/font/google";
+import { Toaster } from "sonner";
 
 import "./globals.css";
 
@@ -97,7 +98,7 @@ export default function RootLayout({
       </head>
       <body
         className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased text-[#FFF8F0] selection:bg-[#FF9800]/30 min-h-screen relative`}
-        style={{ backgroundColor: 'transparent' }}
+        style={{ backgroundColor: 'var(--color-bg-primary)' }}
       >
         <BackgroundProvider>
           <GlobalBackground />
@@ -109,6 +110,7 @@ export default function RootLayout({
           </LanguageProvider>
           <Analytics />
           <OneSignalInit />
+          <Toaster position="top-center" richColors theme="dark" />
         </BackgroundProvider>
       </body>
     </html>

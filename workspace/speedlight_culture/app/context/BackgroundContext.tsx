@@ -10,6 +10,9 @@ interface BackgroundSettings {
     slideshowImages: string[];
     interval: number; // in seconds
     overlayOpacity: number; // 0 to 1
+    themeColor: 'coffee' | 'amber' | 'emerald' | 'cobalt' | 'crimson' | 'violet';
+    brightness: number; // 0.5 to 1.5
+    saturation: number; // 0 to 2
 }
 
 interface BackgroundContextType extends BackgroundSettings {
@@ -17,15 +20,14 @@ interface BackgroundContextType extends BackgroundSettings {
 }
 
 const defaultSettings: BackgroundSettings = {
-    mode: "slideshow",
+    mode: "static",
     staticImage: null,
-    slideshowImages: [
-        "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1493238792015-fa0c63404288?q=80&w=2000&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1611565133618-9e5b978c4309?q=80&w=2000&auto=format&fit=crop"
-    ], // Default automotive vibes
+    slideshowImages: [],
     interval: 8,
-    overlayOpacity: 0.65, // More transparent so image shows, but still tinted
+    overlayOpacity: 0.95, // High opacity to make color dominant if there IS an image, but mainly for color
+    themeColor: 'coffee',
+    brightness: 1,
+    saturation: 1
 };
 
 const BackgroundContext = createContext<BackgroundContextType | undefined>(undefined);
@@ -38,7 +40,18 @@ export function BackgroundProvider({ children }: { children: React.ReactNode }) 
         const saved = localStorage.getItem("speedlight_bg_settings");
         if (saved) {
             try {
-                setSettings({ ...defaultSettings, ...JSON.parse(saved) });
+                const parsed = JSON.parse(saved);
+                // MIGRATION: Force static mode and clear generic slideshows to fix "horrible background"
+                // This ensures we respect the user's theme color preference but kill the old images.
+                setSettings({
+                    ...defaultSettings,
+                    ...parsed,
+                    mode: "static",
+                    slideshowImages: [],
+                    staticImage: null,
+                    brightness: (parsed.brightness && typeof parsed.brightness === 'number') ? parsed.brightness : 1,
+                    saturation: (parsed.saturation && typeof parsed.saturation === 'number') ? parsed.saturation : 1
+                });
             } catch (e) {
                 console.error("Failed to parse background settings", e);
             }

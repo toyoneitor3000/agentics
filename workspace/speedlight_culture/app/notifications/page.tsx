@@ -37,7 +37,7 @@ export default function NotificationsPage() {
     ];
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-24 pt-20 px-4 md:px-0">
+        <div className="min-h-screen bg-transparent text-white pb-24 pt-20 px-4 md:px-0">
             <div className="max-w-xl mx-auto">
                 <div className="flex items-center justify-between mb-6">
                     <h1 className="text-2xl font-bold font-oswald uppercase tracking-wide">Notificaciones</h1>
@@ -69,7 +69,7 @@ export default function NotificationsPage() {
                 {/* List */}
                 <div className="space-y-4">
                     {notifications.map((notif) => (
-                        <div key={notif.id} className={`flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-[#111] transition-colors ${!notif.read ? 'bg-white/5 border-white/10' : ''}`}>
+                        <div key={notif.id} className={`flex items-start gap-4 p-4 rounded-xl border border-white/5 bg-black/20 backdrop-blur-md transition-colors ${!notif.read ? 'bg-white/5 border-white/10' : ''}`}>
                             {/* Avatar or Icon */}
                             <div className="shrink-0">
                                 {notif.avatar ? (

@@ -60,3 +60,38 @@ If you are the AI picking up this project:
 4.  **Dependencies:** We use `framer-motion` for the interactions.
 
 **Critical Philosophy:** "Integration is Now." Do not wait for scale to implement intelligence. We build the systems for 1 million users while we have 10.
+
+---
+
+## 4. The Unified Feed Protocol (The "Pulse")
+The Home Page (`app/page.tsx`) acts as the **Central Nervous System**. It does not own data; it aggregates it.
+
+### A. The "Polymorphic" Content Model
+We support 6 distinct formats in the feed. Each has a specific "Shape" and origin:
+
+| Format Type | DB Source | Visual Form | Purpose |
+| :--- | :--- | :--- | :--- |
+| **1. Project** | `projects` | `3:4 Card` + Overlay | Detailed build logs (The "Garage"). |
+| **2. Gallery** | `gallery_albums` | `3:4 Card` + Stack Icon | Collections of high-res photography. |
+| **3. Market** | `marketplace_listings` | `3:4 Card` + Price Tag | Buy/Sell parts and cars. |
+| **4. Cinema** | `cinema_videos` (Horiz) | `16:9 Hero` | High-fidelity cinematic content (YouTube/Cloudflare). |
+| **5. Social** | `cinema_videos` (Vert) | `9:16 Portrait` | Fast, snackable content (Reels/Shorts). |
+| **6. Article** | `articles` (*New*) | `4:3 Card` + Headline | News, opinion, and editorial content (Blog). |
+
+### B. The Aggregation Engine
+The Feed is not a single query. It is a **Federated Fetch**:
+1.  **Fetch Phase:** Parallel queries to `projects`, `gallery`, `market`, `videos`, `articles`.
+2.  **Normalization Phase:** All results are mapped to a `FeedItem` interface:
+    *   `id`: string
+    *   `type`: 'project' | 'gallery' | 'cinema' | ...
+    *   `content`: { bio, image, video_url }
+    *   `author`: { name, avatar }
+    *   `stats`: { likes, views }
+    *   `created_at`: Date
+3.  **Ranking Phase:** Merge and sort by `created_at` (Timeline) or Weight (Algorithm).
+4.  **Injection Phase:** Insert `AdBanner` components every N slots.
+
+### C. Implementation Plan (Next Steps)
+1.  **Database**: Create `articles` table for Blog content.
+2.  **Engine**: Update `app/page.tsx` to include `cinema_videos` (Vertical & Horizontal) in the `Promise.all` fetch group.
+3.  **UI**: Create distinct card variants (`VideoCard`, `BlogCard`, `SocialCard`) for visual variety.

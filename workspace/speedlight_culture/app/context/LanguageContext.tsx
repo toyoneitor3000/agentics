@@ -18,7 +18,14 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     useEffect(() => {
         // Persist preference
         const saved = localStorage.getItem('language') as Language;
-        if (saved) setLanguage(saved);
+        if (saved) {
+            setLanguage(saved);
+        } else {
+            // Auto-detect
+            const browserLang = navigator.language.split('-')[0];
+            if (browserLang === 'en') setLanguage('en');
+            // default is 'es'
+        }
     }, []);
 
     const toggleLanguage = () => {

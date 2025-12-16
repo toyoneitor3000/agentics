@@ -24,7 +24,7 @@ export default function LoginPage() {
     const content = t_auth[language];
 
     return (
-        <div className="min-h-screen w-full bg-[#050302] lg:grid lg:grid-cols-2 relative">
+        <div className="min-h-screen w-full bg-transparent lg:grid lg:grid-cols-2 relative">
 
             {/* Brand Logo - Top Left (Global) */}
             <div className="absolute top-6 left-6 lg:top-10 lg:left-12 z-50">
@@ -67,17 +67,8 @@ export default function LoginPage() {
             {/* Right Panel: Auth Form */}
             <div className="relative flex flex-col items-center justify-center p-6 lg:p-12 min-h-screen">
 
-                {/* Mobile Background Fallback */}
-                <div className="absolute inset-0 lg:hidden pointer-events-none z-0">
-                    <Image
-                        src="https://images.unsplash.com/photo-1611566026373-c6c85447dbdc?q=80&w=1000&auto=format&fit=crop"
-                        alt="Background"
-                        fill
-                        sizes="100vw"
-                        className="object-cover opacity-20"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#050302] via-[#050302]/90 to-[#050302]"></div>
-                </div>
+                {/* Mobile Background Fallback - REMOVED to show Global Theme */}
+                {/* <div className="absolute inset-0 lg:hidden pointer-events-none z-0"> ... </div> */}
 
                 {/* Navbar Placeholder / Logo Link - REMOVED (Moved to Global Top Left) */}
 

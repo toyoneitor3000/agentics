@@ -1,8 +1,11 @@
 {
     "name": "Speedlight Culture",
     "short_name": "Speedlight",
+    "description": "El Arte de la Velocidad. Comunidad Automotriz Global.",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
+    "orientation": "portrait",
     "background_color": "#050302",
     "theme_color": "#050302",
     "icons": [

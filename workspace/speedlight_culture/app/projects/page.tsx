@@ -16,7 +16,7 @@ export default async function ProjectsPage() {
         .order('created_at', { ascending: false });
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-12">
+        <div className="min-h-screen bg-transparent text-white pb-12">
             <PageHero
                 title="Speedlight Projects"
                 subtitle="El Garaje Virtual"
@@ -34,7 +34,7 @@ export default async function ProjectsPage() {
                     {projects && projects.length > 0 ? (
                         projects.map((project) => (
                             <Link key={project.id} href={`/projects/${project.id}`} className="group">
-                                <div className="bg-[#111] border border-[#222] rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all cursor-pointer h-full flex flex-col shadow-lg">
+                                <div className="bg-black/20 backdrop-blur-md border border-white/5 rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all cursor-pointer h-full flex flex-col shadow-lg">
 
                                     {/* Image Wrapper */}
                                     <div className="relative h-64 bg-[#1a1a1a] overflow-hidden">

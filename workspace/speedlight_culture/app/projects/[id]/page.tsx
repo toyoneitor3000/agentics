@@ -140,7 +140,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
     const displayImage = project.cover_image || (project.gallery_images && project.gallery_images.length > 0 ? project.gallery_images[0] : null);
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-12"> {/* Removed py-12, kept pb-12 */}
+        <div className="min-h-screen bg-transparent text-white pb-12"> {/* Removed py-12, kept pb-12, transparent bg */}
 
             {/* Hero / Cover */}
             <div className="relative h-[60vh] w-full bg-black overflow-hidden"> {/* Increased height for drama */}
@@ -157,7 +157,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                         <Camera className="w-20 h-20 text-white/10" />
                     </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent"></div> {/* Improved gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div> {/* Improved gradient to black */}
 
                 <div className="absolute top-0 left-0 w-full h-[150px] bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" /> {/* Header legibility gradient */}
 

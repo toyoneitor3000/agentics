@@ -1,5 +1,14 @@
 'use client';
 
+
+
+
+
+
+
+
+        
+
 import { useState, useEffect } from 'react';
 import { createClient } from '@/app/utils/supabase/client';
 import Link from 'next/link';
@@ -39,9 +48,58 @@ export default function SearchPage() {
     const supabase = createClient();
 
     useEffect(() => {
+        const fetchSuggestions = async () => {
+            setLoading(true);
+            try {
+                // Fetch random/recent profiles as suggestions
+                const { data: users } = await supabase
+                    .from('profiles')
+                    .select('id, full_name, bio, avatar_url, role')
+                    .limit(3);
+
+                // Fetch recent projects
+                const { data: projects } = await supabase
+                    .from('projects')
+                    .select('id, title, make, model, cover_image')
+                    .order('created_at', { ascending: false })
+                    .limit(3);
+
+                let suggestedItems: SearchResult[] = [];
+
+                if (users) {
+                    suggestedItems.push(...users.map(u => ({
+                        type: 'user' as const,
+                        id: u.id,
+                        title: u.full_name || 'Usuario',
+                        subtitle: 'Sugerido para ti',
+                        image: u.avatar_url,
+                        link: `/profile/${u.id}`
+                    })));
+                }
+
+                if (projects) {
+                    suggestedItems.push(...projects.map(p => ({
+                        type: 'project' as const,
+                        id: p.id,
+                        title: p.title,
+                        subtitle: 'Nuevo en Garage',
+                        image: p.cover_image,
+                        link: `/projects/${p.id}`
+                    })));
+                }
+
+                setResults(suggestedItems);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
         const search = async () => {
             if (!debouncedQuery.trim()) {
-                setResults([]);
+                // Load suggestions if clear
+                fetchSuggestions();
                 return;
             }
 
@@ -190,45 +248,48 @@ export default function SearchPage() {
                             <p className="text-xs">Buscando en la red...</p>
                         </div>
                     ) : results.length > 0 ? (
-                        results.map((result, idx) => (
-                            <Link href={result.link} key={`${result.type}-${result.id}-${idx}`}>
-                                <div className="bg-[#111] hover:bg-[#1a1a1a] border border-[#222] hover:border-[#333] p-3 rounded-xl flex items-center gap-4 transition-all group">
-                                    {/* Image */}
-                                    <div className="w-12 h-12 rounded-full bg-[#222] overflow-hidden relative shrink-0">
-                                        {result.image ? (
-                                            <Image src={result.image} alt={result.title} fill className="object-cover" />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-white/20">
-                                                {result.type === 'user' && <User className="w-5 h-5" />}
-                                                {result.type === 'project' && <Package className="w-5 h-5" />}
-                                                {result.type === 'event' && <Calendar className="w-5 h-5" />}
-                                                {result.type === 'album' && <ImageIcon className="w-5 h-5" />}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Text */}
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-2 mb-0.5">
-                                            <h3 className="text-white font-bold truncate">{result.title}</h3>
-                                            <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider
-                                                ${result.type === 'user' ? 'bg-purple-900/30 text-purple-400' :
-                                                    result.type === 'project' ? 'bg-orange-900/30 text-orange-400' :
-                                                        result.type === 'event' ? 'bg-blue-900/30 text-blue-400' : 'bg-green-900/30 text-green-400'}
-                                            `}>
-                                                {result.type === 'user' ? 'Perfil' :
-                                                    result.type === 'project' ? 'Proyecto' :
-                                                        result.type === 'event' ? 'Evento' : 'Album'}
-                                            </span>
+                        <>
+                            {!query && <h3 className="text-xs font-bold uppercase text-white/40 mb-2 pl-1">Sugerencias para ti</h3>}
+                            {results.map((result, idx) => (
+                                <Link href={result.link} key={`${result.type}-${result.id}-${idx}`}>
+                                    <div className="bg-[#111] hover:bg-[#1a1a1a] border border-[#222] hover:border-[#333] p-3 rounded-xl flex items-center gap-4 transition-all group mb-2">
+                                        {/* Image */}
+                                        <div className="w-12 h-12 rounded-full bg-[#222] overflow-hidden relative shrink-0">
+                                            {result.image ? (
+                                                <Image src={result.image} alt={result.title} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/20">
+                                                    {result.type === 'user' && <User className="w-5 h-5" />}
+                                                    {result.type === 'project' && <Package className="w-5 h-5" />}
+                                                    {result.type === 'event' && <Calendar className="w-5 h-5" />}
+                                                    {result.type === 'album' && <ImageIcon className="w-5 h-5" />}
+                                                </div>
+                                            )}
                                         </div>
-                                        <p className="text-white/40 text-xs truncate">{result.subtitle}</p>
-                                    </div>
 
-                                    {/* Arrow */}
-                                    <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
-                                </div>
-                            </Link>
-                        ))
+                                        {/* Text */}
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2 mb-0.5">
+                                                <h3 className="text-white font-bold truncate">{result.title}</h3>
+                                                <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider
+                                                    ${result.type === 'user' ? 'bg-purple-900/30 text-purple-400' :
+                                                        result.type === 'project' ? 'bg-orange-900/30 text-orange-400' :
+                                                            result.type === 'event' ? 'bg-blue-900/30 text-blue-400' : 'bg-green-900/30 text-green-400'}
+                                                `}>
+                                                    {result.type === 'user' ? 'Perfil' :
+                                                        result.type === 'project' ? 'Proyecto' :
+                                                            result.type === 'event' ? 'Evento' : 'Album'}
+                                                </span>
+                                            </div>
+                                            <p className="text-white/40 text-xs truncate">{result.subtitle}</p>
+                                        </div>
+
+                                        {/* Arrow */}
+                                        <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white transition-colors" />
+                                    </div>
+                                </Link>
+                            ))}
+                        </>
                     ) : debouncedQuery ? (
                         <div className="text-center py-12 text-white/30">
                             <p>No se encontraron resultados para "{query}"</p>

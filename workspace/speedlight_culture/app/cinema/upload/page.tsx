@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
+import SpotifySearch from '@/app/components/cinema/SpotifySearch';
 
 // Helper for file size
 const formatFileSize = (bytes: number) => {
@@ -29,6 +30,7 @@ export default function UploadReelPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [format, setFormat] = useState<'horizontal' | 'vertical'>('horizontal'); // Auto-detected
+    const [musicMetadata, setMusicMetadata] = useState<any>(null); // NEW STATE
 
     // UI STATES
     const [isUploading, setIsUploading] = useState(false);
@@ -58,8 +60,14 @@ export default function UploadReelPage() {
             video.onloadedmetadata = () => {
                 window.URL.revokeObjectURL(video.src);
                 const isVertical = video.videoHeight > video.videoWidth;
-                setFormat(isVertical ? 'vertical' : 'horizontal');
-                console.log(`🎥 Detected Format: ${isVertical ? 'Vertical (Social)' : 'Horizontal (Cinema)'} [${video.videoWidth}x${video.videoHeight}]`);
+                if (isVertical) {
+                    alert("⚠️ ARQUITECTURA DETECTADA: VERTICAL\n\nEl módulo Cinema está diseñado exclusivamente para formatos 16:9 (Horizontal).\nPara Reels y contenido vertical, por favor utiliza el módulo Social.");
+                    setSelectedFile(null);
+                    setFormat('horizontal');
+                    return;
+                }
+                setFormat('horizontal');
+                console.log(`🎥 Detected Format: Horizontal (Cinema) [${video.videoWidth}x${video.videoHeight}]`);
             };
             video.src = URL.createObjectURL(file);
         }
@@ -225,7 +233,8 @@ export default function UploadReelPage() {
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
                 category: 'Native',
-                format: finalFormat // <-- NEW FIELD
+                format: finalFormat, 
+                music_metadata: musicMetadata // <-- NEW FIELD
             });
 
             // SUCCESS!
@@ -238,6 +247,7 @@ export default function UploadReelPage() {
             setTitle('');
             setDescription('');
             setUploadProgress(0);
+            setMusicMetadata(null); // Reset music
 
         } catch (e: any) {
             console.error(e);
@@ -423,6 +433,11 @@ export default function UploadReelPage() {
                                 Al publicar, confirmas que tienes los derechos de este contenido.
                                 El material será procesado en <strong>High Bitrate</strong>.
                             </p>
+                        </div>
+                        
+                        {/* SPOTIFY SEARCH INTEGRATION */}
+                        <div className="pt-2">
+                             <SpotifySearch onSelect={(track: any) => setMusicMetadata(track)} />
                         </div>
 
                         <button

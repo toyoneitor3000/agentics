@@ -21,6 +21,7 @@ interface CinemaVideoData {
     thumbnail_url?: string;
     category?: string;
     format?: 'horizontal' | 'vertical';
+    music_metadata?: any; // JSONB
 }
 
 export async function submitVideo(data: CinemaVideoData) {
@@ -29,8 +30,8 @@ export async function submitVideo(data: CinemaVideoData) {
 
     try {
         await query(
-            `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, format, status) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'pending')`,
+            `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, format, music_metadata, status) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
             [
                 user.id,
                 data.title,
@@ -38,7 +39,8 @@ export async function submitVideo(data: CinemaVideoData) {
                 data.video_url,
                 data.thumbnail_url || null,
                 data.category || 'General',
-                data.format || 'horizontal'
+                data.format || 'horizontal',
+                data.music_metadata || null
             ]
         );
 
@@ -49,6 +51,40 @@ export async function submitVideo(data: CinemaVideoData) {
         console.error('submitVideo Error:', e);
         throw e;
     }
+}
+
+export async function updateVideoMetadata(id: string, data: { title: string; description: string; location?: string; hashtags?: string[]; format?: 'horizontal' | 'vertical'; music_metadata?: any }) {
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    // Verify ownership
+    const { rows } = await query('SELECT user_id FROM cinema_videos WHERE id = $1', [id]);
+    if (rows.length === 0) throw new Error("Not found");
+    if (rows[0].user_id !== user.id) throw new Error("Forbidden");
+
+    // Dynamic Update Query Construction
+    const updates: string[] = [];
+    const values: any[] = [];
+    let queryIndex = 1;
+
+    if (data.title) { updates.push(`title = $${queryIndex++}`); values.push(data.title); }
+    if (data.description !== undefined) { updates.push(`description = $${queryIndex++}`); values.push(data.description); }
+    if (data.format) { updates.push(`format = $${queryIndex++}`); values.push(data.format); }
+    if (data.music_metadata !== undefined) { updates.push(`music_metadata = $${queryIndex++}`); values.push(data.music_metadata); }
+
+    // Add ID as last parameter
+    values.push(id);
+
+    if (updates.length === 0) return { success: true }; // Nothing to update
+
+    await query(
+        `UPDATE cinema_videos SET ${updates.join(', ')} WHERE id = $${queryIndex}`,
+        values
+    );
+
+    revalidatePath('/cinema');
+    revalidatePath('/profile');
+    return { success: true };
 }
 
 export async function getSignedUploadUrl(fileName: string) {
@@ -150,20 +186,45 @@ export async function toggleLike(videoId: string) {
     if (!user) return { error: "Unauthorized" };
 
     try {
-        // Check if exists
+        // 1. Get Video Owner
+        const { rows: videoRows } = await query(
+            'SELECT user_id FROM cinema_videos WHERE id = $1',
+            [videoId]
+        );
+
+        if (videoRows.length === 0) return { error: "Video not found" };
+        const ownerId = videoRows[0].user_id;
+
+        // 2. Check if Like exists
         const { rows } = await query(
             'SELECT 1 FROM cinema_likes WHERE user_id = $1 AND video_id = $2',
             [user.id, videoId]
         );
 
         if (rows.length > 0) {
-            // Unlike
+            // UNLIKE
             await query('DELETE FROM cinema_likes WHERE user_id = $1 AND video_id = $2', [user.id, videoId]);
+
+            // Decrease XP (Link Economy) - Only if not self-like
+            if (ownerId !== user.id) {
+                // REVERTED: XP is for GIVER now.
+                // await query('UPDATE profiles SET xp = GREATEST(0, xp - 1) WHERE id = $1', [ownerId]);
+                await query('UPDATE profiles SET xp = GREATEST(0, xp - 1) WHERE id = $1', [user.id]);
+            }
+
             revalidatePath('/cinema');
             return { liked: false };
         } else {
-            // Like
+            // LIKE
             await query('INSERT INTO cinema_likes (user_id, video_id) VALUES ($1, $2)', [user.id, videoId]);
+
+            // Increase XP (Link Economy) - Only if not self-like
+            if (ownerId !== user.id) {
+                // REVERTED: XP is for GIVER now.
+                // await query('UPDATE profiles SET xp = xp + 1 WHERE id = $1', [ownerId]);
+                await query('UPDATE profiles SET xp = xp + 1 WHERE id = $1', [user.id]);
+            }
+
             revalidatePath('/cinema');
             return { liked: true };
         }
@@ -188,36 +249,43 @@ export async function getCinemaFeed() {
                 v.category,
                 v.created_at,
                 v.format,
+                v.music_metadata,
+                u.id as creator_id,
                 u.name as creator_name,
                 u.image as creator_avatar,
                 (SELECT COUNT(*) FROM cinema_likes l WHERE l.video_id = v.id) as like_count,
-                ${userId ? `(EXISTS(SELECT 1 FROM cinema_likes l WHERE l.video_id = v.id AND l.user_id = $1))` : 'false'} as liked_by_user
+                ${userId ? `(EXISTS(SELECT 1 FROM cinema_likes l WHERE l.video_id = v.id AND l.user_id = $1))` : 'false'} as liked_by_user,
+                ${userId ? `(EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.following_id = u.id))` : 'false'} as is_following
              FROM cinema_videos v
              LEFT JOIN "user" u ON v.user_id = u.id
+             WHERE v.status = 'approved' AND v.video_url IS NOT NULL
              ORDER BY v.created_at DESC`,
             userId ? [userId] : []
         );
 
         return rows.map(row => {
-            // Safety Heuristic: If title is purely numeric (mobile upload default), assume Vertical/Social
-            // unless explicitly marked horizontal manually later.
-            const isNumericTitle = /^\d+$/.test(row.title);
-            const effectiveFormat = isNumericTitle ? 'vertical' : (row.format || 'horizontal');
+            // Respect the Database Value purely.
+            const effectiveFormat = row.format || 'horizontal';
+
             // like_count comes as string from COUNT
             const likes = parseInt(row.like_count || '0');
 
             return {
                 id: row.id,
                 title: row.title,
+                creatorId: row.creator_id,
                 creator: row.creator_name || "Unknown Driver",
                 avatar: row.creator_avatar || "",
                 videoUrl: row.video_url,
                 poster: row.thumbnail_url || "https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop",
                 likes: likes, // REAL LIKES
                 liked_by_user: row.liked_by_user, // REAL STATUS
+                isFollowing: row.is_following, // REAL FOLLOW STATUS
                 comments: 0, // Pending comments
                 description: row.description,
-                format: effectiveFormat
+                format: effectiveFormat,
+                music_metadata: row.music_metadata,
+                created_at: row.created_at // Expose Date for sorting
             };
         });
     } catch (e) {
