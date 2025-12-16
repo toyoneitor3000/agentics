@@ -21,9 +21,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex flex-col min-h-screen bg-transparent relative">
             {/* Universal Top Header (Fixed Top) */}
-            {/* Fades out ONLY on Social Mode when idle. Stays visible elsewhere. 
-                Using isUiVisible (3s) for strict cinema immersion. */}
-            <div className={`transition-opacity duration-1000 ease-in-out ${isSocialMode && !isUiVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {/* User Request: Header should NEVER hide, even in Immersive Mode */}
+            <div className="opacity-100 z-[60]">
                 <AppHeader />
             </div>
 

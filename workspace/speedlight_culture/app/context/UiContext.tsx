@@ -22,6 +22,9 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
     const [isSocialMode, setIsSocialMode] = useState(false);
 
+    const [isManuallyHidden, setIsManuallyHidden] = useState(false);
+    const isManuallyHiddenRef = useRef(false); // Ref to access current value in event listeners
+
     // Settings
     const [autoHideMode, setAutoHideMode] = useState<'always' | 'cinema-only' | 'never'>('never');
     const [autoHideDuration, setAutoHideDuration] = useState(10000);
@@ -49,12 +52,21 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     };
 
     const toggleUiVisibility = () => {
-        setIsUiVisible(prev => !prev);
-        setIsBottomNavVisible(prev => !prev); // Sync bottom nav with general UI
+        setIsUiVisible(prev => {
+            const newState = !prev;
+            // If we are hiding it manually, set lock. If showing, clear lock.
+            setIsManuallyHidden(!newState);
+            isManuallyHiddenRef.current = !newState; // Sync Ref
+            return newState;
+        });
+        setIsBottomNavVisible(prev => !prev);
     };
 
     const resetIdleTimer = () => {
-        // Always SHOW UI on activity (restore if hidden manually)
+        // If manually hidden, DO NOT show on activity (Check Ref for fresh value)
+        if (isManuallyHiddenRef.current) return;
+
+        // Always SHOW UI on activity (restore if hidden automatically)
         setIsUiVisible(true);
         setIsBottomNavVisible(true);
 
@@ -88,7 +100,8 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     }, [pathname, autoHideMode, autoHideDuration, isCinema]);
 
     useEffect(() => {
-        const events = ['mousemove', 'click', 'touchstart', 'keydown', 'scroll'];
+        // Removed 'scroll' so UI doesn't reappear on scroll (keeps immersive mode)
+        const events = ['mousemove', 'click', 'touchstart', 'keydown'];
         const handleActivity = () => resetIdleTimer();
         events.forEach(e => window.addEventListener(e, handleActivity));
         return () => {

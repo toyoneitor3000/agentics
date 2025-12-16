@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, startTransition, useTransition } from 'react';
-import { Gamepad2, VolumeX, Volume2, Heart, MessageCircle, MoreVertical, Plus, ChevronDown, Monitor, EyeOff, Music, Play } from "lucide-react";
+import { Gamepad2, VolumeX, Volume2, Heart, MessageCircle, MoreVertical, Plus, ChevronDown, Monitor, EyeOff, Music, Play, Maximize2 } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
@@ -975,68 +975,60 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         }
     };
 
-    const handleTap = (e?: any) => {
-        if (e && e.stopPropagation) e.stopPropagation();
-        if (isLongPress.current) return;
+    const handleTap = (e: any) => {
+        e.stopPropagation();
 
-        const now = Date.now();
         const doubleTapThreshold = 300;
 
-        if (tapTimeoutRef.current) {
-            clearTimeout(tapTimeoutRef.current);
+        // 1. Double Tap Logic
+        const now = Date.now();
+        if (lastTapTime.current && (now - lastTapTime.current) < doubleTapThreshold) {
+            // DOUBLE TAP DETECTED
+            if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
             tapTimeoutRef.current = null;
-        }
 
-        // 1. DOUBLE TAP DETECTED
-        if (now - lastTapTime.current < doubleTapThreshold) {
             // Toggle Mute
-            toggleMute();
+            const newMuted = !isMuted;
+            setIsMuted(newMuted);
+            if (player) player.muted = newMuted;
 
-            // Note: isMuted is the OLD state here usually.
-            const newMutedState = !isMuted;
-            if (player) player.muted = newMutedState;
-
-            setShowActionIcon(newMutedState ? 'mute' : 'unmute');
-            setTimeout(() => setShowActionIcon(null), 600);
+            // Show Icon Feedback
+            setShowActionIcon(newMuted ? 'mute' : 'unmute');
+            setTimeout(() => setShowActionIcon(null), 800);
 
             lastTapTime.current = 0; // Reset
+            return;
         }
-        // 2. SINGLE TAP CANDIDATE (Wait for second tap)
-        else {
-            lastTapTime.current = now;
 
-            tapTimeoutRef.current = setTimeout(() => {
+        lastTapTime.current = now;
+
+        // 2. Single Tap Logic (Debounced)
+        tapTimeoutRef.current = setTimeout(() => {
+            if (toggleUiVisibility) {
                 if (!isUiVisible) {
-                    resetIdleTimer(); // Show UI if hidden
+                    // If hidden, just show UI
+                    resetIdleTimer();
+                    toggleUiVisibility();
                 } else {
-                    toggleUiVisibility(); // Hide UI if visible
+                    // If visible, Toggle Play/Pause
+                    if (player) {
+                        if (player.paused) {
+                            player.play();
+                            setShowActionIcon('play');
+                        } else {
+                            player.pause();
+                            setShowActionIcon('pause');
+                        }
+                        setTimeout(() => setShowActionIcon(null), 600);
+                        resetIdleTimer(); // Keep UI alive
+                    }
                 }
-                tapTimeoutRef.current = null;
-            }, doubleTapThreshold);
-        }
-    };
-
-    const handleDown = () => {
-        isLongPress.current = false;
-        pressTimerRef.current = setTimeout(() => {
-            isLongPress.current = true;
-            if (player) {
-                player.pause();
-                setShowActionIcon('pause');
-                if (isUiVisible && toggleUiVisibility) toggleUiVisibility(); // Hide UI while holding for clean view
             }
-        }, 200);
+            tapTimeoutRef.current = null;
+        }, doubleTapThreshold);
     };
 
-    const handleUp = () => {
-        if (pressTimerRef.current) clearTimeout(pressTimerRef.current);
-        if (isLongPress.current && player) {
-            player.play();
-            resetIdleTimer();
-            setShowActionIcon(null);
-        }
-        isLongPress.current = false;
-    };
+    // Removed handleDown/handleUp (Hold to pause caused issues)
 
 
     // Native Video Ref for fallback
@@ -1181,14 +1173,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                 </div>
             )}
 
-            {/* 4. PLAYER LAYER */}
             <div
-                className="w-full h-full"
-                onMouseDown={handleDown}
-                onMouseUp={handleUp}
-                onMouseLeave={handleUp}
-                onTouchStart={handleDown}
-                onTouchEnd={handleUp}
+                className="w-full h-full select-none"
+                onContextMenu={(e) => e.preventDefault()}
                 onClick={handleTap}
             >
                 {cloudflareId ? (
@@ -1197,7 +1184,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
                         // Pass 'muted' param BUT Cloudflare JS API (sp.muted) takes precedence after load
                         src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
-                        className="w-full h-full object-contain pointer-events-none"
+                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                     />
                 ) : (
                     // NATIVE FALLBACK (For non-Cloudflare URLs)
@@ -1207,7 +1194,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     <video
                         key={post.videoUrl} // Force recreation if URL changes
                         ref={nativeVideoRef}
-                        className="w-full h-full object-contain pointer-events-none"
+                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                         poster={post.poster}
                         preload="auto"
                         // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
@@ -1357,21 +1344,35 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
 
                 {/* LEFT: INFO */}
                 <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative">
+                    <div className="flex items-center mb-2">
+                        <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative mr-2 shrink-0">
                             {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
                         </div>
-                        <span className="font-bold text-sm text-white drop-shadow-md">@{post.creator || 'SpeedlightUser'}</span>
-                        <button
-                            onClick={handleFollow}
-                            disabled={isPending}
-                            className={`px-3 py-1 rounded text-[10px] font-bold uppercase ml-2 border transition-all ${following
-                                ? 'bg-white text-black border-white hover:bg-white/90'
-                                : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
-                                }`}
-                        >
-                            {following ? 'Siguiendo' : 'Seguir'}
-                        </button>
+                        <span className="font-bold text-sm text-white drop-shadow-md truncate max-w-[120px] mr-3">
+                            {post.creator || 'SpeedlightUser'}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={handleFollow}
+                                disabled={isPending}
+                                className={`px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all ${following
+                                    ? 'bg-white text-black border-white hover:bg-white/90'
+                                    : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
+                                    }`}
+                            >
+                                {following ? 'Siguiendo' : 'Seguir'}
+                            </button>
+
+                            {/* HIDE UI BUTTON (YouTube Style) */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
+                                className="w-8 h-6 border border-white/40 rounded flex items-center justify-center hover:bg-white/10 hover:border-white transition-colors"
+                                title="Modo Inmersivo"
+                            >
+                                <Maximize2 className="w-3.5 h-3.5 text-white rotate-90" />
+                            </button>
+                        </div>
                     </div>
                     <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
                     <p className="text-white/80 text-xs line-clamp-2 drop-shadow-md mb-2">{post.description}</p>
@@ -1433,35 +1434,9 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Compartir</span>
                     </button>
 
-                    {/* HIDE UI TOGGLE */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
-                        className="flex flex-col items-center gap-1 group"
-                    >
-                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <EyeOff className="w-6 h-6" />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Ocultar</span>
-                    </button>
 
-                    {/* MUSIC DISK ANIMATION */}
-                    <div className="mt-2 animate-spin-slow">
-                        <div className="w-10 h-10 rounded-full bg-black border-4 border-[#222] flex items-center justify-center relative shadow-lg overflow-hidden">
-                            {post.music_metadata?.cover ? (
-                                <Image
-                                    src={post.music_metadata.cover}
-                                    alt="Album Art"
-                                    fill
-                                    className="object-cover rounded-full"
-                                />
-                            ) : (
-                                <>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-[#FF9800] to-black opacity-50"></div>
-                                    <Music className="w-5 h-5 text-white relative z-10" />
-                                </>
-                            )}
-                        </div>
-                    </div>
+
+
 
                 </div>
             </div>
