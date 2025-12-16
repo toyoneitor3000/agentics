@@ -227,7 +227,7 @@ export default function CinemaSocialPage() {
                     </div>
 
                     {/* 2. DISCOVERY ROWS (Only Horizontal) */}
-                    <div className="relative z-10 bg-[#050505] pb-24 pt-12 min-h-screen">
+                    <div className="relative z-10 bg-[#050505] pb-20 pt-12 min-h-screen">
                         <div className="px-4 md:px-12 space-y-12">
                             {/* We use specific filtered categories or fallbacks */}
                             <CategoryRow title="Tendencias Globales" posts={categories.trending} onPostClick={setActiveMovie} />
@@ -275,7 +275,7 @@ export default function CinemaSocialPage() {
                         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />
 
                         {/* Safe Area Padding for Navbar */}
-                        <div className="w-full h-full pb-24 md:pb-32 relative">
+                        <div className="w-full h-full pb-20 md:pb-24 relative">
                             {activeSocialPost && (
                                 <SocialInterface
                                     post={activeSocialPost}

@@ -79,21 +79,21 @@ export default function BottomNav() {
                 {isEditMode ? (
                     <button
                         onClick={() => setSelectedSlotForEdit(slotId)}
-                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 relative
+                        className={`flex flex-col items-center justify-center w-10 h-10 rounded-full transition-all duration-300 relative
                             ${isSelectedForEdit
                                 ? 'bg-[#FF9800] text-black animate-pulse ring-2 ring-[#FF9800]/50'
                                 : 'bg-white/5 text-white/60 border border-dashed border-white/30 hover:bg-white/10'
                             }`}
                     >
-                        <Icon className="w-6 h-6" />
+                        <Icon className="w-5 h-5" />
                         <GripVertical className="absolute top-1 right-1 w-3 h-3 opacity-50" />
                     </button>
                 ) : (
                     <Link
                         href={app.path}
-                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${active ? 'bg-white/10 text-white backdrop-blur-3xl shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${active ? 'bg-white/10 text-white backdrop-blur-3xl shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Icon className="w-6 h-6" strokeWidth={active ? 2.5 : 2} />
+                        <Icon className="w-5 h-5" strokeWidth={active ? 2.5 : 2} />
                     </Link>
                 )}
             </div>
@@ -108,16 +108,16 @@ export default function BottomNav() {
         <>
             {/* Main Navigation Bar */}
             <div
-                className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isHidden && !isMenuOpen ? 'translate-y-[180%]' : 'translate-y-0'} w-[94%] max-w-[420px]`}
+                className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isHidden && !isMenuOpen ? 'translate-y-[180%]' : 'translate-y-0'} w-[94%] max-w-[360px]`}
             >
-                <div className="relative flex items-center justify-between px-1 h-[72px] rounded-full bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] ring-1 ring-black/20">
+                <div className="relative flex items-center justify-between px-1 h-[54px] rounded-full bg-[#0a0a0a]/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] ring-1 ring-black/20">
 
                     {/* Slot 1: Home (Fixed) */}
                     <Link
                         href="/"
-                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${isActive('/') ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isActive('/') ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Home className="w-6 h-6" strokeWidth={isActive('/') ? 2.5 : 2} />
+                        <Home className="w-5 h-5" strokeWidth={isActive('/') ? 2.5 : 2} />
                     </Link>
 
                     {/* Slot 2: Flexible Left */}
@@ -125,12 +125,12 @@ export default function BottomNav() {
 
                     {/* Slot 3: Center Create (Fixed & Flat) */}
                     {/* User requested Flat Balance. No negative margin. */}
-                    <div className="flex items-center justify-center w-16 h-16 shrink-0 z-10">
+                    <div className="flex items-center justify-center w-12 h-12 shrink-0 z-10">
                         <Link
                             href="/create"
-                            className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-tr from-[#FF9800] to-[#FFB74D] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
+                            className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-tr from-[#FF9800] to-[#FFB74D] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
                         >
-                            <Plus className="w-7 h-7" strokeWidth={3} />
+                            <Plus className="w-6 h-6" strokeWidth={3} />
                         </Link>
                     </div>
 
@@ -143,9 +143,9 @@ export default function BottomNav() {
                             setIsMenuOpen(!isMenuOpen);
                             if (isEditMode) setIsEditMode(false); // Reset edit on toggle
                         }}
-                        className={`flex flex-col items-center justify-center w-14 h-14 rounded-full transition-all duration-300 ${isMenuOpen ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-10 h-10 rounded-full transition-all duration-300 ${isMenuOpen ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        {isMenuOpen ? <X className="w-6 h-6" strokeWidth={2.5} /> : <Menu className="w-6 h-6" strokeWidth={2} />}
+                        {isMenuOpen ? <X className="w-5 h-5" strokeWidth={2.5} /> : <Menu className="w-5 h-5" strokeWidth={2} />}
                     </button>
                 </div>
             </div>

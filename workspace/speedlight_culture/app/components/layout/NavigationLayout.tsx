@@ -27,7 +27,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             </div>
 
             {/* Main Content Area */}
-            <main className="flex-1 w-full min-h-screen transition-all duration-300 pt-0 pb-[100px]">
+            <main className="flex-1 w-full min-h-screen transition-all duration-300 pt-0 pb-[80px]">
                 {children}
             </main>
 
