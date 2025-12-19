@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // Changed from next/router for App Router
 import { createClient } from "@/app/utils/supabase/client";
 
 import { Wrench, Play, ChevronRight, Zap, Loader2 } from "lucide-react";
@@ -12,9 +13,11 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import HomeIntro from "@/app/components/home/HomeIntro";
 import FeedCard from "@/app/components/feed/FeedCard";
 import { getCinemaFeed } from "@/app/actions/cinema";
+// ... imports
 
 export default function Home() {
   const supabase = createClient();
+  const router = useRouter();
   const [feedItems, setFeedItems] = useState<any[]>([]);
   const [featuredItems, setFeaturedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,10 +71,12 @@ export default function Home() {
       setCurrentUserId(session?.user?.id);
 
       // --- INTRO LOGIC CHECK ---
-      const hasVisited = localStorage.getItem('speedlight_visited');
+      // Changed to sessionStorage so closing the tab resets the Intro.
+      // Guest users will see the Landing Page every time they visit fresh.
+      const isSessionActive = sessionStorage.getItem('speedlight_session_active');
       const isLogged = !!session?.user;
 
-      if (!isLogged && !hasVisited) {
+      if (!isLogged && !isSessionActive) {
         setShowIntro(true);
       } else {
         setShowIntro(false);
@@ -134,11 +139,11 @@ export default function Home() {
           return {
             id: v.id,
             uniqueId: `vid_${v.id}`,
-            type: type,
-            date: new Date(v.created_at || Date.now()), // Use real date if available or fallback
+            type: false ? 'social' : type, // Keep original logic if needed, simplify here
+            date: new Date(v.created_at || Date.now()),
             user: { id: null, name: v.creator, avatar: v.avatar },
             content: { title: v.title, text: v.description, image: v.poster, video_poster: v.poster, video: v.videoUrl },
-            stats // Use Unified Stats
+            stats
           };
         });
 
@@ -307,9 +312,13 @@ export default function Home() {
   };
 
   const handleEnterApp = () => {
-    localStorage.setItem('speedlight_visited', 'true');
+    sessionStorage.setItem('speedlight_session_active', 'true');
     setShowIntro(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSignUp = () => {
+    router.push('/sign-up');
   };
 
   if (isCheckingIntro) {
@@ -321,7 +330,7 @@ export default function Home() {
   }
 
   if (showIntro) {
-    return <HomeIntro onEnterApp={handleEnterApp} featuredItems={featuredItems} recentActivity={feedItems} />;
+    return <HomeIntro onEnterApp={handleEnterApp} onSignUp={handleSignUp} featuredItems={featuredItems} recentActivity={feedItems} />;
   }
 
   return (
@@ -335,29 +344,29 @@ export default function Home() {
         <>
           {/* HORIZONTAL SCROLL - Featured Machines */}
           {featuredItems.length > 0 && (
-            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-              <div className="px-4 flex items-center justify-between mb-2">
-                <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                  <span className="w-1 h-3 bg-[#FF9800] rounded-full"></span>
+            <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-100">
+              <div className="px-4 flex items-center justify-between mb-3">
+                <h2 className="text-[#FF9800] text-sm font-bold font-oswald uppercase tracking-widest flex items-center gap-2">
+                  <span className="w-1.5 h-4 bg-[#FF9800] rounded-sm shadow-[0_0_8px_#FF9800]"></span>
                   {labels.featured}
                 </h2>
-                <Link href="/projects" className="text-white/40 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 hover:text-white transition-colors">
-                  {labels.viewAll} <ChevronRight className="w-3 h-3" />
+                <Link href="/projects" className="text-[#F5E6D3]/40 text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 hover:text-white transition-colors font-roboto-mono group">
+                  {labels.viewAll} <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
 
-              <div className="flex overflow-x-auto gap-4 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
+              <div className="flex overflow-x-auto gap-3 px-4 pb-4 snap-x snap-mandatory scrollbar-hide">
                 {featuredItems.map((item) => (
-                  <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[85vw] max-w-[340px]">
+                  <Link href={`/projects/${item.id}`} key={item.uniqueId} className="snap-center shrink-0 w-[90vw] max-w-[400px]">
                     <div className="relative aspect-video rounded-3xl overflow-hidden border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] group">
                       {item.content?.image ? (
                         <Image
                           src={item.content.image}
                           alt={item.content.title}
                           fill
-                          sizes="(max-width: 768px) 85vw, 340px"
+                          sizes="(max-width: 768px) 90vw, 400px"
                           priority={true}
-                          className="object-cover group-hover:scale-110 transition-transform duration-700"
+                          className="object-cover group-hover:scale-110 transition-transform duration-1000"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-[#1e1e1e] to-black flex items-center justify-center">
@@ -365,18 +374,20 @@ export default function Home() {
                         </div>
                       )}
 
-                      <div className="absolute inset-x-0 bottom-0 h-full bg-gradient-to-t from-black via-black/20 to-transparent opacity-90"></div>
+                      {/* Hard Vignette for Cinematic Feel */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#1A0F08] via-transparent to-transparent opacity-90"></div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent opacity-60"></div>
 
-                      <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 hover:bg-[#FF9800] hover:text-black hover:border-[#FF9800] transition-all group-hover:scale-105">
+                      <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 hover:bg-[#FF9800] hover:text-black hover:border-[#FF9800] transition-all group-hover:scale-105 shadow-lg">
                         <Play className="w-3 h-3 text-white group-hover:text-black fill-current" />
-                        <span className="text-[10px] font-bold text-white group-hover:text-black uppercase tracking-wider">{labels.play}</span>
+                        <span className="text-[10px] font-bold text-white group-hover:text-black uppercase tracking-wider font-oswald">{labels.play}</span>
                       </div>
 
                       <div className="absolute bottom-5 left-5 right-5">
-                        <div className="flex items-center gap-2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
-                          <span className="text-[#FF9800] text-[10px] font-black uppercase tracking-[0.2em]">{item.user.name}</span>
+                        <div className="flex items-center gap-2 mb-1 opacity-80 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                          <span className="text-[#FF9800] text-[9px] font-black uppercase tracking-[0.2em] font-roboto-mono">{item.user.name}</span>
                         </div>
-                        <h3 className="font-oswald font-bold text-xl text-white truncate drop-shadow-lg tracking-wide group-hover:text-[#FF9800] transition-colors">{item.content.title}</h3>
+                        <h3 className="font-oswald font-bold text-2xl text-white truncate drop-shadow-lg tracking-wide group-hover:text-[#FF9800] transition-colors">{item.content.title}</h3>
                       </div>
                     </div>
                   </Link>
@@ -388,9 +399,9 @@ export default function Home() {
 
           {/* MAIN FEED */}
           <div className="px-4 space-y-8">
-            <div className="flex items-center gap-2 mb-4 px-1">
+            <div className="flex items-center gap-2 mb-6 px-1 border-b border-white/5 pb-2">
               <Zap className="w-4 h-4 text-[#FF9800]" />
-              <h2 className="text-white text-sm font-bold uppercase tracking-wider">{labels.latest}</h2>
+              <h2 className="text-white text-sm font-bold uppercase tracking-[0.2em] font-oswald">{labels.latest}</h2>
             </div>
 
             {feedItems.length === 0 && (
@@ -399,33 +410,34 @@ export default function Home() {
               </div>
             )}
 
-            {feedItems.map((item) => {
+            {feedItems.map((item, idx) => {
               if (item.type === 'ad') {
                 return (
-                  <div key={item.id} className="rounded-3xl overflow-hidden shadow-2xl border border-white/5 mx-[-10px] md:mx-0">
+                  <div key={item.id} className="rounded-3xl overflow-hidden shadow-2xl border border-white/5 mx-[-10px] md:mx-0 animate-in fade-in slide-in-from-bottom-8 fill-mode-backwards" style={{ animationDelay: `${idx * 100}ms` }}>
                     <AdFeedCard data={item.data} />
                   </div>
                 );
               }
 
               return (
-                <FeedCard
-                  key={item.uniqueId}
-                  item={item}
-                  labels={labels}
-                  currentUserId={currentUserId}
-                  timeAgo={timeAgo}
-                />
+                <div key={item.uniqueId} className="animate-in fade-in slide-in-from-bottom-8 fill-mode-backwards" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <FeedCard
+                    item={item}
+                    labels={labels}
+                    currentUserId={currentUserId}
+                    timeAgo={timeAgo}
+                  />
+                </div>
               );
             })}
 
             {/* End of Feed Spacer */}
-            <div className="h-24 flex flex-col items-center justify-center text-white/20 text-xs uppercase tracking-widest gap-2">
-              <span>End of Transmission</span>
-              <span className="text-[10px] normal-case tracking-normal">
-                Diseñado y desarrollado por <span className="text-[#A855F7] font-bold">Purpur.dev</span>
-                <span className="mx-1">•</span>
-                Bogotá, Colombia
+            <div className="h-32 flex flex-col items-center justify-center text-white/20 text-xs uppercase tracking-widest gap-2 opacity-50">
+              <span className="font-oswald">End of Transmission</span>
+              <span className="text-[10px] normal-case tracking-normal font-roboto-mono">
+                Speedlight Culture
+                <span className="mx-2 text-[#FF9800]">•</span>
+                v1.0
               </span>
             </div>
           </div>

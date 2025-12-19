@@ -19,10 +19,14 @@ export default function CreatePage() {
             galleryTitle: "Gallery Upload",
             galleryDesc: "Comparte fotografía de alta resolución. Ideal para eventos y detalles.",
             galleryAction: "Subir Fotos",
-            cinemaTitle: "Cinema",
+            cinemaTitle: "Cinema Films",
             cinemaBadge: "High Quality Only",
-            cinemaDesc: "Envía arte visual automotriz cinemático. Preferible Vertical 4K.",
-            cinemaAction: "Enviar Video"
+            cinemaDesc: "Producciones cinematográficas horizontales. Formato 16:9.",
+            cinemaAction: "Enviar Video",
+            socialTitle: "Cinema Social",
+            socialBadge: "Vertical / Reels",
+            socialDesc: "Contenido vertical corto y dinámico. Formato 9:16.",
+            socialAction: "Subir Reel"
         },
         en: {
             badge: "Speedlight Studio",
@@ -35,10 +39,14 @@ export default function CreatePage() {
             galleryTitle: "Gallery Upload",
             galleryDesc: "Share high-resolution photography. Ideal for car meets and details.",
             galleryAction: "Upload Photos",
-            cinemaTitle: "Cinema",
+            cinemaTitle: "Cinema Films",
             cinemaBadge: "High Quality Only",
-            cinemaDesc: "Submit cinematic automotive video art. Vertical 4K preferred.",
-            cinemaAction: "Submit Video"
+            cinemaDesc: "Horizontal cinematic productions. 16:9 Format.",
+            cinemaAction: "Submit Video",
+            socialTitle: "Cinema Social",
+            socialBadge: "Vertical / Reels",
+            socialDesc: "Short and dynamic vertical content. 9:16 Format.",
+            socialAction: "Upload Reel"
         }
     };
 
@@ -59,12 +67,40 @@ export default function CreatePage() {
                     </p>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                    {/* OPTION 1: PROJECT */}
+                    {/* OPTION 4: CINEMA SOCIAL (VERTICAL TALL CARD) - MOVED TO FIRST */}
+                    <Link href="/cinema/upload/social" className="group relative h-[550px] lg:h-auto lg:row-span-2 border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
+                        {/* Different BG for Social - New Image V2 */}
+                        <div className="absolute inset-0 bg-[url('/social-cinema-bg-v2.png')] bg-cover bg-center opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 pointer-events-none"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
+
+                        <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+                            <div className="w-6 h-6 border-2 border-black rounded-sm flex items-center justify-center">
+                                <div className="w-2 h-2 bg-black rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <div className="absolute top-6 right-6 px-3 py-1 rounded-full border border-white/20 bg-black/50 backdrop-blur-md">
+                            <span className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                {content.socialBadge}
+                            </span>
+                        </div>
+
+                        <div className="absolute bottom-0 left-0 p-8 w-full">
+                            <h3 className="font-oswald font-bold text-3xl uppercase mb-2 text-white drop-shadow-lg">{content.socialTitle}</h3>
+                            <p className="text-white/80 text-sm mb-6 font-medium max-w-[200px]">{content.socialDesc}</p>
+                            <div className="flex items-center gap-2 text-white text-xs font-bold uppercase tracking-widest group-hover:text-[#FF9800] transition-colors">
+                                {content.socialAction} <ChevronRight className="w-4 h-4" />
+                            </div>
+                        </div>
+                    </Link>
+
+                    {/* OPTION 1: PROJECT (Standard) */}
                     <Link href="/projects/new" className="group relative h-[400px] border border-white/10 rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-500">
                         <div className="absolute inset-0 bg-neutral-900 group-hover:bg-neutral-800 transition-colors"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
 
                         <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-[#FF9800]/10 flex items-center justify-center group-hover:bg-[#FF9800] transition-colors duration-500">
                             <Wrench className="w-6 h-6 text-[#FF9800] group-hover:text-black" />
@@ -79,10 +115,10 @@ export default function CreatePage() {
                         </div>
                     </Link>
 
-                    {/* OPTION 2: GALLERY */}
+                    {/* OPTION 2: GALLERY (Standard) */}
                     <Link href="/gallery/new" className="group relative h-[400px] border border-white/10 rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-500">
                         <div className="absolute inset-0 bg-neutral-900 group-hover:bg-neutral-800 transition-colors"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
 
                         <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-[#FF9800]/10 flex items-center justify-center group-hover:bg-[#FF9800] transition-colors duration-500">
                             <Camera className="w-6 h-6 text-[#FF9800] group-hover:text-black" />
@@ -97,10 +133,17 @@ export default function CreatePage() {
                         </div>
                     </Link>
 
-                    {/* OPTION 3: CINEMA (REEL) */}
-                    <Link href="/cinema/upload" className="group relative h-[400px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.02] transition-all duration-500 md:-mt-4 bg-[#0A0A0A]">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop')] bg-cover opacity-20 grayscale group-hover:grayscale-0 group-hover:opacity-40 transition-all duration-700"></div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent"></div>
+                    {/* OPTION 3: CINEMA FILMS (HORIZONTAL WIDE CARD) */}
+                    <Link href="/cinema/upload/film" className="md:col-span-2 group relative h-[260px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
+                        <video
+                            src="https://videos.pexels.com/video-files/854671/854671-hd_1920_1080_25fps.mp4"
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 pointer-events-none"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
 
                         <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-[#FF9800] flex items-center justify-center shadow-[0_0_20px_rgba(255,152,0,0.5)]">
                             <Film className="w-6 h-6 text-black" />
@@ -108,14 +151,14 @@ export default function CreatePage() {
 
                         <div className="absolute top-6 right-6 px-3 py-1 rounded-full border border-white/20 bg-black/50 backdrop-blur-md">
                             <span className="text-[10px] uppercase font-bold tracking-widest flex items-center gap-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
                                 {content.cinemaBadge}
                             </span>
                         </div>
 
                         <div className="absolute bottom-0 left-0 p-8 w-full">
-                            <h3 className="font-oswald font-bold text-3xl uppercase mb-2 text-white drop-shadow-lg">{content.cinemaTitle}</h3>
-                            <p className="text-white/80 text-sm mb-6 h-10 font-medium">{content.cinemaDesc}</p>
+                            <h3 className="font-oswald font-bold text-2xl uppercase mb-1 text-white drop-shadow-lg">{content.cinemaTitle}</h3>
+                            <p className="text-white/80 text-sm mb-4 font-medium">{content.cinemaDesc}</p>
                             <div className="flex items-center gap-2 text-[#FF9800] text-xs font-bold uppercase tracking-widest">
                                 {content.cinemaAction} <ChevronRight className="w-4 h-4" />
                             </div>

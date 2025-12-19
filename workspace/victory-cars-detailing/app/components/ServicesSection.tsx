@@ -7,11 +7,11 @@ const ServicesSection: React.FC = () => {
       {/* Fondo con degradados solicitados */}
       <div className="absolute inset-0 bg-gradient-to-t from-brand-black via-brand-light-blue/20 to-brand-dark-blue/60 opacity-40 -z-10"></div>
       <div className="absolute inset-0 bg-gradient-to-b from-brand-light-blue/10 via-brand-black/30 to-brand-dark-blue opacity-30 -z-10"></div>
-      
+
       {/* Elementos decorativos */}
       <div className="absolute top-10 left-10 w-72 h-72 bg-brand-light-blue/5 rounded-full blur-3xl -z-10"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-brand-petroleum/5 rounded-full blur-3xl -z-10"></div>
-      
+
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-20 reveal">
           <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 font-orbitron tracking-wider">
@@ -293,6 +293,47 @@ const ServicesSection: React.FC = () => {
                   <span className="text-xs text-brand-slate block">Laterales</span>
                   <span className="text-xl font-bold text-brand-cyan">$120k c/u</span>
                 </div>
+              </div>
+            }
+          />
+
+
+          {/* PDR - SACATOCOS */}
+          <ServiceCard
+            title="PDR - Sacatocos (Sin Pintar)"
+            imageUrl="/services/pdr-repair.png"
+            benefits={[
+              "Elimina golpes manteniendo pintura original",
+              "Sin masilla ni repintado agresivo",
+              "Conserva el valor comercial del vehículo",
+              "Tiempo récord (servicios en el día)",
+              "Técnica artesanal de precisión"
+            ]}
+            description={
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <span className="text-sm text-brand-slate block mb-2">Desde</span>
+                <span className="text-2xl font-bold text-brand-cyan block">$80.000</span>
+                <p className="text-xs text-brand-slate mt-2">Por golpe / Según complejidad y ubicación</p>
+              </div>
+            }
+          />
+
+          {/* PINTURA DE PIEZAS */}
+          <ServiceCard
+            title="Pintura de Piezas Premium"
+            imageUrl="/services/paint-booth.png"
+            benefits={[
+              "Colorimetría computarizada exacta",
+              "Cabina de pintura profesional",
+              "Barniz de altos sólidos (Mayor brillo)",
+              "Cero piel de naranja",
+              "Garantía de color y acabado"
+            ]}
+            description={
+              <div className="border-t border-white/10 pt-4 mt-4">
+                <span className="text-sm text-brand-slate block mb-2">Pieza Completa Desde</span>
+                <span className="text-2xl font-bold text-brand-cyan block">$220.000</span>
+                <p className="text-xs text-brand-slate mt-2">Incluye preparación y difuminado si requiere</p>
               </div>
             }
           />

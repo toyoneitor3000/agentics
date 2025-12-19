@@ -71,7 +71,16 @@ export default function GlobalBackground() {
                 }}
             />
 
-            {/* Layer 4: Satin/Glass Finish */}
+            {/* Layer 4: Floating Ambient Orbs (New) */}
+            <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[#FF9800] rounded-full mix-blend-screen filter blur-[120px] opacity-[0.08] animate-float-slow"></div>
+                <div className="absolute bottom-[-10%] right-[-10%] w-[60vw] h-[60vw] bg-[#D32F2F] rounded-full mix-blend-screen filter blur-[150px] opacity-[0.06] animate-float-medium"></div>
+            </div>
+
+            {/* Layer 5: Noise Texture (New) */}
+            <div className="bg-noise mix-blend-overlay"></div>
+
+            {/* Layer 6: Satin/Glass Finish */}
             <div className="absolute inset-0 backdrop-blur-[2px]" />
 
             {/* Spotlight / Glow Effect */}

@@ -8,27 +8,27 @@ import { MoreHorizontal, Play, FileText, ShoppingBag, Camera, Wrench } from "luc
 import SocialActions from "./SocialActions";
 
 const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string, action?: string, type: string }) => (
-    <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-black/90 via-black/40 to-transparent flex items-center justify-between pointer-events-none">
+    <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#1A0F08]/95 via-[#1A0F08]/50 to-transparent flex items-center justify-between pointer-events-none">
         <div className="flex items-center gap-3 pointer-events-auto">
-            <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/20 relative overflow-hidden shadow-lg">
+            <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
                 {user.avatar ? (
                     <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
                 ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold">{user.name?.charAt(0)}</div>
+                    <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold font-oswald">{user.name?.charAt(0)}</div>
                 )}
             </div>
             <div>
-                <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md">
+                <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md font-oswald tracking-wide flex items-center gap-1">
                     {user.name}
                 </Link>
-                <div className="flex items-center gap-2 text-[10px] text-white/80 font-roboto-mono tracking-wide drop-shadow-sm">
+                <div className="flex items-center gap-2 text-[9px] text-[#F5E6D3]/60 font-roboto-mono tracking-widest uppercase">
                     <span>{time}</span>
-                    <span className="w-1 h-1 bg-[#FF9800] rounded-full"></span>
-                    <span className="uppercase tracking-wider text-[#FF9800]">{action}</span>
+                    <span className="w-1 h-1 bg-[#FF9800] rounded-full shadow-[0_0_5px_#FF9800]"></span>
+                    <span className="text-[#FF9800]">{action}</span>
                 </div>
             </div>
         </div>
-        <button className="text-white/60 hover:text-white transition-colors bg-black/20 backdrop-blur-md p-2 rounded-full pointer-events-auto">
+        <button className="text-[#F5E6D3]/60 hover:text-white transition-colors bg-[#1A0F08]/40 backdrop-blur-md p-2 rounded-full pointer-events-auto border border-white/5 hover:border-[#FF9800]/30 hover:shadow-[0_0_15px_rgba(255,152,0,0.1)]">
             <MoreHorizontal className="w-5 h-5" />
         </button>
     </div>
@@ -61,16 +61,19 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
     // Special Workshop Render
     if (item.type === 'workshop') {
         return (
-            <div className="bg-black/20 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/5 p-6 flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-white/10 overflow-hidden relative border border-white/10 shrink-0">
+            <div className="glass-premium rounded-3xl overflow-hidden p-6 flex items-center gap-5 transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4">
+                <div className="w-16 h-16 rounded-full bg-black/40 overflow-hidden relative border border-[#FF9800]/20 shrink-0 shadow-[0_0_20px_rgba(255,152,0,0.1)]">
                     {item.user.avatar ? <Image src={item.user.avatar} alt={item.user.name} fill className="object-cover" /> : <Wrench className="w-8 h-8 m-4 text-[#FF9800]" />}
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-white font-bold text-lg">{item.content.title}</h3>
-                    <p className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-1">Taller Verificado</p>
-                    <p className="text-white/60 text-sm line-clamp-2">{item.content.text}</p>
+                    <h3 className="text-white font-oswald font-bold text-lg tracking-wide">{item.content.title}</h3>
+                    <p className="text-[#FF9800] text-[10px] uppercase font-bold tracking-[0.2em] mb-1 font-roboto-mono flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 bg-[#FF9800] rounded-full animate-pulse"></span>
+                        Taller Verificado
+                    </p>
+                    <p className="text-[#F5E6D3]/60 text-sm line-clamp-2">{item.content.text}</p>
                 </div>
-                <Link href={`/profile/${item.user.id}`} className="px-4 py-2 bg-white/10 hover:bg-[#FF9800] hover:text-black text-white rounded-full text-xs font-bold transition-all">
+                <Link href={`/profile/${item.user.id}`} className="px-5 py-2 bg-[#FF9800] hover:bg-[#FFB74D] text-black rounded-lg text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(255,152,0,0.3)] hover:shadow-[0_0_25px_rgba(255,152,0,0.5)]">
                     Ver
                 </Link>
             </div>
@@ -80,11 +83,11 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
     // Article Specific Render
     if (item.type === 'article') {
         return (
-            <div className="bg-black/20 backdrop-blur-2xl rounded-3xl overflow-hidden shadow-2xl border border-white/5 hover:border-[#FF9800]/20 transition-all group">
+            <div className="glass-premium rounded-3xl overflow-hidden transition-all duration-500 hover:scale-[1.01] group animate-in fade-in slide-in-from-bottom-4">
                 <div className="relative aspect-video w-full overflow-hidden">
-                    <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur px-3 py-1 rounded-full border border-white/10 flex items-center gap-2">
+                    <div className="absolute top-4 left-4 z-20 bg-black/60 backdrop-blur-md px-3 py-1 rounded-lg border border-[#FF9800]/30 flex items-center gap-2 shadow-lg">
                         <FileText className="w-3 h-3 text-[#FF9800]" />
-                        <span className="text-[10px] font-bold text-white uppercase tracking-wider">Artículo</span>
+                        <span className="text-[10px] font-bold text-white uppercase tracking-widest font-roboto-mono">Artículo</span>
                     </div>
                     {item.content.image ? (
                         <Image
@@ -94,24 +97,24 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
                             className="object-cover group-hover:scale-105 transition-transform duration-700"
                         />
                     ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-neutral-800 to-black" />
+                        <div className="w-full h-full bg-gradient-to-br from-[#1e1e1e] to-black" />
                     )}
                 </div>
                 <div className="p-6">
-                    <h3 className="text-2xl font-bold font-oswald text-white mb-2 leading-tight group-hover:text-[#FF9800] transition-colors">
+                    <h3 className="text-2xl font-bold font-oswald text-white mb-2 leading-none uppercase tracking-tight group-hover:text-[#FF9800] transition-colors drop-shadow-lg">
                         {item.content.title}
                     </h3>
-                    <p className="text-white/60 text-sm line-clamp-3 mb-4 leading-relaxed font-light">
+                    <p className="text-[#F5E6D3]/70 text-sm line-clamp-3 mb-4 leading-relaxed font-light font-roboto-mono text-xs">
                         {item.content.text}
                     </p>
                     <div className="flex items-center justify-between border-t border-white/5 pt-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-white/10 relative overflow-hidden">
+                            <div className="w-6 h-6 rounded-full bg-white/10 relative overflow-hidden ring-1 ring-[#FF9800]/20">
                                 {item.user.avatar && <Image src={item.user.avatar} alt="Author" fill className="object-cover" />}
                             </div>
-                            <span className="text-xs text-white/50">{item.user.name}</span>
+                            <span className="text-[10px] text-[#F5E6D3]/50 uppercase tracking-widest font-bold">{item.user.name}</span>
                         </div>
-                        <span className="text-xs text-[#FF9800] font-bold uppercase tracking-wider">Leer Más</span>
+                        <span className="text-[10px] text-[#FF9800] font-bold uppercase tracking-[0.2em] group-hover:underline decoration-[#FF9800] underline-offset-4 decoration-2 transition-all">Leer Más</span>
                     </div>
                 </div>
             </div>
@@ -120,7 +123,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
 
     // Standard & Video Render
     return (
-        <div className={`bg-black/10 backdrop-blur-3xl rounded-3xl overflow-hidden shadow-[0_10px_50px_rgba(0,0,0,0.6)] border border-white/5 hover:border-[#FF9800]/20 transition-all duration-500 group relative`}>
+        <div className={`glass-premium rounded-3xl overflow-hidden transition-all duration-500 group relative animate-in fade-in slide-in-from-bottom-4 hover:scale-[1.005]`}>
 
             <FeedPostHeader
                 user={item.user}
@@ -133,8 +136,8 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
             <div className={`relative w-full ${AspectRatioClass} bg-[#050505] overflow-hidden`}>
                 {/* Video Indicator */}
                 {(item.type === 'cinema' || item.type === 'social') && (
-                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 bg-black/40 backdrop-blur rounded-full flex items-center justify-center border border-white/20 transition-all duration-300 ${item.content?.video ? 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110' : 'group-hover:scale-110'}`}>
-                        <Play className="w-6 h-6 text-white ml-1 fill-white" />
+                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 bg-[#FF9800]/20 backdrop-blur-md rounded-full flex items-center justify-center border border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.3)] transition-all duration-500 ${item.content?.video ? 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110' : 'group-hover:scale-110 animate-pulse'}`}>
+                        <Play className="w-6 h-6 text-[#FF9800] ml-1 fill-[#FF9800]" />
                     </div>
                 )}
 
@@ -158,21 +161,21 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
                 )}
 
                 {/* Info Overlay (Standard for Project/Gallery/Market) */}
-                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/90 via-black/50 to-transparent flex flex-col justify-end p-6 pb-24">
-                    <h3 className="font-oswald font-bold text-3xl md:text-4xl text-white leading-[0.9] mb-3 drop-shadow-lg">
+                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#1A0F08] via-[#1A0F08]/60 to-transparent flex flex-col justify-end p-6 pb-24">
+                    <h3 className="font-oswald font-bold text-3xl md:text-4xl text-white leading-[0.9] mb-3 drop-shadow-lg uppercase tracking-tight">
                         {item.content.title}
                     </h3>
                     {item.content.text && (
-                        <p className="text-white/70 text-sm md:text-base font-light line-clamp-2 drop-shadow-md max-w-lg mb-2">
+                        <p className="text-[#F5E6D3]/80 text-sm md:text-base font-light line-clamp-2 drop-shadow-md max-w-lg mb-2 leading-relaxed">
                             {item.content.text}
-                            {item.type === 'event' && item.content.description && <span className="block mt-1 text-white/50 text-xs">{item.content.description}</span>}
+                            {item.type === 'event' && item.content.description && <span className="block mt-2 text-[#FF9800] text-xs font-roboto-mono uppercase tracking-wider border-l-2 border-[#FF9800] pl-2">{item.content.description}</span>}
                         </p>
                     )}
                 </div>
             </div>
 
             {/* Actions */}
-            <div className="absolute bottom-0 inset-x-0 bg-black/60 backdrop-blur-xl border-t border-white/5">
+            <div className="absolute bottom-0 inset-x-0 bg-[#1A0F08]/80 backdrop-blur-xl border-t border-white/5">
                 {/* Note: We cast entityType because SocialActions only knew about 3 types, but usually strings are compatible if DB allows */}
                 <SocialActions
                     entityId={item.id}
@@ -186,8 +189,6 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
         </div>
     );
 }
-
-
 
 const SafeVideoPlayer = ({ src, poster }: { src: string, poster?: string }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -219,7 +220,7 @@ const SafeVideoPlayer = ({ src, poster }: { src: string, poster?: string }) => {
             ref={videoRef}
             src={src}
             poster={poster}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
             playsInline
             loop
             muted

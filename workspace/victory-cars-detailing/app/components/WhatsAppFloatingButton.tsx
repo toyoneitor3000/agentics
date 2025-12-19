@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MessageCircle, Share2, X } from 'lucide-react';
+import { MessageCircle, Share2, X, Calendar, Shield, MapPin, Star, Hammer, Palette } from 'lucide-react';
 
 const WhatsAppFloatingButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,8 +10,49 @@ const WhatsAppFloatingButton: React.FC = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleWhatsAppChat = () => {
-    window.open('https://wa.me/573157742419?text=Hola,%20deseo%20información%20sobre%20sus%20servicios%20de%20detailing.', '_blank');
+  const whatsappNumber = '573157742419';
+
+  const menuOptions = [
+    {
+      label: 'Agendar Cita',
+      icon: <Calendar className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, quisiera agendar una cita para mi vehículo.',
+      description: 'Reserva tu espacio'
+    },
+    {
+      label: 'Cotizar Cerámico/PPF',
+      icon: <Shield className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, estoy interesado en proteger mi vehículo con Cerámico o PPF. ¿Me pueden asesorar?',
+      description: 'Protección Premium'
+    },
+    {
+      label: 'Cotizar Sacatocos/PDR',
+      icon: <Hammer className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, tengo un golpe en mi vehículo y quisiera cotizar el servicio de PDR (Sacatocos).',
+      description: 'Cero Masilla'
+    },
+    {
+      label: 'Cotizar Pintura',
+      icon: <Palette className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, necesito pintar una pieza o renovar la pintura de mi auto. ¿Me ayudan con una cotización?',
+      description: 'Acabado Original'
+    },
+    {
+      label: 'Lavado y Detailing',
+      icon: <Star className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, quiero información sobre sus servicios de lavado y detailing interior.',
+      description: 'Limpieza profunda'
+    },
+    {
+      label: 'Ubicación',
+      icon: <MapPin className="h-4 w-4 md:h-5 md:w-5 mr-2" />,
+      message: 'Hola, ¿podrían enviarme su ubicación exacta para visitarlos?',
+      description: 'Visítanos'
+    }
+  ];
+
+  const handleOptionClick = (message: string) => {
+    window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const handleWhatsAppShare = () => {
@@ -21,25 +62,34 @@ const WhatsAppFloatingButton: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
       {/* Menú desplegable */}
       {isOpen && (
-        <div className="absolute bottom-16 right-0 mb-4 flex flex-col items-end space-y-3 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2">
-          {/* Opción: Compartir por WhatsApp */}
+        <div className="mb-4 flex flex-col items-end space-y-3 transition-all duration-300 ease-out animate-in fade-in slide-in-from-bottom-2">
+
+          {menuOptions.map((option, index) => (
+            <button
+              key={index}
+              onClick={() => handleOptionClick(option.message)}
+              className="flex items-center justify-end group"
+            >
+              <div className="mr-3 bg-white text-brand-black px-3 py-1.5 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none hidden md:block">
+                <span className="text-xs font-bold font-orbitron">{option.description}</span>
+              </div>
+              <div className="flex items-center justify-center bg-white text-[#25D366] hover:bg-[#25D366] hover:text-white rounded-full px-5 py-3 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-2 border-[#25D366]">
+                {option.icon}
+                <span className="text-xs md:text-sm font-bold whitespace-nowrap font-orbitron">{option.label}</span>
+              </div>
+            </button>
+          ))}
+
+          {/* Opción: Compartir */}
           <button
             onClick={handleWhatsAppShare}
-            className="flex items-center justify-center bg-[#25D366] text-white rounded-full px-4 py-3 shadow-lg hover:bg-[#128C7E] transition-all duration-300 transform hover:scale-105"
+            className="flex items-center justify-center bg-brand-dark-blue text-white/80 hover:text-white rounded-full px-4 py-2 shadow-lg hover:bg-brand-mid-blue transition-all duration-300 transform hover:scale-105 mt-2"
           >
-            <Share2 className="h-5 w-5 mr-2" />
-            <span className="text-sm font-semibold whitespace-nowrap">Compartir por WhatsApp</span>
-          </button>
-          {/* Opción: Escribir por WhatsApp */}
-          <button
-            onClick={handleWhatsAppChat}
-            className="flex items-center justify-center bg-[#25D366] text-white rounded-full px-4 py-3 shadow-lg hover:bg-[#128C7E] transition-all duration-300 transform hover:scale-105"
-          >
-            <MessageCircle className="h-5 w-5 mr-2" />
-            <span className="text-sm font-semibold whitespace-nowrap">Escribir por WhatsApp</span>
+            <Share2 className="h-4 w-4 mr-2" />
+            <span className="text-xs font-semibold whitespace-nowrap">Compartir</span>
           </button>
         </div>
       )}
@@ -48,14 +98,16 @@ const WhatsAppFloatingButton: React.FC = () => {
       <button
         onClick={toggleMenu}
         aria-label="Menú de WhatsApp"
-        className="bg-[#25D366] text-white p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.5)] hover:scale-110 hover:bg-[#128C7E] transition-all duration-300 animate-pulse flex items-center justify-center"
+        className={`
+          flex items-center justify-center p-4 rounded-full shadow-[0_0_20px_rgba(37,211,102,0.6)] 
+          transition-all duration-300 hover:scale-110 
+          ${isOpen ? 'bg-red-500 hover:bg-red-600 rotate-90' : 'bg-[#25D366] hover:bg-[#128C7E] animate-pulse'}
+        `}
       >
         {isOpen ? (
-          <X className="h-8 w-8" />
+          <X className="h-8 w-8 text-white" />
         ) : (
-          <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.79.46 3.48 1.32 4.94L2 22l5.27-1.38c1.41.81 3.02 1.29 4.77 1.29h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2zM9.53 8.3c.24-.24.58-.25.82-.25.22 0 .42.02.61.27.19.25.63 1.53.63 1.66 0 .13-.08.25-.16.33-.08.08-.19.1-.33.2-.14.1-.33.18-.48.28-.15.1-.3.23-.43.38-.13.15-.27.33-.11.62s.51.93.99 1.4c.66.66 1.2 1.03 1.35 1.15.15.12.24.1.38-.05.14-.15.63-.73.8-1s.17-.22.28-.13c.11.09 1 .48 1.18.56.18.08.3.13.35.19.05.06.03.93-.16 1.15-.19.22-1.18 1.11-1.36 1.13-.18.02-.38.03-.58.03-.2 0-1.03-.1-1.95-.58-.92-.48-1.78-1.24-2.52-2.14s-1.2-1.9-1.38-2.22c-.18-.32-.38-.68-.38-1.03 0-.35.2-.68.44-.92z" />
-          </svg>
+          <MessageCircle className="h-8 w-8 text-white" />
         )}
       </button>
     </div>

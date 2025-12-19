@@ -1,24 +1,31 @@
 import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
-import { Inter, Roboto_Mono, Oswald } from "next/font/google";
+import { Unbounded, Space_Grotesk, Chakra_Petch } from "next/font/google"; // AESTHETIC OVERHAUL
 import { Toaster } from "sonner";
 
 import "./globals.css";
 
-const inter = Inter({
+// 1. TITULOS / DISPLAY -> REEMPLAZA A OSWALD
+// "Unbounded": Ancha, agresiva, cultural, muy "street car scene".
+const fontDisplay = Unbounded({
+  variable: "--font-oswald", // Mantener variable para no romper CSS existente
+  subsets: ["latin"],
+  display: "swap",
+});
+
+// 2. CUERPO / TEXTO -> REEMPLAZA A INTER
+// "Space Grotesk": Geométrica pero con "quirks" extraños. Técnica y moderna.
+const fontBody = Space_Grotesk({
   variable: "--font-inter",
   subsets: ["latin"],
   display: "swap",
 });
 
-const robotoMono = Roboto_Mono({
+// 3. TECNICO / MONO -> REEMPLAZA A ROBOTO MONO
+// "Chakra Petch": Cuadrada, futurista, parece un display de un GTR.
+const fontTech = Chakra_Petch({
+  weight: ['300', '400', '500', '600', '700'],
   variable: "--font-roboto-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const oswald = Oswald({
-  variable: "--font-oswald",
   subsets: ["latin"],
   display: "swap",
 });
@@ -97,7 +104,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#1A0F08" />
       </head>
       <body
-        className={`${inter.variable} ${robotoMono.variable} ${oswald.variable} font-sans antialiased text-[#FFF8F0] selection:bg-[#FF9800]/30 min-h-screen relative`}
+        className={`${fontBody.variable} ${fontTech.variable} ${fontDisplay.variable} font-sans antialiased text-[#FFF8F0] selection:bg-[#FF9800]/30 min-h-screen relative`}
         style={{ backgroundColor: 'var(--color-bg-primary)' }}
       >
         <BackgroundProvider>
