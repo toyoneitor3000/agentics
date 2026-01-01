@@ -70,7 +70,7 @@ export default function CreatePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                     {/* OPTION 4: CINEMA SOCIAL (VERTICAL TALL CARD) - MOVED TO FIRST */}
-                    <Link href="/cinema/upload/social" className="group relative h-[550px] lg:h-auto lg:row-span-2 border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
+                    <Link href="/cinema/upload" className="group relative h-[550px] lg:h-auto lg:row-span-2 border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
                         {/* Different BG for Social - New Image V2 */}
                         <div className="absolute inset-0 bg-[url('/social-cinema-bg-v2.png')] bg-cover bg-center opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 pointer-events-none"></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
@@ -134,7 +134,7 @@ export default function CreatePage() {
                     </Link>
 
                     {/* OPTION 3: CINEMA FILMS (HORIZONTAL WIDE CARD) */}
-                    <Link href="/cinema/upload/film" className="md:col-span-2 group relative h-[260px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
+                    <Link href="/cinema/upload" className="md:col-span-2 group relative h-[260px] border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
                         <video
                             src="https://videos.pexels.com/video-files/854671/854671-hd_1920_1080_25fps.mp4"
                             autoPlay

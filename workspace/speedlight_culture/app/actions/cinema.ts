@@ -42,7 +42,7 @@ export async function submitVideo(data: CinemaVideoData) {
 
         await query(
             `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, format, music_metadata, status) 
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'approved')`,
             [
                 user.id,
                 data.title,

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import SpotifySearch from '@/app/components/cinema/SpotifySearch';
+import LocationInput from '@/app/components/LocationInput';
 
 // Helper for file size
 const formatFileSize = (bytes: number) => {
@@ -30,6 +31,8 @@ export default function UploadReelPage() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [format, setFormat] = useState<'horizontal' | 'vertical'>('horizontal'); // Auto-detected
+    const [location, setLocation] = useState('');
+    const [hashtags, setHashtags] = useState('');
     const [musicMetadata, setMusicMetadata] = useState<any>(null); // NEW STATE
 
     // UI STATES
@@ -235,9 +238,11 @@ export default function UploadReelPage() {
                 description,
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
-                category: 'Native',
+                category: finalFormat === 'vertical' ? 'Social' : 'Cinema',
                 format: finalFormat,
-                music_metadata: musicMetadata
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             await submitVideo({
@@ -245,9 +250,11 @@ export default function UploadReelPage() {
                 description: description,
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
-                category: 'Native',
+                category: finalFormat === 'vertical' ? 'Social' : 'Cinema',
                 format: finalFormat,
-                music_metadata: musicMetadata // <-- NEW FIELD
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             // SUCCESS!
@@ -260,7 +267,10 @@ export default function UploadReelPage() {
             setTitle('');
             setDescription('');
             setUploadProgress(0);
+            setUploadProgress(0);
             setMusicMetadata(null); // Reset music
+            setLocation('');
+            setHashtags('');
 
         } catch (e: any) {
             console.error(e);
@@ -345,7 +355,7 @@ export default function UploadReelPage() {
                                     <div className="text-center w-full px-12">
                                         <h3 className="text-lg font-bold text-white mb-1 truncate w-full">{selectedFile.name.toUpperCase()}</h3>
                                         <p className="text-[#FF9800] text-xs font-bold tracking-widest uppercase mb-4">
-                                            {isUploading ? `Subiendo ${uploadProgress}%` : formatFileSize(selectedFile.size) + ' • LISTO PARA PROCESAR'}
+                                            {isUploading ? `Subiendo ${uploadProgress}%` : formatFileSize(selectedFile.size) + (format === 'vertical' ? ' • LISTO (SOCIAL)' : ' • LISTO (CINEMA)')}
                                         </p>
 
                                         {/* Progress Bar */}
@@ -435,6 +445,26 @@ export default function UploadReelPage() {
                                 placeholder="Añade contexto, créditos y detalles técnicos..."
                                 rows={4}
                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm font-medium transition-colors resize-none"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Ubicación</label>
+                            <LocationInput
+                                value={location}
+                                onChange={setLocation}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Hashtags</label>
+                            <input
+                                type="text"
+                                value={hashtags}
+                                onChange={(e) => setHashtags(e.target.value)}
+                                placeholder="#cinema #racing #speedlight"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm transition-colors"
                             />
                         </div>
                     </div>
