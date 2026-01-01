@@ -10,7 +10,7 @@ interface BackgroundSettings {
     slideshowImages: string[];
     interval: number; // in seconds
     overlayOpacity: number; // 0 to 1
-    themeColor: 'coffee' | 'amber' | 'emerald' | 'cobalt' | 'crimson' | 'violet';
+    themeColor: 'coffee' | 'amber' | 'emerald' | 'crimson' | 'violet';
     brightness: number; // 0.5 to 1.5
     saturation: number; // 0 to 2
 }
@@ -46,9 +46,7 @@ export function BackgroundProvider({ children }: { children: React.ReactNode }) 
                 setSettings({
                     ...defaultSettings,
                     ...parsed,
-                    mode: "static",
-                    slideshowImages: [],
-                    staticImage: null,
+                    themeColor: (parsed.themeColor === 'cobalt') ? 'coffee' : (parsed.themeColor || 'coffee'),
                     brightness: (parsed.brightness && typeof parsed.brightness === 'number') ? parsed.brightness : 1,
                     saturation: (parsed.saturation && typeof parsed.saturation === 'number') ? parsed.saturation : 1
                 });

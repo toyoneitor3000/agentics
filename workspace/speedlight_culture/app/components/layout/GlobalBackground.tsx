@@ -13,7 +13,7 @@ export default function GlobalBackground() {
         coffee: '#1A0F08', // Default Dark Coffee
         amber: '#1A1400',  // Dark Amber/Ochre
         emerald: '#001A08', // Dark Racing Green
-        cobalt: '#050A1A',  // Deep Cobalt (Negative Light)
+
         crimson: '#1A0000', // Deep Red
         violet: '#10001A', // Deep Purple
     };

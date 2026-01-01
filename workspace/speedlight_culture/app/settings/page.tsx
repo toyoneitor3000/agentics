@@ -158,11 +158,11 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-6 gap-2">
+                            <div className="grid grid-cols-5 gap-2">
                                 <ThemeOption color="#1A0F08" label="Café" theme="coffee" active={themeColor === 'coffee'} onClick={() => updateSettings({ themeColor: 'coffee' })} />
                                 <ThemeOption color="#2E2000" label="Amber" theme="amber" active={themeColor === 'amber'} onClick={() => updateSettings({ themeColor: 'amber' })} />
                                 <ThemeOption color="#051A10" label="Verde" theme="emerald" active={themeColor === 'emerald'} onClick={() => updateSettings({ themeColor: 'emerald' })} />
-                                <ThemeOption color="#050A1A" label="Cobalt" theme="cobalt" active={themeColor === 'cobalt'} onClick={() => updateSettings({ themeColor: 'cobalt' })} />
+
                                 <ThemeOption color="#2A0505" label="Crimson" theme="crimson" active={themeColor === 'crimson'} onClick={() => updateSettings({ themeColor: 'crimson' })} />
                                 <ThemeOption color="#10001A" label="Violet" theme="violet" active={themeColor === 'violet'} onClick={() => updateSettings({ themeColor: 'violet' })} />
                             </div>
