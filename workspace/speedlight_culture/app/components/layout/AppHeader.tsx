@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard, ChevronLeft, Megaphone } from "lucide-react";
+import { Bell, User, LogIn, Search, Settings, Edit3, LogOut, Loader2, LayoutDashboard, ChevronLeft, Megaphone, MessageCircle } from "lucide-react";
 import { useSession, signOut } from "@/app/lib/auth-client";
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
@@ -143,16 +143,24 @@ export default function AppHeader() {
                     ) : (
                         /* Mobile: Message/Notification Icon on Main Pages (ONLY IF LOGGED IN) */
                         user && (
-                            <Link
-                                href="/notifications"
-                                onClick={handleNotificationClick}
-                                className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
-                            >
-                                <Bell className="w-6 h-6" />
-                                {hasUnreadNotifications && (
-                                    <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
-                                )}
-                            </Link>
+                            <>
+                                <Link
+                                    href="/messages"
+                                    className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
+                                >
+                                    <MessageCircle className="w-6 h-6" />
+                                </Link>
+                                <Link
+                                    href="/notifications"
+                                    onClick={handleNotificationClick}
+                                    className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
+                                >
+                                    <Bell className="w-6 h-6" />
+                                    {hasUnreadNotifications && (
+                                        <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
+                                    )}
+                                </Link>
+                            </>
                         )
                     )}
 
@@ -193,16 +201,24 @@ export default function AppHeader() {
                     {/* Desktop: Extra Actions (e.g. Notifications) */}
                     <div className="hidden md:flex items-center gap-2 mr-2">
                         {!showBackButton && user && (
-                            <Link
-                                href="/notifications"
-                                onClick={handleNotificationClick}
-                                className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
-                            >
-                                <Bell className="w-5 h-5" />
-                                {hasUnreadNotifications && (
-                                    <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
-                                )}
-                            </Link>
+                            <>
+                                <Link
+                                    href="/messages"
+                                    className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                </Link>
+                                <Link
+                                    href="/notifications"
+                                    onClick={handleNotificationClick}
+                                    className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
+                                >
+                                    <Bell className="w-5 h-5" />
+                                    {hasUnreadNotifications && (
+                                        <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
+                                    )}
+                                </Link>
+                            </>
                         )}
                     </div>
 

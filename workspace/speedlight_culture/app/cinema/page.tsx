@@ -5,10 +5,11 @@ import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
     Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
     ArrowLeft, Plus, Image as ImageIcon, Video, X, Gift, Gamepad2, ChevronDown,
-    Pencil, Archive, Trash2, MoreVertical
+    Pencil, Archive, Trash2, MoreVertical, Bookmark
 } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { getCinemaFeed, toggleLike, archiveVideo, deleteVideo, updateVideoMetadata } from '@/app/actions/cinema';
 import { useUi } from '@/app/context/UiContext';
@@ -30,6 +31,8 @@ const CATEGORIES = [
 ];
 
 export default function CinemaSocialPage() {
+    const searchParams = useSearchParams();
+    const videoIdParam = searchParams.get('video');
     const [featuredPost, setFeaturedPost] = useState<any>(null);
     const [categories, setCategories] = useState<any>({});
     const [isMuted, setIsMuted] = useState(false); // Sound ON by default (User Preference)
@@ -67,7 +70,21 @@ export default function CinemaSocialPage() {
                 console.log("Feed loaded:", processedFeed.length, "items");
                 console.log("Horizontal:", horizontalFeed.length, "Vertical:", verticalFeed.length);
 
-                if (verticalFeed.length > 0) {
+                if (videoIdParam) {
+                    const targetVideo = processedFeed.find((p: any) => p.id === videoIdParam);
+                    if (targetVideo) {
+                        if (targetVideo.format === 'vertical') {
+                            setViewMode('social');
+                            setActiveSocialPost(targetVideo);
+                            // Scroll handled in separate effect or callback
+                        } else {
+                            setViewMode('cinema');
+                            setActiveMovie(targetVideo);
+                        }
+                    } else if (verticalFeed.length > 0) {
+                        setActiveSocialPost(verticalFeed[0]);
+                    }
+                } else if (verticalFeed.length > 0) {
                     setActiveSocialPost(verticalFeed[0]);
                 }
 
@@ -96,8 +113,25 @@ export default function CinemaSocialPage() {
                 setIsLoading(false);
             }
         };
+
         loadContent();
-    }, []);
+    }, [videoIdParam]);
+
+    // Handle initial scroll for deep link
+    useEffect(() => {
+        if (videoIdParam && viewMode === 'social' && !isLoading && categories.vertical) {
+            const timer = setTimeout(() => {
+                const el = document.getElementById(`video-${videoIdParam}`);
+                if (el) {
+                    el.scrollIntoView({ behavior: 'auto' });
+                    // Also update active post just in case logic missed it
+                    const target = categories.vertical.find((p: any) => p.id === videoIdParam);
+                    if (target) setActiveSocialPost(target);
+                }
+            }, 500); // Small delay for render
+            return () => clearTimeout(timer);
+        }
+    }, [videoIdParam, viewMode, isLoading, categories]);
 
     // Keyboard Navigation for Social Mode (TikTok Style)
     const socialFeedRef = useRef<HTMLDivElement>(null);
@@ -169,39 +203,41 @@ export default function CinemaSocialPage() {
                 NEW UI: STICKY SUB-HEADER (Tightened per user request)
                 Matches AppHeader height (~70px) but overlaps slightly to save space
             ---------------------------------------------------------------------- */}
-            <div className={`fixed top-[60px] left-0 right-0 z-[140] flex items-center justify-between px-6 py-2 transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
-                {/* CENTERED TOGGLE (Now Integrated) */}
-                <div className="absolute left-1/2 -translate-x-1/2">
-                    <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-1 shadow-2xl">
-                        <button
-                            onClick={() => setViewMode('social')}
-                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
-                        >
-                            Social
-                        </button>
-                        <button
-                            onClick={() => setViewMode('cinema')}
-                            className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black shadow-lg shadow-[#FF9800]/20' : 'text-white/40 hover:text-white'}`}
-                        >
-                            Films
-                        </button>
-                    </div>
-                </div>
-
-                {/* RIGHT ACTION */}
-                <div className="ml-auto flex items-center gap-4">
-                    {/* Gamepad Indicator */}
-                    {isGamepadConnected && (
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#FF9800]/20 border border-[#FF9800]/50 rounded-full text-[#FF9800] animate-pulse">
-                            <Gamepad2 className="w-3 h-3" />
-                            <span className="text-[9px] font-bold uppercase tracking-wider">Mando Activo</span>
+                <div className="w-full px-4 md:px-8 flex items-center justify-between py-2 relative">
+                    {/* CENTERED TOGGLE (Now Integrated) */}
+                    <div className="absolute left-1/2 -translate-x-1/2">
+                        <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-[3px] shadow-2xl">
+                            <button
+                                onClick={() => setViewMode('social')}
+                                className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-white/40 hover:text-white'}`}
+                            >
+                                Social
+                            </button>
+                            <button
+                                onClick={() => setViewMode('cinema')}
+                                className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all duration-300 ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black shadow-lg shadow-[#FF9800]/20' : 'text-white/40 hover:text-white'}`}
+                            >
+                                Films
+                            </button>
                         </div>
-                    )}
+                    </div>
 
-                    <Link href="/cinema/upload" className="w-10 h-10 flex items-center justify-center bg-white/5 hover:bg-[#FF9800] backdrop-blur-md rounded-full border border-white/10 text-white hover:text-black transition-all shadow-lg group">
-                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform" />
-                    </Link>
+                    {/* RIGHT ACTION */}
+                    <div className="ml-auto flex items-center gap-4">
+                        {/* Gamepad Indicator */}
+                        {isGamepadConnected && (
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-[#FF9800]/20 border border-[#FF9800]/50 rounded-full text-[#FF9800] animate-pulse">
+                                <Gamepad2 className="w-3 h-3" />
+                                <span className="text-[9px] font-bold uppercase tracking-wider">Mando Activo</span>
+                            </div>
+                        )}
+
+                        <Link href="/cinema/upload" className="w-9 h-9 flex items-center justify-center bg-white/5 hover:bg-[#FF9800] backdrop-blur-md rounded-full border border-white/10 text-white hover:text-black transition-all shadow-lg group">
+                            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -309,7 +345,7 @@ export default function CinemaSocialPage() {
                     >
                         {/* Feed: ONLY VERTICAL POSTS. If none, show a placeholder or mix */}
                         {(categories.vertical && categories.vertical.length > 0 ? categories.vertical : []).map((post: any, i: number) => (
-                            <div key={post.id} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
+                            <div key={post.id} id={`video-${post.id}`} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
                                 <ImmersiveCinemaMode
                                     post={post}
                                     onClose={() => { }} // No close in feed mode
@@ -1281,6 +1317,10 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
     const [showComments, setShowComments] = useState(false);
     const [showGifting, setShowGifting] = useState(false);
 
+    // NEW: Text Expansion State
+    const [expanded, setExpanded] = useState(false);
+    const isLongDescription = post.description && post.description.length > 100;
+
     // NEW: Sync Real Comment Count on Mount
     useEffect(() => {
         const fetchRealCount = async () => {
@@ -1366,19 +1406,19 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
     };
 
     return (
-        <div className="w-full h-full pointer-events-none z-20 flex flex-col justify-between">
+        <div className="w-full h-full pointer-events-none z-20 px-4 md:px-8 flex flex-col justify-between">
 
             {/* TOP BAR: Transparent */}
-            <div className="w-full p-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
+            <div className="w-full pt-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
                 {/* Mute button moved to bottom right */}
             </div>
 
             {/* BOTTOM AREA: Actions & Info */}
-            <div className={`w-full flex items-end justify-between px-4 pb-4`}> {/* Raised PB to clear Nav */}
+            <div className={`w-full flex items-end justify-between pb-4`}> {/* Raised PB to clear Nav */}
 
                 {/* LEFT: INFO */}
                 <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
-                    <div className="flex items-center mb-2">
+                    <div className="flex items-center mb-1">
                         <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative mr-2 shrink-0">
                             {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
                         </div>
@@ -1409,7 +1449,31 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         </div>
                     </div>
                     <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
-                    <p className="text-white/80 text-xs line-clamp-2 drop-shadow-md mb-2">{post.description}</p>
+
+                    <div className="mb-1 relative">
+                        <p
+                            className={`text-white/80 text-xs drop-shadow-md transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}
+                            onClick={() => { if (isLongDescription) setExpanded(!expanded); }}
+                        >
+                            {post.description}
+                            {expanded && (
+                                <span
+                                    onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+                                    className="text-white/50 font-bold text-xs ml-2 hover:text-white cursor-pointer"
+                                >
+                                    Ver menos
+                                </span>
+                            )}
+                        </p>
+                        {isLongDescription && !expanded && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+                                className="absolute bottom-0 right-0 pl-12 pr-1 bg-gradient-to-l from-black via-black/80 to-transparent text-white font-bold text-xs hover:text-[#FF9800]"
+                            >
+                                ... Ver más
+                            </button>
+                        )}
+                    </div>
 
                     {/* Tags / Music ticker */}
                     <div className="flex items-center gap-2 text-[10px] text-white/70">
@@ -1434,8 +1498,8 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
 
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
-                            <Heart className={`w-6 h-6 ${liked ? 'fill-current' : ''}`} />
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
+                            <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
                     </button>
@@ -1445,30 +1509,10 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
                         className="flex flex-col items-center gap-1 group"
                     >
-                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <MessageCircle className="w-6 h-6" />
+                        <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <MessageCircle className="w-5 h-5" />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(commentCount)}</span>
-                    </button>
-
-                    {/* SAVE / BOOKMARK */}
-                    <button onClick={handleSave} className="flex flex-col items-center gap-1 group">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white transition-all ${saved ? 'bg-[#FF9800]/20 text-[#FF9800]' : 'bg-black/20 hover:bg-black/40'}`}>
-                            {saved ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" /></svg>
-                            )}
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{saved ? 'Guardado' : 'Guardar'}</span>
-                    </button>
-
-                    {/* SHARE */}
-                    <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
-                        <div className="w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" /><line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" /></svg>
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Compartir</span>
                     </button>
 
                     {/* GIFT (NEW - FUNCTIONAL) */}
@@ -1476,14 +1520,19 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         onClick={(e) => { e.stopPropagation(); setShowGifting(true); }}
                         className="flex flex-col items-center gap-1 group"
                     >
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
-                            <Gift className="w-6 h-6" />
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
+                            <Gift className="w-5 h-5" />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
                     </button>
 
-                    {/* MORE ACTIONS (OWNER ONLY) */}
-                    <VideoActionsMenu post={post} />
+                    {/* MORE ACTIONS (MENU) */}
+                    <VideoActionsMenu
+                        post={post}
+                        saved={saved}
+                        onSave={handleSave}
+                        onShare={handleShare}
+                    />
 
                 </div>
             </div>
@@ -1565,9 +1614,9 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
 }
 
 // ----------------------------------------------------------------------
-// VIDEO ACTIONS MENU (Owner Only)
+// VIDEO ACTIONS MENU (Now for Everyone + Owner Extras)
 // ----------------------------------------------------------------------
-function VideoActionsMenu({ post }: { post: any }) {
+function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: boolean, onSave: (e: any) => void, onShare: (e: any) => void }) {
     const { data: session } = useSession();
     const [isOpen, setIsOpen] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -1575,7 +1624,7 @@ function VideoActionsMenu({ post }: { post: any }) {
     const [confirmDelete, setConfirmDelete] = useState(false);
     const isOwner = session?.user?.id === post.creatorId;
 
-    if (!isOwner) return null;
+    // if (!isOwner) return null; // REMOVED: Now showing for everyone
 
     const handleArchive = async () => {
         try {
@@ -1602,9 +1651,9 @@ function VideoActionsMenu({ post }: { post: any }) {
             <div className="relative">
                 <button
                     onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}
+                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}
                 >
-                    <MoreVertical className="w-6 h-6" />
+                    <MoreVertical className="w-5 h-5" />
                 </button>
 
                 <AnimatePresence>
@@ -1619,24 +1668,52 @@ function VideoActionsMenu({ post }: { post: any }) {
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                                 className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
                             >
+                                {/* PUBLIC ACTIONS */}
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setShowEditModal(true); setIsOpen(false); }}
+                                    onClick={(e) => {
+                                        setIsOpen(false);
+                                        onSave(e);
+                                    }}
                                     className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
                                 >
-                                    <Pencil className="w-4 h-4 text-[#FF9800]" /> Editar Video
+                                    <Bookmark className={`w-4 h-4 ${saved ? 'text-[#FF9800] fill-[#FF9800]' : 'text-white'}`} />
+                                    {saved ? 'Guardado' : 'Guardar'}
                                 </button>
+
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setConfirmArchive(true); setIsOpen(false); }}
+                                    onClick={(e) => {
+                                        setIsOpen(false);
+                                        onShare(e);
+                                    }}
                                     className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
                                 >
-                                    <Archive className="w-4 h-4 text-blue-400" /> Archivar
+                                    <Share2 className="w-4 h-4 text-white" /> Compartir
                                 </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setIsOpen(false); }}
-                                    className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
-                                >
-                                    <Trash2 className="w-4 h-4" /> Eliminar
-                                </button>
+
+                                {/* OWNER ONLY ACTIONS */}
+                                {isOwner && (
+                                    <>
+                                        <div className="h-px bg-white/10 my-1 mx-2"></div>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setShowEditModal(true); setIsOpen(false); }}
+                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                        >
+                                            <Pencil className="w-4 h-4 text-[#FF9800]" /> Editar Video
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setConfirmArchive(true); setIsOpen(false); }}
+                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                        >
+                                            <Archive className="w-4 h-4 text-blue-400" /> Archivar
+                                        </button>
+                                        <button
+                                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setIsOpen(false); }}
+                                            className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                        >
+                                            <Trash2 className="w-4 h-4" /> Eliminar
+                                        </button>
+                                    </>
+                                )}
                             </motion.div>
                         </>
                     )}

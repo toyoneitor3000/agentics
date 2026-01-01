@@ -185,9 +185,12 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
             <div className={`relative w-full ${AspectRatioClass} bg-[#050505] overflow-hidden rounded-3xl`}>
                 {/* Video Indicator */}
                 {(item.type === 'cinema' || item.type === 'social') && (
-                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 bg-[#FF9800]/20 backdrop-blur-md rounded-full flex items-center justify-center border border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.3)] transition-all duration-500 ${item.content?.video ? 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110' : 'group-hover:scale-110 animate-pulse'}`}>
-                        <Play className="w-6 h-6 text-[#FF9800] ml-1 fill-[#FF9800]" />
-                    </div>
+                    <>
+                        <Link href={`/cinema?video=${item.id}`} className="absolute inset-0 z-10" aria-label="Open video" />
+                        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 bg-[#FF9800]/20 backdrop-blur-md rounded-full flex items-center justify-center border border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.3)] transition-all duration-500 ${item.content?.video ? 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110' : 'group-hover:scale-110 animate-pulse'}`}>
+                            <Play className="w-6 h-6 text-[#FF9800] ml-1 fill-[#FF9800]" />
+                        </div>
+                    </>
                 )}
 
                 {(item.type === 'cinema' || item.type === 'social') && item.content?.video ? (

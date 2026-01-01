@@ -26,6 +26,7 @@ export default function ConfirmModal({
 }: ConfirmModalProps) {
     if (!isOpen) return null;
 
+
     const colors = {
         danger: 'bg-red-500 text-white hover:bg-red-600',
         warning: 'bg-yellow-500 text-black hover:bg-yellow-600',
