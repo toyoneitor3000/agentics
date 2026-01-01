@@ -231,7 +231,7 @@ export default function Navbar() {
                     <div className="pt-8 mt-4">
                         {!user ? (
                             <Link href="/login" onClick={() => setIsMobileNavOpen(false)} className="w-full flex justify-center py-4 bg-[#FF9800] text-black font-bold uppercase tracking-widest rounded-lg shadow-[0_0_20px_rgba(255,152,0,0.4)]">
-                                Acceder / Registro
+                                Acceder
                             </Link>
                         ) : (
                             <button onClick={handleSignOut} className="w-full flex justify-center py-4 border border-red-500/50 text-red-500 font-bold uppercase tracking-widest rounded-lg hover:bg-red-500/10">

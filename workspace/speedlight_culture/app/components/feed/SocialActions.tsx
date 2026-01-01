@@ -5,6 +5,7 @@ import { createClient } from "@/app/utils/supabase/client";
 import { Heart, MessageCircle, Share2, Send, X, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 
 interface SocialActionsProps {
     entityId: string;
@@ -13,6 +14,7 @@ interface SocialActionsProps {
     initialComments: number;
     initialIsLiked: boolean;
     currentUserId?: string;
+    onRequireAuth?: () => void;
 }
 
 export default function SocialActions({
@@ -21,7 +23,8 @@ export default function SocialActions({
     initialLikes,
     initialComments,
     initialIsLiked,
-    currentUserId
+    currentUserId,
+    onRequireAuth
 }: SocialActionsProps) {
     const supabase = createClient();
     const [liked, setLiked] = useState(initialIsLiked);
@@ -33,7 +36,10 @@ export default function SocialActions({
     const [loadingComments, setLoadingComments] = useState(false);
 
     const handleLike = async () => {
-        if (!currentUserId) return; // Prompt login ideally
+        if (!currentUserId) {
+            onRequireAuth?.();
+            return;
+        }
 
         // Optimistic Update
         const newLiked = !liked;
@@ -95,7 +101,12 @@ export default function SocialActions({
     };
 
     const handlePostComment = async () => {
-        if (!commentText.trim() || !currentUserId) return;
+        if (!commentText.trim()) return;
+
+        if (!currentUserId) {
+            onRequireAuth?.();
+            return;
+        }
 
         const tempId = Math.random().toString();
         const newComment = {
@@ -169,7 +180,7 @@ export default function SocialActions({
                             }).catch(console.error);
                         } else {
                             navigator.clipboard.writeText(url);
-                            alert("Enlace copiado al portapapeles");
+                            toast.success("Enlace copiado al portapapeles");
                         }
                     }}
                     className="text-white/40 hover:text-white transition-colors"
@@ -252,15 +263,16 @@ export default function SocialActions({
                                         value={commentText}
                                         onChange={(e) => setCommentText(e.target.value)}
                                         onKeyDown={(e) => e.key === 'Enter' && handlePostComment()}
-                                        placeholder={currentUserId ? "Añade un comentario..." : "Inicia sesión..."}
-                                        disabled={!currentUserId}
+                                        onClick={() => !currentUserId && onRequireAuth?.()}
+                                        placeholder={currentUserId ? "Añade un comentario..." : "Inicia sesión para comentar..."}
+                                        readOnly={!currentUserId}
                                         className="w-full bg-white/5 border border-white/10 rounded-full pl-4 pr-12 py-3 text-sm text-white placeholder-white/30 focus:outline-none focus:border-[#FF9800]/50 transition-all font-light"
-                                        autoFocus={isCommentsOpen}
+                                        autoFocus={isCommentsOpen && !!currentUserId}
                                     />
                                     <button
                                         onClick={handlePostComment}
-                                        disabled={!commentText.trim() || !currentUserId}
-                                        className="absolute right-1 top-1Bottom-1 bottom-1 aspect-square bg-[#FF9800] text-black rounded-full hover:bg-[#ffad33] disabled:opacity-0 disabled:scale-90 transition-all flex items-center justify-center w-8 h-8 my-auto top-0 mt-1 mr-1"
+                                        disabled={(!commentText.trim() && !!currentUserId)}
+                                        className="absolute right-1 top-1 bottom-1 aspect-square bg-[#FF9800] text-black rounded-full hover:bg-[#ffad33] disabled:opacity-0 disabled:scale-90 transition-all flex items-center justify-center w-8 h-8 my-auto top-0 mt-1 mr-1"
                                     >
                                         <Send className="w-4 h-4 ml-0.5" />
                                     </button>

@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import SpotifySearch from '@/app/components/cinema/SpotifySearch';
+import LocationInput from '@/app/components/LocationInput';
 
 // Helper for file size
 const formatFileSize = (bytes: number) => {
@@ -29,6 +30,8 @@ export default function UploadFilmPage() {
     const [videoUrl, setVideoUrl] = useState('');
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
+    const [hashtags, setHashtags] = useState('');
 
     // STRICT FORMAT: HORIZONTAL ONLY
     const [formatError, setFormatError] = useState<string | null>(null);
@@ -229,9 +232,11 @@ export default function UploadFilmPage() {
                 description,
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
-                category: 'Cinema', // Or Native
-                format: 'horizontal', // HARDCODED
-                music_metadata: musicMetadata
+                category: 'Native', // Defaulting to Native for uploaded films
+                format: 'horizontal',
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             await submitVideo({
@@ -239,9 +244,11 @@ export default function UploadFilmPage() {
                 description: description,
                 video_url: finalVideoUrl,
                 thumbnail_url: finalThumb,
-                category: 'Native', // Defaulting to Native for uploaded films
+                category: 'Native',
                 format: 'horizontal',
-                music_metadata: musicMetadata
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             // SUCCESS!
@@ -255,6 +262,8 @@ export default function UploadFilmPage() {
             setDescription('');
             setUploadProgress(0);
             setMusicMetadata(null);
+            setLocation('');
+            setHashtags('');
 
         } catch (e: any) {
             console.error(e);
@@ -388,7 +397,6 @@ export default function UploadFilmPage() {
                     {/* MODE B: EXTERNAL LINK IMPORT */}
                     {mode === 'link' && (
                         <div className="relative w-full aspect-video rounded-3xl border border-white/10 bg-white/5 flex flex-col items-center justify-center p-8 text-center animate-in fade-in duration-300">
-                            {/* ... LINK UI SAME AS BEFORE ... */}
                             <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
                                 <svg viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8 text-red-500">
                                     <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
@@ -451,9 +459,35 @@ export default function UploadFilmPage() {
                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm font-medium transition-colors resize-none"
                             />
                         </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Ubicación</label>
+                            <LocationInput
+                                value={location}
+                                onChange={setLocation}
+                                className="w-full"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Hashtags (separados por espacio)</label>
+                            <input
+                                type="text"
+                                value={hashtags}
+                                onChange={(e) => setHashtags(e.target.value)}
+                                placeholder="#movie #cinema #racing"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-[#FF9800] text-sm transition-colors"
+                            />
+                        </div>
                     </div>
 
                     <div className="pt-4 mt-auto space-y-4 relative z-10 transition-opacity duration-300" style={{ opacity: formatError ? 0.3 : 1, pointerEvents: formatError ? 'none' : 'auto' }}>
+
+                        {/* SPOTIFY SEARCH INTEGRATION */}
+                        <div className="pt-2">
+                            <SpotifySearch onSelect={(track: any) => setMusicMetadata(track)} />
+                        </div>
+
                         <div className="flex items-start gap-3 p-4 bg-[#FF9800]/5 rounded-xl border border-[#FF9800]/20">
                             <Info className="w-5 h-5 text-[#FF9800] shrink-0 mt-0.5" />
                             <p className="text-[10px] text-white/60 leading-relaxed">

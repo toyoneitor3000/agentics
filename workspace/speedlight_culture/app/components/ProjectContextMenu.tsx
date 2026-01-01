@@ -5,9 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { MoreVertical, Edit, Eye, EyeOff, Trash2 } from 'lucide-react';
 import { createClient } from '@/app/utils/supabase/client';
+import { toast } from 'sonner';
+import ConfirmModal from './ui/ConfirmModal';
 
 export default function ProjectContextMenu({ projectId, isArchived }: { projectId: string, isArchived?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
     const router = useRouter();
     const supabase = createClient();
 
@@ -19,16 +22,21 @@ export default function ProjectContextMenu({ projectId, isArchived }: { projectI
 
     const handleArchive = async () => {
         await supabase.from('projects').update({ archived: !isArchived }).eq('id', projectId);
+        toast.success(isArchived ? 'Proyecto restaurado' : 'Proyecto archivado');
         setIsOpen(false);
         router.refresh();
     };
 
     const handleDelete = async () => {
-        if (!confirm('¿Estás seguro de eliminar este proyecto permanentemente?')) return;
-
-        await supabase.from('projects').delete().eq('id', projectId);
-        router.push('/profile'); // Redirect to profile after delete
-        router.refresh();
+        toast.promise(async () => {
+            await supabase.from('projects').delete().eq('id', projectId);
+            router.push('/profile');
+            router.refresh();
+        }, {
+            loading: 'Eliminando proyecto...',
+            success: 'Proyecto eliminado',
+            error: 'Error al eliminar'
+        });
     };
 
     return (
@@ -65,7 +73,7 @@ export default function ProjectContextMenu({ projectId, isArchived }: { projectI
 
                         {/* Delete */}
                         <button
-                            onClick={handleDelete}
+                            onClick={() => { setConfirmDelete(true); setIsOpen(false); }}
                             className="px-5 py-4 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
                         >
                             <Trash2 className="w-4 h-4" /> Eliminar Proyecto
@@ -73,6 +81,15 @@ export default function ProjectContextMenu({ projectId, isArchived }: { projectI
                     </div>
                 </>
             )}
+
+            <ConfirmModal
+                isOpen={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={handleDelete}
+                title="Eliminar Proyecto"
+                message="¿Estás seguro de que deseas eliminar este proyecto permanentemente? Esta acción borrará todas las fotos y datos asociados."
+                confirmText="Eliminar permanentemente"
+            />
         </div>
     );
 }

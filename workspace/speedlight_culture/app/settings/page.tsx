@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession, signOut } from "@/app/lib/auth-client";
 import { createClient } from '@/app/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Lock, Globe, Shield, ChevronRight, LogOut, Trash2, Palette } from 'lucide-react';
+import { ArrowLeft, Lock, Globe, Shield, ChevronRight, LogOut, Trash2, Palette, Video, History } from 'lucide-react';
+import DeletedFilesManager from '@/app/components/settings/DeletedFilesManager';
 import Link from 'next/link';
 import { useLanguage } from '@/app/context/LanguageContext';
 import { useBackground } from '@/app/context/BackgroundContext';
@@ -301,6 +302,21 @@ export default function SettingsPage() {
                             </div>
                         </div>
                     </section>
+
+                    {/* Deleted Files Manager (User Only) */}
+                    {user && (
+                        <section>
+                            <h2 className="text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-4 px-2 flex items-center gap-2">
+                                <History className="w-4 h-4" /> Gestión de Archivos
+                            </h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 px-2">Archivos Eliminados Recentemente</h3>
+                                    <DeletedFilesManager />
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* General Account Actions */}
                     <section>

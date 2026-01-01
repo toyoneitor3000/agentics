@@ -87,16 +87,30 @@ export async function deleteContent(type: ContentType, id: string) {
     }
 
     // Execute Delete
-    const { error } = await supabaseAdmin
-        .from(type)
-        .delete()
-        .eq('id', id);
+    // IF it's a video, we do a SOFT DELETE (move to Deleted category)
+    if (type === 'cinema_videos') {
+        const { error } = await supabaseAdmin
+            .from(type)
+            .update({ category: 'Deleted' })
+            .eq('id', id);
 
-    if (error) {
-        throw new Error(error.message);
+        if (error) {
+            throw new Error(error.message);
+        }
+    } else {
+        // Execute Hard Delete
+        const { error } = await supabaseAdmin
+            .from(type)
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            throw new Error(error.message);
+        }
     }
 
     revalidatePath('/profile');
+    revalidatePath('/settings');
     return { success: true };
 }
 

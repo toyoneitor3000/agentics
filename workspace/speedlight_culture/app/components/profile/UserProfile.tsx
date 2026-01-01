@@ -162,16 +162,19 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
     // Filter Content (Active vs Archived)
     const filterContent = (items: any[]) => {
-        const active = items.filter(i => !i.archived);
-        const archived = items.filter(i => i.archived);
+        // Exclude deleted (soft-delete for videos)
+        const nonDeleted = items.filter(i => i.category !== 'Deleted');
+        const active = nonDeleted.filter(i => !i.archived);
+        const archived = nonDeleted.filter(i => i.archived);
         return { active, archived };
     };
 
     const projects = filterContent(content.projects);
     const albums = filterContent(content.albums);
     const events = filterContent(content.events);
+    const videos = filterContent(content.videos);
 
-    const hasArchivedContent = projects.archived.length > 0 || albums.archived.length > 0 || events.archived.length > 0;
+    const hasArchivedContent = projects.archived.length > 0 || albums.archived.length > 0 || events.archived.length > 0 || videos.archived.length > 0;
 
     const toggleMenu = (id: string, e: React.MouseEvent) => {
         e.preventDefault();
@@ -195,7 +198,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
     };
 
     const handleDelete = (type: 'projects' | 'gallery_albums' | 'events' | 'cinema_videos', id: string) => {
-        toast("¿Eliminar permanentemente?", {
+        toast(type === 'cinema_videos' ? "¿Mover a eliminados?" : "¿Eliminar permanentemente?", {
             action: {
                 label: 'Sí, eliminar',
                 onClick: () => {
@@ -634,9 +637,9 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
                         {/* CINEMA */}
                         {activeTab === 'cinema' && (
-                            content.videos && content.videos.filter(v => v.format !== 'vertical').length > 0 ? (
+                            videos.active.filter(v => v.format !== 'vertical').length > 0 ? (
                                 <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 gap-4" : "flex flex-col gap-3"}>
-                                    {content.videos.filter(v => v.format !== 'vertical').map((v) => (
+                                    {videos.active.filter(v => v.format !== 'vertical').map((v) => (
                                         <div key={v.id} className="relative group bg-[#111] rounded-xl overflow-hidden border border-[#222]">
                                             <SelectableItem id={v.id}>
 
@@ -721,9 +724,9 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
 
                         {/* SOCIAL (Vertical Only) */}
                         {activeTab === 'social' && (
-                            content.videos && content.videos.filter(v => v.format === 'vertical').length > 0 ? (
+                            videos.active.filter(v => v.format === 'vertical').length > 0 ? (
                                 <div className={viewMode === 'grid' ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" : "flex flex-col gap-3"}>
-                                    {content.videos.filter(v => v.format === 'vertical').map((v) => (
+                                    {videos.active.filter(v => v.format === 'vertical').map((v) => (
                                         <div key={v.id} className="relative group bg-[#111] rounded-xl overflow-hidden border border-[#222]">
                                             <SelectableItem id={v.id}>
 
@@ -822,6 +825,31 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                                                         {a.cover_url && <Image src={a.cover_url} alt={a.title} fill className="object-cover grayscale" />}
                                                     </div>
                                                     <ActionMenu type="gallery_albums" id={a.id} isArchived={true} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {videos.archived.length > 0 && (
+                                    <div>
+                                        <h3 className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4 flex items-center gap-2">
+                                            <Youtube className="w-4 h-4" /> Videos y Reels Archivados
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                            {videos.archived.map((v) => (
+                                                <div key={v.id} className="relative group opacity-60 hover:opacity-100 transition-opacity">
+                                                    <div className={`${v.format === 'vertical' ? 'aspect-[9/16]' : 'aspect-video'} bg-[#1a1a1a] rounded-xl overflow-hidden relative`}>
+                                                        {v.thumbnail_url ? (
+                                                            <Image src={v.thumbnail_url} alt={v.title} fill className="object-cover grayscale" />
+                                                        ) : (
+                                                            <video src={v.video_url} className="w-full h-full object-cover grayscale" />
+                                                        )}
+                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                                                            <EyeOff className="w-6 h-6 text-white/50" />
+                                                        </div>
+                                                    </div>
+                                                    <ActionMenu type="cinema_videos" id={v.id} isArchived={true} onEdit={() => setEditingVideo(v)} />
                                                 </div>
                                             ))}
                                         </div>

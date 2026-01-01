@@ -22,8 +22,8 @@ interface VideoEditModalProps {
 export default function VideoEditModal({ isOpen, onClose, video }: VideoEditModalProps) {
     const [title, setTitle] = useState(video.title);
     const [description, setDescription] = useState(video.description || '');
-    const [location, setLocation] = useState(video.location || '');
-    const [hashtags, setHashtags] = useState(video.hashtags?.join(' ') || '');
+    const [location, setLocation] = useState(video.location || video.music_metadata?.location || '');
+    const [hashtags, setHashtags] = useState(video.hashtags?.join(' ') || video.music_metadata?.hashtags?.join(' ') || '');
     const [format, setFormat] = useState<'horizontal' | 'vertical'>(video.format || 'horizontal');
     const [musicMetadata, setMusicMetadata] = useState<any>(video.music_metadata || null);
     const [isSaving, setIsSaving] = useState(false);
@@ -34,7 +34,7 @@ export default function VideoEditModal({ isOpen, onClose, video }: VideoEditModa
         setIsSaving(true);
         try {
             // Convert hashtags string to array
-            const tagsArray = hashtags.split(' ').filter(t => t.length > 0).map(t => t.startsWith('#') ? t : `#${t}`);
+            const tagsArray = hashtags.split(/[ ,]+/).filter((t: string) => t.length > 0).map((t: string) => t.startsWith('#') ? t : `#${t}`);
 
             await updateVideoMetadata(video.id, {
                 title,
@@ -46,6 +46,8 @@ export default function VideoEditModal({ isOpen, onClose, video }: VideoEditModa
             });
             toast.success('Video actualizado correctamente');
             onClose();
+            // Refresh parent components
+            window.location.reload();
         } catch (error) {
             console.error(error);
             toast.error('Error al actualizar video');
@@ -110,9 +112,21 @@ export default function VideoEditModal({ isOpen, onClose, video }: VideoEditModa
                                         <Music className="w-5 h-5 text-white/50 m-auto" />
                                     )}
                                 </div>
-                                <div className="min-w-0">
-                                    <h4 className="text-sm font-bold text-white truncate">{musicMetadata.name}</h4>
-                                    <p className="text-xs text-white/50 truncate">{musicMetadata.artist}</p>
+                                <div className="min-w-0 flex-1 space-y-1">
+                                    <input
+                                        type="text"
+                                        value={musicMetadata.name}
+                                        onChange={(e) => setMusicMetadata({ ...musicMetadata, name: e.target.value })}
+                                        className="w-full bg-transparent border-none p-0 text-sm font-bold text-white focus:ring-0 focus:outline-none placeholder:text-white/20"
+                                        placeholder="Nombre de la canción"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={musicMetadata.artist}
+                                        onChange={(e) => setMusicMetadata({ ...musicMetadata, artist: e.target.value })}
+                                        className="w-full bg-transparent border-none p-0 text-xs text-white/50 focus:ring-0 focus:outline-none placeholder:text-white/20"
+                                        placeholder="Artista"
+                                    />
                                 </div>
                             </div>
                         ) : (

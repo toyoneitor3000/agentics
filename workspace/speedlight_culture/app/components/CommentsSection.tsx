@@ -5,6 +5,7 @@ import { createClient } from '@/app/utils/supabase/client';
 import { Send, MessageSquare, Heart, Reply, Gift } from 'lucide-react';
 import { useSession } from '@/app/lib/auth-client';
 import Image from "next/image";
+import { toast } from 'sonner';
 
 interface Comment {
     id: string;
@@ -77,7 +78,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
 
             if (error) {
                 console.error("Error posting comment:", error);
-                alert("Error al publicar: " + error.message);
+                toast.error("Error al publicar: " + error.message);
             } else {
                 setNewComment('');
                 await fetchComments(); // Force immediate update
@@ -167,7 +168,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
                                                 <button
                                                     key={gift.id}
                                                     onClick={() => {
-                                                        alert(`Enviaste ${gift.icon} a ${comment.profiles?.full_name}`);
+                                                        toast.success(`Enviaste ${gift.icon} a ${comment.profiles?.full_name}`);
                                                         setActiveGiftMenu(null);
                                                     }}
                                                     className="flex flex-col items-center justify-center w-10 h-12 bg-white/5 hover:bg-[#FF9800]/20 rounded-lg transition-colors border border-transparent hover:border-[#FF9800]/50"

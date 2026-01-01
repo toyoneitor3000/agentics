@@ -1,4 +1,5 @@
 import HeroSection from './components/HeroSection';
+import HolidayNotice from './components/HolidayNotice';
 import FeaturedServicesBar from './components/FeaturedServicesBar';
 import AboutUsSection from './components/AboutUsSection';
 import ServicesSection from './components/ServicesSection';
@@ -11,6 +12,7 @@ import Footer from './components/Footer';
 export default function Home() {
   return (
     <main>
+      <HolidayNotice />
       <HeroSection />
       <FeaturedServicesBar />
       <AboutUsSection />

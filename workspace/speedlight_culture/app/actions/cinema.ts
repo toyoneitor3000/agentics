@@ -14,10 +14,12 @@ async function getSessionUser() {
     return session?.user;
 }
 
-interface CinemaVideoData {
+export interface CinemaVideoData {
     title: string;
     description: string;
     video_url: string;
+    location?: string;
+    hashtags?: string[];
     thumbnail_url?: string;
     category?: string;
     format?: 'horizontal' | 'vertical';
@@ -29,6 +31,15 @@ export async function submitVideo(data: CinemaVideoData) {
     if (!user) throw new Error("Unauthorized");
 
     try {
+        // Prepare music_metadata with location and hashtags if they exist
+        const musicMetadata = data.music_metadata || {};
+        if (data.location) {
+            musicMetadata.location = data.location;
+        }
+        if (data.hashtags) {
+            musicMetadata.hashtags = data.hashtags;
+        }
+
         await query(
             `INSERT INTO cinema_videos (user_id, title, description, video_url, thumbnail_url, category, format, music_metadata, status) 
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')`,
@@ -40,7 +51,7 @@ export async function submitVideo(data: CinemaVideoData) {
                 data.thumbnail_url || null,
                 data.category || 'General',
                 data.format || 'horizontal',
-                data.music_metadata || null
+                musicMetadata || null
             ]
         );
 
@@ -67,10 +78,15 @@ export async function updateVideoMetadata(id: string, data: { title: string; des
     const values: any[] = [];
     let queryIndex = 1;
 
+    // Prepare music_metadata with hashtags and location
+    const musicMeta = data.music_metadata || {};
+    if (data.location) musicMeta.location = data.location;
+    if (data.hashtags) musicMeta.hashtags = data.hashtags;
+
     if (data.title) { updates.push(`title = $${queryIndex++}`); values.push(data.title); }
     if (data.description !== undefined) { updates.push(`description = $${queryIndex++}`); values.push(data.description); }
     if (data.format) { updates.push(`format = $${queryIndex++}`); values.push(data.format); }
-    if (data.music_metadata !== undefined) { updates.push(`music_metadata = $${queryIndex++}`); values.push(data.music_metadata); }
+    updates.push(`music_metadata = $${queryIndex++}`); values.push(musicMeta);
 
     // Add ID as last parameter
     values.push(id);
@@ -258,7 +274,7 @@ export async function getCinemaFeed() {
                 ${userId ? `(EXISTS(SELECT 1 FROM follows f WHERE f.follower_id = $1 AND f.following_id = u.id))` : 'false'} as is_following
              FROM cinema_videos v
              LEFT JOIN "user" u ON v.user_id = u.id
-             WHERE v.status = 'approved' AND v.video_url IS NOT NULL
+             WHERE v.status = 'approved' AND v.video_url IS NOT NULL AND (v.archived IS FALSE OR v.archived IS NULL)
              ORDER BY v.created_at DESC`,
             userId ? [userId] : []
         );
@@ -285,6 +301,7 @@ export async function getCinemaFeed() {
                 description: row.description,
                 format: effectiveFormat,
                 music_metadata: row.music_metadata,
+                archived: row.archived || false,
                 created_at: row.created_at // Expose Date for sorting
             };
         });
@@ -293,3 +310,39 @@ export async function getCinemaFeed() {
         return [];
     }
 }
+
+export async function archiveVideo(id: string) {
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    // Verify ownership
+    const { rows } = await query('SELECT user_id, archived FROM cinema_videos WHERE id = $1', [id]);
+    if (rows.length === 0) throw new Error("Not found");
+    if (rows[0].user_id !== user.id) throw new Error("Forbidden");
+
+    const newArchivedState = !rows[0].archived;
+
+    await query(
+        'UPDATE cinema_videos SET archived = $1 WHERE id = $2',
+        [newArchivedState, id]
+    );
+
+    revalidatePath('/cinema');
+    return { success: true, archived: newArchivedState };
+}
+
+export async function deleteVideo(id: string) {
+    const user = await getSessionUser();
+    if (!user) throw new Error("Unauthorized");
+
+    // Verify ownership
+    const { rows } = await query('SELECT user_id FROM cinema_videos WHERE id = $1', [id]);
+    if (rows.length === 0) throw new Error("Not found");
+    if (rows[0].user_id !== user.id) throw new Error("Forbidden");
+
+    await query('DELETE FROM cinema_videos WHERE id = $1', [id]);
+
+    revalidatePath('/cinema');
+    return { success: true };
+}
+

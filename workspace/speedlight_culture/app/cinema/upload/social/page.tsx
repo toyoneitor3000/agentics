@@ -8,6 +8,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import SpotifySearch from '@/app/components/cinema/SpotifySearch';
+import LocationInput from '@/app/components/LocationInput';
 
 // Helper for file size
 const formatFileSize = (bytes: number) => {
@@ -32,6 +33,8 @@ export default function UploadSocialPage() {
     // STRICT FORMAT: VERTICAL ONLY
     const [formatError, setFormatError] = useState<string | null>(null);
     const [musicMetadata, setMusicMetadata] = useState<any>(null);
+    const [location, setLocation] = useState('');
+    const [hashtags, setHashtags] = useState('');
 
     // UI STATES
     const [isUploading, setIsUploading] = useState(false);
@@ -229,7 +232,9 @@ export default function UploadSocialPage() {
                 thumbnail_url: finalThumb,
                 category: 'Social',
                 format: 'vertical', // HARDCODED
-                music_metadata: musicMetadata
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             await submitVideo({
@@ -239,7 +244,9 @@ export default function UploadSocialPage() {
                 thumbnail_url: finalThumb,
                 category: 'Social',
                 format: 'vertical',
-                music_metadata: musicMetadata
+                music_metadata: musicMetadata,
+                location: location,
+                hashtags: hashtags ? hashtags.split(' ').filter(tag => tag) : undefined
             });
 
             // SUCCESS!
@@ -253,6 +260,8 @@ export default function UploadSocialPage() {
             setDescription('');
             setUploadProgress(0);
             setMusicMetadata(null);
+            setLocation('');
+            setHashtags('');
 
         } catch (e: any) {
             console.error(e);
@@ -407,6 +416,25 @@ export default function UploadSocialPage() {
                                 placeholder="Etiquetas, menciones y vibes..."
                                 rows={4}
                                 className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white placeholder:text-white/20 focus:outline-none focus:border-green-500 text-sm font-medium transition-colors resize-none"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Ubicación</label>
+                            <LocationInput
+                                value={location}
+                                onChange={setLocation}
+                                className="w-full"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-white/50 uppercase tracking-widest ml-1">Hashtags (separados por espacio)</label>
+                            <input
+                                type="text"
+                                value={hashtags}
+                                onChange={(e) => setHashtags(e.target.value)}
+                                placeholder="#drift #jdm #night"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-green-500 text-sm transition-colors"
                             />
                         </div>
                     </div>

@@ -58,28 +58,28 @@ export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentA
                         </div>
 
                         <h1 className="text-5xl md:text-7xl font-oswald font-black leading-[0.9] mb-8 text-white tracking-tighter uppercase italic transform -skew-x-2">
-                           LA CULTURA <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9800] via-[#FF5722] to-[#FF9800] animate-gradient-x">DE LA VELOCIDAD</span>
+                            LA CULTURA <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9800] via-[#FF5722] to-[#FF9800] animate-gradient-x">DE LA VELOCIDAD</span>
                         </h1>
 
                         <p className="text-white/60 text-sm md:text-base mb-12 max-w-lg mx-auto leading-relaxed font-sans font-medium tracking-wide">
-                            La comunidad definitiva para constructores y entusiastas. <br className="hidden md:block"/> Documenta, comparte y celebra el automovilismo real.
+                            La comunidad definitiva para constructores y entusiastas. <br className="hidden md:block" /> Documenta, comparte y celebra el automovilismo real.
                         </p>
 
                         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                            <button 
-                                onClick={onEnterApp}
-                                className="w-full md:w-auto px-8 py-4 bg-[#FF9800] text-black rounded-none skew-x-[-10deg] hover:skew-x-0 transition-all duration-300 group"
-                            > 
+                            <Link
+                                href="/login"
+                                className="w-full md:w-auto px-8 py-4 bg-[#FF9800] text-black rounded-none skew-x-[-10deg] hover:skew-x-0 transition-all duration-300 group block text-center"
+                            >
                                 <span className="block skew-x-[10deg] group-hover:skew-x-0 font-oswald font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                                     Iniciar Motor <ChevronRight className="w-4 h-4" />
                                 </span>
-                            </button>
-                            
-                            <button 
+                            </Link>
+
+                            <button
                                 onClick={() => {
                                     const section = document.getElementById('features-section');
                                     if (section) {
-                                        const y = section.getBoundingClientRect().top + window.scrollY - 20; 
+                                        const y = section.getBoundingClientRect().top + window.scrollY - 20;
                                         window.scrollTo({ top: y, behavior: 'smooth' });
                                     }
                                 }}

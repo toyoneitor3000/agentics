@@ -12,6 +12,7 @@ import { getAdByType } from "@/app/data/ads";
 import { useLanguage } from "@/app/context/LanguageContext";
 import HomeIntro from "@/app/components/home/HomeIntro";
 import FeedCard from "@/app/components/feed/FeedCard";
+import LoginRequiredModal from "@/app/components/auth/LoginRequiredModal";
 import { getCinemaFeed } from "@/app/actions/cinema";
 // ... imports
 
@@ -22,6 +23,7 @@ export default function Home() {
   const [featuredItems, setFeaturedItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
+  const [guestMode, setGuestMode] = useState(false);
 
   // INTRO LOGIC STATE
   const [showIntro, setShowIntro] = useState(false);
@@ -67,8 +69,18 @@ export default function Home() {
 
   useEffect(() => {
     async function init() {
+      // 1. Initial check
       const { data: { session } } = await supabase.auth.getSession();
       setCurrentUserId(session?.user?.id);
+
+      // 2. Subscribe to changes (Fixes 'hardcoded' feel)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setCurrentUserId(session?.user?.id);
+        // If we just logged in, we might want to refetch the feed to see personalized 'likes' status
+        if (session?.user?.id) {
+          fetchFeed(session.user.id);
+        }
+      });
 
       // --- INTRO LOGIC CHECK ---
       // Changed to sessionStorage so closing the tab resets the Intro.
@@ -84,6 +96,11 @@ export default function Home() {
       setIsCheckingIntro(false);
 
       fetchFeed(session?.user?.id);
+
+      // Cleanup subscription on unmount
+      return () => {
+        subscription.unsubscribe();
+      };
     }
 
     async function fetchFeed(userId?: string) {
@@ -426,6 +443,7 @@ export default function Home() {
                     labels={labels}
                     currentUserId={currentUserId}
                     timeAgo={timeAgo}
+                    onRequireAuth={() => setGuestMode(false)}
                   />
                 </div>
               );
@@ -443,6 +461,10 @@ export default function Home() {
           </div>
         </>
       )}
+      <LoginRequiredModal
+        isOpen={!loading && !showIntro && !currentUserId && !guestMode}
+        onClose={() => setGuestMode(true)}
+      />
     </div>
   );
 }

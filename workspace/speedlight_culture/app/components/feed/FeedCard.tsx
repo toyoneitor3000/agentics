@@ -39,9 +39,10 @@ interface FeedCardProps {
     labels: any;
     currentUserId?: string;
     timeAgo: (date: Date) => string;
+    onRequireAuth?: () => void;
 }
 
-export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedCardProps) {
+export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequireAuth }: FeedCardProps) {
 
     // Determine the type label and logic
     let typeLabel = labels.untitled;
@@ -184,6 +185,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo }: FeedC
                     initialComments={item.stats.comments}
                     initialIsLiked={item.stats.isLiked}
                     currentUserId={currentUserId}
+                    onRequireAuth={onRequireAuth}
                 />
             </div>
         </div>

@@ -1,20 +1,24 @@
 "use client";
 
-import { useRef, useEffect, useState, startTransition, useTransition } from 'react';
+import { useRef, useEffect, useState, startTransition, useTransition, useMemo } from 'react';
 import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
     Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
-    ArrowLeft, Plus, Image as ImageIcon, Video, X, Gift, Gamepad2, ChevronDown
+    ArrowLeft, Plus, Image as ImageIcon, Video, X, Gift, Gamepad2, ChevronDown,
+    Pencil, Archive, Trash2, MoreVertical
 } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import Script from 'next/script';
-import { getCinemaFeed, toggleLike } from '@/app/actions/cinema';
+import { getCinemaFeed, toggleLike, archiveVideo, deleteVideo, updateVideoMetadata } from '@/app/actions/cinema';
 import { useUi } from '@/app/context/UiContext';
 import { useGamepad } from '@/app/hooks/useGamepad';
+import { useSession } from '@/app/lib/auth-client';
 import { motion, AnimatePresence } from "framer-motion";
 import { CommentsSection } from "../components/CommentsSection";
 import { GiftingSystem } from "../components/GiftingSystem";
+import { toast } from 'sonner';
+import ConfirmModal from '../components/ui/ConfirmModal';
 
 // MOCK DATA FOR CATEGORIES
 const CATEGORIES = [
@@ -1478,6 +1482,9 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
                     </button>
 
+                    {/* MORE ACTIONS (OWNER ONLY) */}
+                    <VideoActionsMenu post={post} />
+
                 </div>
             </div>
 
@@ -1553,6 +1560,197 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                 )}
             </AnimatePresence>
 
+        </div >
+    );
+}
+
+// ----------------------------------------------------------------------
+// VIDEO ACTIONS MENU (Owner Only)
+// ----------------------------------------------------------------------
+function VideoActionsMenu({ post }: { post: any }) {
+    const { data: session } = useSession();
+    const [isOpen, setIsOpen] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [confirmArchive, setConfirmArchive] = useState(false);
+    const [confirmDelete, setConfirmDelete] = useState(false);
+    const isOwner = session?.user?.id === post.creatorId;
+
+    if (!isOwner) return null;
+
+    const handleArchive = async () => {
+        try {
+            await archiveVideo(post.id);
+            toast.success('Video archivado correctamente');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            toast.error('Error al archivar');
+        }
+    };
+
+    const handleDelete = async () => {
+        try {
+            await deleteVideo(post.id);
+            toast.success('Video eliminado');
+            setTimeout(() => window.location.reload(), 1500);
+        } catch (err) {
+            toast.error('Error al eliminar');
+        }
+    };
+
+    return (
+        <>
+            <div className="relative">
+                <button
+                    onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}
+                >
+                    <MoreVertical className="w-6 h-6" />
+                </button>
+
+                <AnimatePresence>
+                    {isOpen && (
+                        <>
+                            {/* Backdrop to close */}
+                            <div className="fixed inset-0 z-[290]" onClick={() => setIsOpen(false)} />
+
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
+                            >
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setShowEditModal(true); setIsOpen(false); }}
+                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                >
+                                    <Pencil className="w-4 h-4 text-[#FF9800]" /> Editar Video
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setConfirmArchive(true); setIsOpen(false); }}
+                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                >
+                                    <Archive className="w-4 h-4 text-blue-400" /> Archivar
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setIsOpen(false); }}
+                                    className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                >
+                                    <Trash2 className="w-4 h-4" /> Eliminar
+                                </button>
+                            </motion.div>
+                        </>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* CONFIRMATION MODALS */}
+            <ConfirmModal
+                isOpen={confirmArchive}
+                onClose={() => setConfirmArchive(false)}
+                onConfirm={handleArchive}
+                title="Archivar Video"
+                message="¿Seguro que quieres archivar este video? Se ocultará del feed principal."
+                confirmText="Archivar"
+                variant="info"
+            />
+
+            <ConfirmModal
+                isOpen={confirmDelete}
+                onClose={() => setConfirmDelete(false)}
+                onConfirm={handleDelete}
+                title="Eliminar Video"
+                message="¿ESTÁS SEGURO? Esta acción enviará el video a la papelera. Se podrá recuperar desde ajustes."
+                confirmText="Mover a papelera"
+                variant="danger"
+            />
+
+            {/* EDIT MODAL */}
+            <AnimatePresence>
+                {showEditModal && (
+                    <EditMetadataModal
+                        post={post}
+                        onClose={() => setShowEditModal(false)}
+                    />
+                )}
+            </AnimatePresence>
+        </>
+    );
+}
+
+// ----------------------------------------------------------------------
+// EDIT METADATA MODAL
+// ----------------------------------------------------------------------
+function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }) {
+    const [title, setTitle] = useState(post.title);
+    const [description, setDescription] = useState(post.description);
+    const [isSaving, setIsSaving] = useState(false);
+
+    const handleSave = async () => {
+        if (!title.trim()) return;
+        setIsSaving(true);
+        try {
+            await updateVideoMetadata(post.id, { title, description });
+            window.location.reload();
+        } catch (err) {
+            alert('Error al guardar cambios');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md" onClick={onClose}>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white">
+                    <X className="w-6 h-6" />
+                </button>
+
+                <h3 className="text-xl font-black font-oswald uppercase text-white mb-6">Editar Publicación</h3>
+
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Título</label>
+                        <input
+                            type="text"
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Descripción</label>
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            rows={4}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors resize-none text-sm"
+                        />
+                    </div>
+                </div>
+
+                <div className="mt-8 flex gap-3">
+                    <button
+                        onClick={onClose}
+                        className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition-colors"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="flex-1 py-3 rounded-xl bg-[#FF9800] text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
+                    >
+                        {isSaving ? 'Guardando...' : 'Guardar'}
+                    </button>
+                </div>
+            </motion.div>
         </div>
     );
 }
@@ -1560,6 +1758,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
 // ----------------------------------------------------------------------
 // UTILITIES
 // ----------------------------------------------------------------------
+
 
 function formatTime(seconds: number) {
     if (!seconds || isNaN(seconds)) return "0:00";

@@ -107,9 +107,29 @@ export default function SpotifySearch({ onSelect, initialTrack }: SpotifySearchP
                             <Music className="w-4 h-4 text-white" />
                         </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold text-white truncate">{selectedTrack.name}</h4>
-                        <p className="text-xs text-[#1DB954] truncate font-medium">{selectedTrack.artist}</p>
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                        <input
+                            type="text"
+                            value={selectedTrack.name}
+                            onChange={(e) => {
+                                const updated = { ...selectedTrack, name: e.target.value };
+                                setSelectedTrack(updated);
+                                onSelect(updated);
+                            }}
+                            className="w-full bg-transparent border-none p-0 text-sm font-bold text-white focus:ring-0 focus:outline-none placeholder:text-white/20"
+                            placeholder="Nombre de la canción"
+                        />
+                        <input
+                            type="text"
+                            value={selectedTrack.artist}
+                            onChange={(e) => {
+                                const updated = { ...selectedTrack, artist: e.target.value };
+                                setSelectedTrack(updated);
+                                onSelect(updated);
+                            }}
+                            className="w-full bg-transparent border-none p-0 text-xs text-[#1DB954] font-medium focus:ring-0 focus:outline-none placeholder:text-[#1DB954]/20"
+                            placeholder="Artista"
+                        />
                     </div>
                     <button
                         onClick={clearSelection}
