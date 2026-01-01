@@ -7,7 +7,7 @@ import { ChevronRight, Play, Zap, Info, Camera, Wrench, ShoppingBag, Globe, Bot,
 import { useState } from "react";
 import SystemStatus from "@/app/components/layout/SystemStatus";
 
-export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentActivity }: { onEnterApp: () => void, onSignUp: () => void, featuredItems: any[], recentActivity: any[] }) {
+export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentActivity, isLoggedIn }: { onEnterApp: () => void, onSignUp: () => void, featuredItems: any[], recentActivity: any[], isLoggedIn: boolean }) {
 
     console.log("HomeIntro rendered with items:", featuredItems, recentActivity); // Debug
 
@@ -66,14 +66,14 @@ export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentA
                         </p>
 
                         <div className="flex flex-col md:flex-row items-center justify-center gap-4">
-                            <Link
-                                href="/login"
+                            <button
+                                onClick={onEnterApp}
                                 className="w-full md:w-auto px-8 py-4 bg-[#FF9800] text-black rounded-none skew-x-[-10deg] hover:skew-x-0 transition-all duration-300 group block text-center"
                             >
                                 <span className="block skew-x-[10deg] group-hover:skew-x-0 font-oswald font-bold text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-                                    Iniciar Motor <ChevronRight className="w-4 h-4" />
+                                    {isLoggedIn ? "Entrar al Garage" : "Iniciar Motor"} <ChevronRight className="w-4 h-4" />
                                 </span>
-                            </Link>
+                            </button>
 
                             <button
                                 onClick={() => {
@@ -103,7 +103,7 @@ export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentA
             </section>
 
             {/* 1.5 ONBOARDING STEPS (Vertical Timeline - Speedlight Style) */}
-            <section id="features-section" className="py-12 px-6 max-w-4xl mx-auto scroll-mt-24">
+            <section id="features-section" className="py-12 px-6 max-w-4xl mx-auto scroll-mt-24" >
                 <div className="space-y-12 relative pl-8 border-l border-white/10">
 
                     {[

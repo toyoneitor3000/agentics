@@ -1,38 +1,84 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 import Link from "next/link";
-import { MoreHorizontal, Play, FileText, ShoppingBag, Camera, Wrench } from "lucide-react";
+import { MoreHorizontal, Play, FileText, ShoppingBag, Camera, Wrench, Share2, Bookmark } from "lucide-react";
 import SocialActions from "./SocialActions";
+import { toast } from "sonner";
 
-const FeedPostHeader = ({ user, time, action, type }: { user: any, time: string, action?: string, type: string }) => (
-    <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#1A0F08]/95 via-[#1A0F08]/50 to-transparent flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-3 pointer-events-auto">
-            <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
-                {user.avatar ? (
-                    <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold font-oswald">{user.name?.charAt(0)}</div>
-                )}
-            </div>
-            <div>
-                <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md font-oswald tracking-wide flex items-center gap-1">
-                    {user.name}
-                </Link>
-                <div className="flex items-center gap-2 text-[9px] text-[#F5E6D3]/60 font-roboto-mono tracking-widest uppercase">
-                    <span>{time}</span>
-                    <span className="w-1 h-1 bg-[#FF9800] rounded-full shadow-[0_0_5px_#FF9800]"></span>
-                    <span className="text-[#FF9800]">{action}</span>
+const FeedPostHeader = ({ user, time, action, type, entityId }: { user: any, time: string, action?: string, type: string, entityId: string }) => {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    const handleShare = () => {
+        const url = `${window.location.origin}/${type === 'project' ? 'projects' : 'view'}/${entityId}`;
+        if (navigator.share) {
+            navigator.share({
+                title: 'Speedlight Culture',
+                text: 'Mira esta publicación en Speedlight Culture',
+                url: url
+            }).catch(console.error);
+        } else {
+            navigator.clipboard.writeText(url);
+            toast.success("Enlace copiado al portapapeles");
+        }
+        setIsMenuOpen(false);
+    };
+
+    const handleSave = () => {
+        toast.success("Guardado en tu colección");
+        setIsMenuOpen(false);
+    };
+
+    return (
+        <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#1A0F08]/95 via-[#1A0F08]/50 to-transparent flex items-center justify-between pointer-events-none">
+            <div className="flex items-center gap-3 pointer-events-auto">
+                <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
+                    {user.avatar ? (
+                        <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-white/50 font-bold font-oswald">{user.name?.charAt(0)}</div>
+                    )}
+                </div>
+                <div>
+                    <Link href={user.id ? `/profile/${user.id}` : '#'} className="text-sm font-bold text-white hover:text-[#FF9800] transition-colors drop-shadow-md font-oswald tracking-wide flex items-center gap-1">
+                        {user.name}
+                    </Link>
+                    <div className="flex items-center gap-2 text-[9px] text-[#F5E6D3]/60 font-roboto-mono tracking-widest uppercase">
+                        <span>{time}</span>
+                        <span className="w-1 h-1 bg-[#FF9800] rounded-full shadow-[0_0_5px_#FF9800]"></span>
+                        <span className="text-[#FF9800]">{action}</span>
+                    </div>
                 </div>
             </div>
+            <div className="relative pointer-events-auto">
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="text-[#F5E6D3]/60 hover:text-white transition-colors bg-[#1A0F08]/40 backdrop-blur-md p-2 rounded-full border border-white/5 hover:border-[#FF9800]/30 hover:shadow-[0_0_15px_rgba(255,152,0,0.1)] relative z-30"
+                >
+                    <MoreHorizontal className="w-5 h-5" />
+                </button>
+
+                {isMenuOpen && (
+                    <>
+                        <div className="fixed inset-0 z-20" onClick={() => setIsMenuOpen(false)} />
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1A0F08]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                            <button onClick={handleShare} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-colors text-white/80 hover:text-white group">
+                                <Share2 className="w-4 h-4 group-hover:text-[#FF9800] transition-colors" />
+                                <span className="text-sm font-light">Compartir</span>
+                            </button>
+                            <button onClick={handleSave} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-colors text-white/80 hover:text-white group border-t border-white/5">
+                                <Bookmark className="w-4 h-4 group-hover:text-[#FF9800] transition-colors" />
+                                <span className="text-sm font-light">Guardar</span>
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
         </div>
-        <button className="text-[#F5E6D3]/60 hover:text-white transition-colors bg-[#1A0F08]/40 backdrop-blur-md p-2 rounded-full pointer-events-auto border border-white/5 hover:border-[#FF9800]/30 hover:shadow-[0_0_15px_rgba(255,152,0,0.1)]">
-            <MoreHorizontal className="w-5 h-5" />
-        </button>
-    </div>
-);
+    );
+};
 
 interface FeedCardProps {
     item: any;
@@ -43,6 +89,7 @@ interface FeedCardProps {
 }
 
 export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequireAuth }: FeedCardProps) {
+    const [isMuted, setIsMuted] = useState(true);
 
     // Determine the type label and logic
     let typeLabel = labels.untitled;
@@ -131,10 +178,11 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
                 time={timeAgo(item.date)}
                 action={typeLabel}
                 type={item.type}
+                entityId={item.id}
             />
 
             {/* Visual Content */}
-            <div className={`relative w-full ${AspectRatioClass} bg-[#050505] overflow-hidden`}>
+            <div className={`relative w-full ${AspectRatioClass} bg-[#050505] overflow-hidden rounded-3xl`}>
                 {/* Video Indicator */}
                 {(item.type === 'cinema' || item.type === 'social') && (
                     <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-16 h-16 bg-[#FF9800]/20 backdrop-blur-md rounded-full flex items-center justify-center border border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.3)] transition-all duration-500 ${item.content?.video ? 'opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-110' : 'group-hover:scale-110 animate-pulse'}`}>
@@ -146,6 +194,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
                     <SafeVideoPlayer
                         src={item.content.video}
                         poster={item.content.image || item.content.video_poster}
+                        muted={isMuted}
                     />
                 ) : (item.content?.image || item.content?.video_poster) ? (
                     <Image
@@ -186,13 +235,15 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
                     initialIsLiked={item.stats.isLiked}
                     currentUserId={currentUserId}
                     onRequireAuth={onRequireAuth}
+                    isMuted={isMuted}
+                    onToggleMute={() => setIsMuted(!isMuted)}
                 />
             </div>
         </div>
     );
 }
 
-const SafeVideoPlayer = ({ src, poster }: { src: string, poster?: string }) => {
+const SafeVideoPlayer = ({ src, poster, muted = true }: { src: string, poster?: string, muted?: boolean }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
@@ -225,7 +276,7 @@ const SafeVideoPlayer = ({ src, poster }: { src: string, poster?: string }) => {
             className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
             playsInline
             loop
-            muted
+            muted={muted}
             onContextMenu={(e) => e.preventDefault()}
         />
     );
