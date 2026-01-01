@@ -5,7 +5,7 @@ import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
     Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
     ArrowLeft, Plus, Image as ImageIcon, Video, X, Gift, Gamepad2, ChevronDown,
-    Pencil, Archive, Trash2, MoreVertical, Bookmark
+    Pencil, Archive, Trash2, MoreVertical, Bookmark, Send
 } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
@@ -132,6 +132,14 @@ export default function CinemaSocialPage() {
             return () => clearTimeout(timer);
         }
     }, [videoIdParam, viewMode, isLoading, categories]);
+
+    // DEEP LINKING: Update URL when active post changes
+    useEffect(() => {
+        if (activeSocialPost && viewMode === 'social') {
+            const newUrl = `?video=${activeSocialPost.id}`;
+            window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+        }
+    }, [activeSocialPost, viewMode]);
 
     // Keyboard Navigation for Social Mode (TikTok Style)
     const socialFeedRef = useRef<HTMLDivElement>(null);
@@ -1526,6 +1534,22 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
                     </button>
 
+                    {/* BOOKMARK (SAVE) */}
+                    <button onClick={handleSave} className="flex flex-col items-center gap-1 group">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${saved ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}>
+                            <Bookmark className={`w-5 h-5 ${saved ? 'fill-current' : ''}`} />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Guardar</span>
+                    </button>
+
+                    {/* SHARE (MESSAGE/SEND) */}
+                    <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
+                        <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <Send className="w-5 h-5" />
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Enviar</span>
+                    </button>
+
                     {/* MORE ACTIONS (MENU) */}
                     <VideoActionsMenu
                         post={post}
@@ -1668,27 +1692,8 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                                 className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
                             >
-                                {/* PUBLIC ACTIONS */}
-                                <button
-                                    onClick={(e) => {
-                                        setIsOpen(false);
-                                        onSave(e);
-                                    }}
-                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
-                                >
-                                    <Bookmark className={`w-4 h-4 ${saved ? 'text-[#FF9800] fill-[#FF9800]' : 'text-white'}`} />
-                                    {saved ? 'Guardado' : 'Guardar'}
-                                </button>
-
-                                <button
-                                    onClick={(e) => {
-                                        setIsOpen(false);
-                                        onShare(e);
-                                    }}
-                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
-                                >
-                                    <Share2 className="w-4 h-4 text-white" /> Compartir
-                                </button>
+                                {/* PUBLIC ACTIONS - Just Report/Block in future? For now mostly empty or specific tools */}
+                                {/* Shifted Save/Share to main bar */}
 
                                 {/* OWNER ONLY ACTIONS */}
                                 {isOwner && (
