@@ -882,7 +882,22 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, [isFeedMode, containerRef.current, post.title, onView]);
+    // ----------------------------------------------------------------------
+    // ROBUST AUTOPLAY ENGINE (Reacting to State)
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        if (!player) return;
 
+        if (isInView) {
+            const playPromise = player.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // If unmuted autoplay fails, try mute+play (Browser Policy)
+                    console.log("Autoplay blocked. Retrying muted.");
+                    if (player.muted === false) {
+                        player.muted = true;
+                        player.play().catch((e: any) => console.log("Force mute play failed", e));
+                    }
                 });
             }
         } else {
