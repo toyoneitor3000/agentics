@@ -1301,11 +1301,11 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                                 // If successful, we can unmute if state allows, but safety first
                                 setShowActionIcon('play');
                             }).catch(err => console.error("Hard play failed", err));
-                        } else {
+                        } else if (player) {
                             // Fallback to adapter
-                            videoEl.play().catch((e: any) => {
-                                videoEl.muted = true;
-                                videoEl.play();
+                            player.play().catch((e: any) => {
+                                player.muted = true;
+                                player.play();
                             });
                         }
 
