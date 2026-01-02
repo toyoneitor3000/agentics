@@ -868,33 +868,44 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 // Debug Log to see what's happening
-                console.log(`Video ${post.title} visibility: around ${Math.round(entry.intersectionRatio * 100)}% | Intersecting: ${entry.isIntersecting}`);
+                // console.log(`Video ${post.title} visibility: around ${Math.round(entry.intersectionRatio * 100)}% | Intersecting: ${entry.isIntersecting}`);
 
                 setIsInView(entry.isIntersecting);
 
                 if (entry.isIntersecting) {
                     if (onView) onView();
-
-                    const playPromise = player.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(() => {
-                            // If unmuted autoplay fails, try mute+play
-                            console.log("Autoplay blocked. Retrying muted.");
-                            if (player.muted === false) {
-                                player.muted = true;
-                                player.play().catch((e: any) => console.log("Force mute play failed", e));
-                            }
-                        });
-                    }
-                } else {
-                    player.pause();
+                    // We DO NOT play here anymore. We let the effect below handle it.
                 }
             });
         }, { threshold: 0.5 }); // Lowered to 50% for better mobile detection
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isFeedMode, player, post.title, onView]);
+    }, [isFeedMode, containerRef.current, post.title, onView]); // Removed 'player' dependency so observer is always active
+
+
+    // ----------------------------------------------------------------------
+    // ROBUST AUTOPLAY ENGINE (Reacting to State)
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        if (!player) return;
+
+        if (isInView) {
+            const playPromise = player.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(() => {
+                    // If unmuted autoplay fails, try mute+play (Browser Policy)
+                    console.log("Autoplay blocked. Retrying muted.");
+                    if (player.muted === false) {
+                        player.muted = true;
+                        player.play().catch((e: any) => console.log("Force mute play failed", e));
+                    }
+                });
+            }
+        } else {
+            player.pause();
+        }
+    }, [isInView, player]);
 
 
     // ----------------------------------------------------------------------
@@ -1339,68 +1350,64 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     // NATIVE FALLBACK (For non-Cloudflare URLs)
                     // We use explicit <source> tags to hint the browser about the format, 
                     // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
-                ): (
-                        // NATIVE FALLBACK (For non-Cloudflare URLs)
-                        // We use explicit <source> tags to hint the browser about the format, 
-                        // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
-                        // for videos uploaded previously with issues.
-                        <video
-                        key = {post.videoUrl} // Force recreation if URL changes
-                ref={onVideoRef}
-                className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                poster={post.poster}
-                preload="auto"
-                // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
-                autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
-                loop={isFeedMode}
-                muted={isMuted}
-                playsInline
-                onTimeUpdate={(e) => {
-                    setCurrentTime(e.currentTarget.currentTime);
-                    if (e.currentTarget.currentTime > 0.1) setIsReady(true);
-                }}
-                onLoadedMetadata={(e) => {
-                    setDuration(e.currentTarget.duration);
-                    // Don't set ready here, wait for buffer
-                }}
-                onCanPlay={() => setIsReady(true)} // Better signal
-                onEnded={() => setIsEnded(true)}
-                onError={(e) => {
-                    // React bubbles 'error' events from <source> tags, 
-                    // but at that point the <video> element itself might not have an error yet (it tries the next source).
-                    // We only care if the VIDEO element itself has failed.
-                    const target = e.target as HTMLElement;
-                    if (target.tagName === 'SOURCE') {
-                        return;
-                    }
-                    if (e.currentTarget.error) {
-                        console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
-                    }
-                }}
+                    // for videos uploaded previously with issues.
+                    <video
+                        key={post.videoUrl} // Force recreation if URL changes
+                        ref={onVideoRef}
+                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                        poster={post.poster}
+                        preload="auto"
+                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
+                        autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
+                        loop={isFeedMode}
+                        muted={isMuted}
+                        playsInline
+                        onTimeUpdate={(e) => {
+                            setCurrentTime(e.currentTarget.currentTime);
+                            if (e.currentTarget.currentTime > 0.1) setIsReady(true);
+                        }}
+                        onLoadedMetadata={(e) => {
+                            setDuration(e.currentTarget.duration);
+                            // Don't set ready here, wait for buffer
+                        }}
+                        onCanPlay={() => setIsReady(true)} // Better signal
+                        onEnded={() => setIsEnded(true)}
+                        onError={(e) => {
+                            // React bubbles 'error' events from <source> tags, 
+                            // but at that point the <video> element itself might not have an error yet (it tries the next source).
+                            // We only care if the VIDEO element itself has failed.
+                            const target = e.target as HTMLElement;
+                            if (target.tagName === 'SOURCE') {
+                                return;
+                            }
+                            if (e.currentTarget.error) {
+                                console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
+                            }
+                        }}
                     >
-                <source src={post.videoUrl} type="video/mp4" />
-                <source src={post.videoUrl} type="video/quicktime" />
-                <source src={post.videoUrl} /> {/* Fallback catch-all */}
-            </video>
+                        <source src={post.videoUrl} type="video/mp4" />
+                        <source src={post.videoUrl} type="video/quicktime" />
+                        <source src={post.videoUrl} /> {/* Fallback catch-all */}
+                    </video>
                 )}
-        </div>
-
-            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */ }
-    {
-        !isFeedMode && (
-            <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="pointer-events-auto">
-                    <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
-                    <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
-
-                    {/* Progress Bar only for direct control mode */}
-                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                        <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
-                    </div>
-                </div>
             </div>
-        )
-    }
+
+            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */}
+            {
+                !isFeedMode && (
+                    <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
+                        <div className="pointer-events-auto">
+                            <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
+                            <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
+
+                            {/* Progress Bar only for direct control mode */}
+                            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                                <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
 
 
 
