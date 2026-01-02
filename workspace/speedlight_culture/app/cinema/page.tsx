@@ -361,6 +361,7 @@ function CinemaSocialContent() {
                                     isMuted={isMuted}
                                     toggleMute={() => setIsMuted(!isMuted)}
                                     onView={() => setActiveSocialPost(post)}
+                                    priority={i < 2} // Preload the first 2 videos immediately
                                 />
                             </div>
                         ))}
@@ -837,7 +838,7 @@ function CategoryRow({ title, posts, onPostClick }: any) {
 // ----------------------------------------------------------------------
 // IMMERSIVE CINEMA MODE (The "TikTok/Netflix" Hybrid Player)
 // ----------------------------------------------------------------------
-function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = false, toggleMute, onView }: any) {
+function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = false, toggleMute, onView, priority = false }: any) {
     const { isUiVisible, setIsSocialMode, resetIdleTimer, toggleUiVisibility } = useUi();
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
@@ -847,7 +848,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
 
     // Track visibility for keyboard shortcuts
-    const [isInView, setIsInView] = useState(!isFeedMode); // Cinema mode starts true
+    const [isInView, setIsInView] = useState(!isFeedMode || priority); // Assume in view if priority
 
     const containerRef = useRef<HTMLDivElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -863,35 +864,13 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     // SMART SCROLL OBSERVER (The "Pause on Scroll" Logic)
     // ----------------------------------------------------------------------
     // ----------------------------------------------------------------------
-    // 1. SMART LOADER (Pre-mounts content well in advance)
+    // 1. LOADING & PLAYBACK ENGINE (Aggressive & Reliable)
     // ----------------------------------------------------------------------
-    const [shouldLoad, setShouldLoad] = useState(false);
-
-    useEffect(() => {
-        if (!isFeedMode || !containerRef.current) {
-             // If not feed mode (modal), load immediately
-             setShouldLoad(true);
-             return;
-        }
-
-        const loader = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                // Load if within 1500px (approx 2 screens)
-                if (entry.isIntersecting) {
-                    setShouldLoad(true);
-                    // Once loaded, we keep it loaded for smoother back-scroll
-                    // Or we can unmount if very far away to save RAM. 
-                    // For now, let's keep it simple: Sticky Load.
-                }
-            });
-        }, { rootMargin: '1500px 0px 1500px 0px' });
-
-        loader.observe(containerRef.current);
-        return () => loader.disconnect();
-    }, [isFeedMode, containerRef.current]);
-
+    // We removed the "Smart Loader" because it was causing black screens. 
+    // Usage: Load everything, let browser manage resources, pause when safe.
+    
     // ----------------------------------------------------------------------
-    // 2. PLAYBACK CONTROLLER (Strict Visibility)
+    // 2. PLAYBACK CONTROLLER (Visibility)
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!isFeedMode || !containerRef.current) return;
@@ -905,7 +884,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     onView();
                 }
             });
-        }, { threshold: 0.6 }); // STRICT: Only play if >60% visible
+        }, { threshold: 0.5 }); // Balanced Threshold
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
@@ -1334,13 +1313,13 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             >
 
 
-                {/* 2. ACTIVE PLAYER (Only load when shouldLoad is true) */}
-                {shouldLoad && (
+                {/* 2. ACTIVE PLAYER (Always Ready) */}
+                {(
                     <>
                         {cloudflareId ? (
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=false&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true&preload=true`}
                                 allow="autoplay; encrypted-media"
                                 className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             />
@@ -1358,7 +1337,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                                 className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                                 poster={post.poster}
                                 preload="auto"
-                                autoPlay={false}
+                                autoPlay={true}
                                 loop={isFeedMode}
                                 muted={isMuted}
                                 playsInline={true}
