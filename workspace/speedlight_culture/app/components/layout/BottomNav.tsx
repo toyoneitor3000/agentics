@@ -33,6 +33,8 @@ export default function BottomNav() {
     // We only store the "paths" for Slot 2 and Slot 4
     const [leftSlot, setLeftSlot] = useState<string>('/cinema'); // Default
     const [rightSlot, setRightSlot] = useState<string>('/projects'); // Default
+    const [leftInnerSlot, setLeftInnerSlot] = useState<string>('/gallery'); // Default
+    const [rightInnerSlot, setRightInnerSlot] = useState<string>('/marketplace'); // Default
     const [isEditMode, setIsEditMode] = useState(false);
 
     const isActive = (path: string) => pathname === path || (path !== '/' && pathname?.startsWith(path));
@@ -43,9 +45,13 @@ export default function BottomNav() {
         const savedRight = localStorage.getItem('dockSlotRight');
         if (savedLeft && ALL_APPS[savedLeft]) setLeftSlot(savedLeft);
         if (savedRight && ALL_APPS[savedRight]) setRightSlot(savedRight);
+        const savedLeftInner = localStorage.getItem('dockSlotLeftInner');
+        const savedRightInner = localStorage.getItem('dockSlotRightInner');
+        if (savedLeftInner && ALL_APPS[savedLeftInner]) setLeftInnerSlot(savedLeftInner);
+        if (savedRightInner && ALL_APPS[savedRightInner]) setRightInnerSlot(savedRightInner);
     }, []);
 
-    const [selectedSlotForEdit, setSelectedSlotForEdit] = useState<'left' | 'right' | null>(null);
+    const [selectedSlotForEdit, setSelectedSlotForEdit] = useState<'left' | 'right' | 'leftInner' | 'rightInner' | null>(null);
 
     const selectAppForSlot = (path: string) => {
         if (selectedSlotForEdit === 'left') {
@@ -54,6 +60,12 @@ export default function BottomNav() {
         } else if (selectedSlotForEdit === 'right') {
             setRightSlot(path);
             localStorage.setItem('dockSlotRight', path);
+        } else if (selectedSlotForEdit === 'leftInner') {
+            setLeftInnerSlot(path);
+            localStorage.setItem('dockSlotLeftInner', path);
+        } else if (selectedSlotForEdit === 'rightInner') {
+            setRightInnerSlot(path);
+            localStorage.setItem('dockSlotRightInner', path);
         }
         setSelectedSlotForEdit(null);
         setIsEditMode(false);
@@ -61,8 +73,13 @@ export default function BottomNav() {
     };
 
     // --- RENDER HELPERS ---
-    const renderSlot = (path: string, slotId: 'left' | 'right') => {
-        const app = ALL_APPS[path] || ALL_APPS[slotId === 'left' ? '/cinema' : '/projects'];
+    const renderSlot = (path: string, slotId: 'left' | 'right' | 'leftInner' | 'rightInner') => {
+        let fallbackPath = '/cinema';
+        if (slotId === 'right') fallbackPath = '/projects';
+        if (slotId === 'leftInner') fallbackPath = '/gallery';
+        if (slotId === 'rightInner') fallbackPath = '/marketplace';
+
+        const app = ALL_APPS[path] || ALL_APPS[fallbackPath];
         const Icon = app?.icon || Play; // Fallback
         const active = isActive(path);
         const isSelectedForEdit = isEditMode && selectedSlotForEdit === slotId;
@@ -101,14 +118,17 @@ export default function BottomNav() {
     };
 
     // Determine correct app for slots (safe lookup)
+    // Determine correct app for slots (safe lookup)
     const effectiveLeftSlot = ALL_APPS[leftSlot] ? leftSlot : '/cinema';
     const effectiveRightSlot = ALL_APPS[rightSlot] ? rightSlot : '/projects';
+    const effectiveLeftInnerSlot = ALL_APPS[leftInnerSlot] ? leftInnerSlot : '/gallery';
+    const effectiveRightInnerSlot = ALL_APPS[rightInnerSlot] ? rightInnerSlot : '/marketplace';
 
     return (
         <>
             {/* Main Navigation Bar */}
             <div
-                className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isHidden && !isMenuOpen ? 'translate-y-[180%]' : 'translate-y-0'} w-[94%] max-w-[300px]`}
+                className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isHidden && !isMenuOpen ? 'translate-y-[180%]' : 'translate-y-0'} w-[94%] max-w-[420px]`}
             >
                 <div className="relative flex items-center justify-between px-1 h-[44px] rounded-full bg-[#0a0a0a]/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] ring-1 ring-black/20">
 
@@ -123,6 +143,9 @@ export default function BottomNav() {
                     {/* Slot 2: Flexible Left */}
                     {renderSlot(effectiveLeftSlot, 'left')}
 
+                    {/* Slot 2b: Flexible Left Inner */}
+                    {renderSlot(effectiveLeftInnerSlot, 'leftInner')}
+
                     {/* Slot 3: Center Create (Fixed & Flat) */}
                     {/* User requested Flat Balance. No negative margin. */}
                     <div className="flex items-center justify-center w-10 h-10 shrink-0 z-10">
@@ -133,6 +156,9 @@ export default function BottomNav() {
                             <Plus className="w-5 h-5" strokeWidth={3} />
                         </Link>
                     </div>
+
+                    {/* Slot 4b: Flexible Right Inner */}
+                    {renderSlot(effectiveRightInnerSlot, 'rightInner')}
 
                     {/* Slot 4: Flexible Right */}
                     {renderSlot(effectiveRightSlot, 'right')}
@@ -196,7 +222,9 @@ export default function BottomNav() {
                                     const Icon = app.icon;
                                     const isCurrentLeft = effectiveLeftSlot === app.path;
                                     const isCurrentRight = effectiveRightSlot === app.path;
-                                    const inDock = isCurrentLeft || isCurrentRight;
+                                    const isCurrentLeftInner = effectiveLeftInnerSlot === app.path;
+                                    const isCurrentRightInner = effectiveRightInnerSlot === app.path;
+                                    const inDock = isCurrentLeft || isCurrentRight || isCurrentLeftInner || isCurrentRightInner;
 
                                     return (
                                         <button

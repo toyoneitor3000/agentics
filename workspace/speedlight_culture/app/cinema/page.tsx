@@ -1288,8 +1288,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             )}
 
             {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
-            {/* Show if player reports paused OR if player isn't ready yet but we have a native video ref (fallback) */}
-            {(player?.paused || (!player && nativeVideoRef.current?.paused)) && (
+            {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
+            {/* HIDE IN FEED MODE: The whole screen is a tap target, so we don't need a center button cluttering the UI. */}
+            {!isFeedMode && (player?.paused || (!player && nativeVideoRef.current?.paused)) && (
                 <div
                     className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer bg-black/10 hover:bg-black/30 transition-colors group"
                     onClick={(e) => {
@@ -1362,9 +1363,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         ref={onVideoRef}
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                         poster={post.poster}
-                        preload="auto"
+                        preload="metadata" // CHANGED: 'auto' -> 'metadata' to prevent massive bandwidth usage on load
                         // crossOrigin="anonymous" // Removed to prevent strict CORS blocks
-                        autoPlay={true}
+                        autoPlay={false} // CHANGED: false -> Let IntersectionObserver handle play/pause
                         loop={isFeedMode}
                         muted={isMuted} // React Prop
                         playsInline={true} // React Prop

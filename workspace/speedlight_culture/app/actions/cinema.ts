@@ -275,7 +275,8 @@ export async function getCinemaFeed() {
              FROM cinema_videos v
              LEFT JOIN "user" u ON v.user_id = u.id
              WHERE v.status = 'approved' AND v.video_url IS NOT NULL AND (v.archived IS FALSE OR v.archived IS NULL)
-             ORDER BY v.created_at DESC`,
+             ORDER BY v.created_at DESC
+             LIMIT 50`,
             userId ? [userId] : []
         );
 

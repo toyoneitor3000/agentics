@@ -135,3 +135,84 @@ export async function startConversation(targetUserId: string) {
         throw e;
     }
 }
+
+export async function searchUsers(queryStr: string) {
+    const user = await getSessionUser();
+    if (!user) return [];
+
+    if (!queryStr || queryStr.trim().length === 0) return [];
+
+    try {
+        // Search users by name/username
+        // Prioritize: 
+        // 1. Mutual follows
+        // 2. People I follow
+        // 3. Others
+        const sql = `
+            SELECT 
+                p.id, 
+                p.username, 
+                p.full_name, 
+                p.avatar_url,
+                CASE 
+                    WHEN f1.follower_id IS NOT NULL AND f2.follower_id IS NOT NULL THEN 'mutual'
+                    WHEN f1.follower_id IS NOT NULL THEN 'following'
+                    ELSE 'none'
+                END as relationship,
+                CASE 
+                    WHEN c.id IS NOT NULL THEN TRUE 
+                    ELSE FALSE 
+                END as has_conversation,
+                c.id as conversation_id
+            FROM profiles p
+            LEFT JOIN follows f1 ON f1.follower_id = $1 AND f1.following_id = p.id
+            LEFT JOIN follows f2 ON f2.follower_id = p.id AND f2.following_id = $1
+            LEFT JOIN conversation_participants cp_other ON p.id = cp_other.user_id
+            LEFT JOIN conversation_participants cp_me ON cp_other.conversation_id = cp_me.conversation_id AND cp_me.user_id = $1
+            LEFT JOIN conversations c ON cp_me.conversation_id = c.id
+            WHERE p.id != $1
+            AND (p.username ILIKE $2 OR p.full_name ILIKE $2)
+            GROUP BY p.id, f1.follower_id, f2.follower_id, c.id
+            ORDER BY 
+                (CASE 
+                    WHEN f1.follower_id IS NOT NULL AND f2.follower_id IS NOT NULL THEN 1
+                    WHEN f1.follower_id IS NOT NULL THEN 2
+                    ELSE 3
+                END) ASC,
+                p.username ASC
+            LIMIT 10
+        `;
+        const { rows } = await query(sql, [user.id, `${queryStr}%`]);
+        return rows;
+    } catch (e) {
+        console.error("Error searching users:", e);
+        return [];
+    }
+}
+
+export async function getSuggestedContacts() {
+    const user = await getSessionUser();
+    if (!user) return [];
+
+    try {
+        // Get mutual follows
+        const sql = `
+            SELECT 
+                p.id, 
+                p.username, 
+                p.full_name, 
+                p.avatar_url,
+                'mutual' as relationship
+            FROM profiles p
+            JOIN follows f1 ON f1.follower_id = $1 AND f1.following_id = p.id
+            JOIN follows f2 ON f2.follower_id = p.id AND f2.following_id = $1
+            WHERE p.id != $1
+            LIMIT 10
+        `;
+        const { rows } = await query(sql, [user.id]);
+        return rows;
+    } catch (e) {
+        console.error("Error fetching suggestions:", e);
+        return [];
+    }
+}
