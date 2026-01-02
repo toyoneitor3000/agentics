@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, startTransition, useTransition, useMemo, Suspense } from 'react';
+import { useRef, useEffect, useState, startTransition, useTransition, useMemo, Suspense, useCallback } from 'react';
 import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
     Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
