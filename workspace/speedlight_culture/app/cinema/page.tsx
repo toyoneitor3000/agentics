@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, startTransition, useTransition, useMemo } from 'react';
+import { useRef, useEffect, useState, startTransition, useTransition, useMemo, Suspense } from 'react';
 import {
     Play, Pause, Volume2, VolumeX, Maximize2, Minimize2,
     Heart, MessageCircle, Share2, MoreHorizontal, ChefHat, Tag, Music,
@@ -30,7 +30,7 @@ const CATEGORIES = [
     { title: "JDM Legends", id: "jdm" }
 ];
 
-export default function CinemaSocialPage() {
+function CinemaSocialContent() {
     const searchParams = useSearchParams();
     const videoIdParam = searchParams.get('video');
     const [featuredPost, setFeaturedPost] = useState<any>(null);
@@ -392,6 +392,18 @@ export default function CinemaSocialPage() {
             )}
 
         </div>
+    );
+}
+
+export default function CinemaSocialPage() {
+    return (
+        <Suspense fallback={
+            <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#050302]">
+                <div className="w-10 h-10 border-2 border-[#FF9800] border-t-transparent rounded-full animate-spin" />
+            </div>
+        }>
+            <CinemaSocialContent />
+        </Suspense>
     );
 }
 
