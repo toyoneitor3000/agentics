@@ -877,33 +877,44 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     // We DO NOT play here anymore. We let the effect below handle it.
                 }
             });
-        }, { threshold: 0.05 }); // Ultra-low threshold: If ANY part is visible, treat as viewable.
+        }, { threshold: 0.05, rootMargin: '300px 0px 300px 0px' }); // PRE-LOAD: Start loading 300px before appearing
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isFeedMode, containerRef.current, post.title, onView]); // Removed 'player' dependency so observer is always active
+    }, [isFeedMode, containerRef.current, post.title, onView]);
 
+    // ... (rest of component) ...
 
-    // ----------------------------------------------------------------------
-    // ROBUST AUTOPLAY ENGINE (Reacting to State)
+    return (
+        <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden group">
+            {/* ... (End Screen, Loader, Play Button Logic) ... */}
+
+            <div
+                className="w-full h-full select-none"
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={handleTap}
+            >
+                {/* 2. ACTIVE PLAYER (Only load when looking at it or near it) */}
+                {isInView && (
+                    <>
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!player) return;
 
-        if (isInView) {
+                        if (isInView) {
             const playPromise = player.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(() => {
-                    // If unmuted autoplay fails, try mute+play (Browser Policy)
-                    console.log("Autoplay blocked. Retrying muted.");
-                    if (player.muted === false) {
-                        player.muted = true;
-                        player.play().catch((e: any) => console.log("Force mute play failed", e));
-                    }
-                });
+                        if (playPromise !== undefined) {
+                            playPromise.catch(() => {
+                                // If unmuted autoplay fails, try mute+play (Browser Policy)
+                                console.log("Autoplay blocked. Retrying muted.");
+                                if (player.muted === false) {
+                                    player.muted = true;
+                                    player.play().catch((e: any) => console.log("Force mute play failed", e));
+                                }
+                            });
             }
         } else {
-            player.pause();
+                            player.pause();
         }
     }, [isInView, player]);
 
@@ -916,65 +927,65 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
 
         const handleSpace = (e: KeyboardEvent) => {
             if (e.code === 'Space') {
-                e.preventDefault(); // Stop page scroll
-                if (player.paused) { // Check if currently paused
-                    player.play();
-                    setShowActionIcon('unmute'); // Or play icon
+                            e.preventDefault(); // Stop page scroll
+                        if (player.paused) { // Check if currently paused
+                            player.play();
+                        setShowActionIcon('unmute'); // Or play icon
                     setTimeout(() => setShowActionIcon(null), 600);
                 } else {
-                    player.pause();
-                    setShowActionIcon('pause'); // Show pause icon
+                            player.pause();
+                        setShowActionIcon('pause'); // Show pause icon
                 }
             }
         };
 
-        window.addEventListener('keydown', handleSpace);
+                        window.addEventListener('keydown', handleSpace);
         return () => window.removeEventListener('keydown', handleSpace);
     }, [isInView, player]);
 
-    // ANALYTICS REF (To avoid re-triggering)
-    const analyticsRef = useRef({
-        hasStarted: false,
-        q25: false,
-        q50: false,
-        q75: false,
-        complete: false,
-        lastHeartbeat: 0
+                        // ANALYTICS REF (To avoid re-triggering)
+                        const analyticsRef = useRef({
+                            hasStarted: false,
+                        q25: false,
+                        q50: false,
+                        q75: false,
+                        complete: false,
+                        lastHeartbeat: 0
     });
 
     // Setup Cloudflare Player (Standard setup code below...)
     useEffect(() => {
         if (!cloudflareId) return;
-        let interval: NodeJS.Timeout;
+                        let interval: NodeJS.Timeout;
 
         const init = () => {
             if (iframeRef.current && (window as any).Stream) {
                 if (iframeRef.current.getAttribute('data-init') === 'true') return;
-                try {
+                        try {
                     const sp = (window as any).Stream(iframeRef.current);
-                    iframeRef.current.setAttribute('data-init', 'true');
-                    setPlayer(sp);
+                        iframeRef.current.setAttribute('data-init', 'true');
+                        setPlayer(sp);
 
-                    // Sync Mute State
-                    sp.muted = isMuted;
+                        // Sync Mute State
+                        sp.muted = isMuted;
 
-                    if (isFeedMode) sp.loop = true; // Loop social vids
-                    else sp.loop = false; // Don't loop cinema movies
+                        if (isFeedMode) sp.loop = true; // Loop social vids
+                        else sp.loop = false; // Don't loop cinema movies
 
-                    // --- ANALYTICS ENGINE INJECTION ---
-                    // Lazy import to avoid server-side issues inside Client Component context if needed
-                    // But we can import actions directly.
-                    const { logWatchEvent } = require('@/app/actions/analytics');
+                        // --- ANALYTICS ENGINE INJECTION ---
+                        // Lazy import to avoid server-side issues inside Client Component context if needed
+                        // But we can import actions directly.
+                        const {logWatchEvent} = require('@/app/actions/analytics');
 
                     sp.addEventListener('play', () => {
                         if (!analyticsRef.current.hasStarted) {
                             logWatchEvent(post.id, 'start', 0);
-                            analyticsRef.current.hasStarted = true;
+                        analyticsRef.current.hasStarted = true;
                         }
                     });
 
                     sp.addEventListener('timeupdate', () => {
-                        setCurrentTime(sp.currentTime);
+                            setCurrentTime(sp.currentTime);
                         const t = sp.currentTime;
                         const d = sp.duration;
                         if (!d) return;
@@ -984,15 +995,15 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         // Quartile Tracking
                         if (pct > 25 && !analyticsRef.current.q25) {
                             logWatchEvent(post.id, 'quartile_25', t);
-                            analyticsRef.current.q25 = true;
+                        analyticsRef.current.q25 = true;
                         }
                         if (pct > 50 && !analyticsRef.current.q50) {
                             logWatchEvent(post.id, 'quartile_50', t);
-                            analyticsRef.current.q50 = true;
+                        analyticsRef.current.q50 = true;
                         }
                         if (pct > 75 && !analyticsRef.current.q75) {
                             logWatchEvent(post.id, 'quartile_75', t);
-                            analyticsRef.current.q75 = true;
+                        analyticsRef.current.q75 = true;
                         }
 
                         // Heartbeat (Every 5 seconds)
@@ -1000,43 +1011,43 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         const now = Date.now();
                         if (now - analyticsRef.current.lastHeartbeat > 5000) {
                             logWatchEvent(post.id, 'heartbeat', t);
-                            analyticsRef.current.lastHeartbeat = now;
+                        analyticsRef.current.lastHeartbeat = now;
                         }
                     });
 
                     sp.addEventListener('durationchange', () => setDuration(sp.duration));
                     sp.addEventListener('ended', () => {
-                        setIsEnded(true);
+                            setIsEnded(true);
                         if (!analyticsRef.current.complete) {
                             logWatchEvent(post.id, 'complete', sp.duration);
-                            analyticsRef.current.complete = true;
+                        analyticsRef.current.complete = true;
                         }
                     });
 
-                    // Listen for volume change events from player to sync upstream? 
-                    // (Optional, complicated for now, sticky global state is handled by parent prop)
+                        // Listen for volume change events from player to sync upstream? 
+                        // (Optional, complicated for now, sticky global state is handled by parent prop)
 
-                    // In Feed Mode, we let the Observer handle play/pause.
-                    // In Cinema Mode (Modal), we auto-play immediately.
-                    if (!isFeedMode) {
-                        sp.play().catch(() => {
-                            sp.muted = true;
-                            sp.play();
-                        });
+                        // In Feed Mode, we let the Observer handle play/pause.
+                        // In Cinema Mode (Modal), we auto-play immediately.
+                        if (!isFeedMode) {
+                            sp.play().catch(() => {
+                                sp.muted = true;
+                                sp.play();
+                            });
                     }
 
-                    setIsReady(true);
-                    clearInterval(interval);
+                        setIsReady(true);
+                        clearInterval(interval);
                 } catch (e) { }
             }
         };
 
-        if ((window as any).Stream) interval = setInterval(init, 200);
-        else {
+                        if ((window as any).Stream) interval = setInterval(init, 200);
+                        else {
             const s = document.createElement('script');
-            s.src = "https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js";
-            s.onload = () => { interval = setInterval(init, 200); };
-            document.body.appendChild(s);
+                        s.src = "https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js";
+            s.onload = () => {interval = setInterval(init, 200); };
+                        document.body.appendChild(s);
         }
         return () => clearInterval(interval);
     }, [cloudflareId, isFeedMode, isMuted]); // Added isMuted dependency to re-sync?
@@ -1045,54 +1056,54 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     // GESTURES
     const togglePlay = () => {
         if (!player) return;
-        if (player.paused) {
-            player.play();
-            setShowActionIcon(null);
+                        if (player.paused) {
+                            player.play();
+                        setShowActionIcon(null);
         } else {
-            player.pause();
-            setShowActionIcon('pause');
+                            player.pause();
+                        setShowActionIcon('pause');
         }
     };
 
     const handleTap = (e: any) => {
-        e.stopPropagation();
+                            e.stopPropagation();
 
-        const doubleTapThreshold = 300;
+                        const doubleTapThreshold = 300;
 
-        // 1. Double Tap Logic
-        const now = Date.now();
-        if (lastTapTime.current && (now - lastTapTime.current) < doubleTapThreshold) {
+                        // 1. Double Tap Logic
+                        const now = Date.now();
+                        if (lastTapTime.current && (now - lastTapTime.current) < doubleTapThreshold) {
             // DOUBLE TAP DETECTED
             if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
-            tapTimeoutRef.current = null;
+                        tapTimeoutRef.current = null;
 
-            // Toggle Mute
-            toggleMute();
-            const newMuted = !isMuted;
-            if (player) player.muted = newMuted;
+                        // Toggle Mute
+                        toggleMute();
+                        const newMuted = !isMuted;
+                        if (player) player.muted = newMuted;
 
-            // Show Icon Feedback
-            setShowActionIcon(newMuted ? 'mute' : 'unmute');
+                        // Show Icon Feedback
+                        setShowActionIcon(newMuted ? 'mute' : 'unmute');
             setTimeout(() => setShowActionIcon(null), 800);
 
-            lastTapTime.current = 0; // Reset
-            return;
+                        lastTapTime.current = 0; // Reset
+                        return;
         }
 
-        lastTapTime.current = now;
+                        lastTapTime.current = now;
 
         // 2. Single Tap Logic (Debounced)
         tapTimeoutRef.current = setTimeout(() => {
             if (toggleUiVisibility) {
                 if (!isUiVisible) {
-                    // If hidden, just show UI
-                    resetIdleTimer();
-                    toggleUiVisibility();
+                            // If hidden, just show UI
+                            resetIdleTimer();
+                        toggleUiVisibility();
                 } else {
                     // If visible, Toggle Play/Pause
                     const targetPlayer = player || nativeVideoRef.current;
 
-                    if (targetPlayer) {
+                        if (targetPlayer) {
                         // Handle Native Element Direct Control if Adapter missing
                         const isPaused = targetPlayer.paused;
 
@@ -1105,10 +1116,10 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                                     targetPlayer.play();
                                 }
                             });
-                            setShowActionIcon('play');
+                        setShowActionIcon('play');
                         } else {
                             targetPlayer.pause();
-                            setShowActionIcon('pause');
+                        setShowActionIcon('pause');
                         }
 
                         setTimeout(() => setShowActionIcon(null), 600);
@@ -1116,7 +1127,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     }
                 }
             }
-            tapTimeoutRef.current = null;
+                        tapTimeoutRef.current = null;
         }, doubleTapThreshold);
     };
 
@@ -1128,96 +1139,96 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     useEffect(() => {
         if (!youtubeId || !iframeRef.current) return;
 
-        const adapter = {
-            play: () => {
+                        const adapter = {
+                            play: () => {
                 if (iframeRef.current?.contentWindow) {
-                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+                            iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
                 }
-                return Promise.resolve();
+                        return Promise.resolve();
             },
             pause: () => {
                 if (iframeRef.current?.contentWindow) {
-                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+                            iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
                 }
             },
-            get paused() { return false; }, // Fallback as we can't sync state easily without full API
-            get muted() { return isMuted; },
-            set muted(val: boolean) {
+                        get paused() { return false; }, // Fallback as we can't sync state easily without full API
+                        get muted() { return isMuted; },
+                        set muted(val: boolean) {
                 if (iframeRef.current?.contentWindow) {
-                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: val ? 'mute' : 'unMute', args: [] }), '*');
+                            iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: val ? 'mute' : 'unMute', args: [] }), '*');
                 }
             }
         };
-        setPlayer(adapter);
+                        setPlayer(adapter);
 
         // Force ready for YT
         const t = setTimeout(() => setIsReady(true), 1000);
         return () => clearTimeout(t);
     }, [youtubeId, isMuted]);
 
-    // Native Video Ref for fallback
-    // ----------------------------------------------------------------------
-    // NATIVE VIDEO ADAPTER LOGIC (Moved to top of component really, but for this patch context)
-    // ----------------------------------------------------------------------
-    const nativeVideoRef = useRef<HTMLVideoElement>(null);
+                        // Native Video Ref for fallback
+                        // ----------------------------------------------------------------------
+                        // NATIVE VIDEO ADAPTER LOGIC (Moved to top of component really, but for this patch context)
+                        // ----------------------------------------------------------------------
+                        const nativeVideoRef = useRef<HTMLVideoElement>(null);
 
     // Initialize Native Player Adapter
     useEffect(() => {
         if (!cloudflareId && nativeVideoRef.current) {
             const video = nativeVideoRef.current;
 
-            // Sync initial mute state immediately to prevent "unmuted autoplay" blocking
-            video.muted = isMuted;
+                            // Sync initial mute state immediately to prevent "unmuted autoplay" blocking
+                            video.muted = isMuted;
 
-            let playingPromise: Promise<void> | undefined;
+                            let playingPromise: Promise<void> | undefined;
 
-            const adapter = {
-                play: async () => {
+                                const adapter = {
+                                    play: async () => {
                     try {
-                        playingPromise = video.play();
-                        await playingPromise;
-                        playingPromise = undefined;
+                                    playingPromise = video.play();
+                                await playingPromise;
+                                playingPromise = undefined;
                     } catch (e: any) {
                         // Ignore AbortError - this happens when pause() is called while play is pending (e.g. fast scroll)
                         if (e.name === 'AbortError') {
-                            playingPromise = undefined;
-                            return;
+                                    playingPromise = undefined;
+                                return;
                         }
 
-                        console.warn("Native Play Interrupted/Failed", e);
-                        // Auto-recover if it was a permission issue by muting
-                        if (!video.muted) {
-                            video.muted = true;
-                            // Retry play muted
-                            try {
-                                playingPromise = video.play();
+                                console.warn("Native Play Interrupted/Failed", e);
+                                // Auto-recover if it was a permission issue by muting
+                                if (!video.muted) {
+                                    video.muted = true;
+                                // Retry play muted
+                                try {
+                                    playingPromise = video.play();
                                 await playingPromise;
                             } catch (retryErr) {
-                                console.error("Recovery failed", retryErr);
+                                    console.error("Recovery failed", retryErr);
                             }
-                            playingPromise = undefined;
+                                playingPromise = undefined;
                         }
                     }
                 },
                 pause: () => {
                     if (playingPromise !== undefined) {
-                        playingPromise.then(() => {
-                            video.pause();
-                        }).catch(() => {
-                            // If play failed, we don't need to pause really, but let's be safe
-                            video.pause()
-                        });
+                                    playingPromise.then(() => {
+                                        video.pause();
+                                    }).catch(() => {
+                                        // If play failed, we don't need to pause really, but let's be safe
+                                        video.pause()
+                                    });
                     } else {
-                        video.pause();
+                                    video.pause();
                     }
                 },
-                get muted() { return video.muted; },
-                set muted(val: boolean) { video.muted = val; },
-                get currentTime() { return video.currentTime; },
-                get duration() { return video.duration; },
-                get paused() { return video.paused; }
+                                get muted() { return video.muted; },
+                                set muted(val: boolean) {video.muted = val; },
+                                get currentTime() { return video.currentTime; },
+                                get duration() { return video.duration; },
+                                get paused() { return video.paused; }
             };
-            setPlayer(adapter);
+                                setPlayer(adapter);
         }
     }, [cloudflareId, youtubeId, isMuted, nativeVideoRef.current]); // Added nativeVideoRef dependency for robustness
 
@@ -1226,33 +1237,33 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
 
     // Callback Ref for Video Element to ensure initialization runs when element exists
     const onVideoRef = useCallback((node: HTMLVideoElement | null) => {
-        nativeVideoRef.current = node; // Keep ref updated
+                                    nativeVideoRef.current = node; // Keep ref updated
 
-        if (node && !cloudflareId && !youtubeId) {
+                                if (node && !cloudflareId && !youtubeId) {
             const adapter = {
-                play: async () => {
+                                    play: async () => {
                     try {
-                        await node.play();
+                                    await node.play();
                     } catch (e: any) {
                         if (e.name === 'AbortError') return;
-                        console.warn("Native Play Interrupted/Failed", e);
-                        if (!node.muted) {
-                            node.muted = true;
-                            try { await node.play(); } catch (retryErr) { }
+                                console.warn("Native Play Interrupted/Failed", e);
+                                if (!node.muted) {
+                                    node.muted = true;
+                                try {await node.play(); } catch (retryErr) { }
                         }
                     }
                 },
                 pause: () => node.pause(),
-                get muted() { return node.muted; },
-                set muted(val: boolean) { node.muted = val; },
-                get currentTime() { return node.currentTime; },
-                get duration() { return node.duration; },
-                get paused() { return node.paused; }
+                                get muted() { return node.muted; },
+                                set muted(val: boolean) {node.muted = val; },
+                                get currentTime() { return node.currentTime; },
+                                get duration() { return node.duration; },
+                                get paused() { return node.paused; }
             };
-            setPlayer(adapter);
+                                setPlayer(adapter);
 
-            // Sync Initial Mute
-            node.muted = isMuted;
+                                // Sync Initial Mute
+                                node.muted = isMuted;
         }
     }, [cloudflareId, youtubeId, isMuted]);
 
@@ -1260,708 +1271,709 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     useEffect(() => {
         // If we switch away from native, clear player
         if (cloudflareId || youtubeId) {
-            // Player will be set by other effects
-        }
+                                    // Player will be set by other effects
+                                }
     }, [cloudflareId, youtubeId]);
 
-    return (
-        <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden group">
+                                return (
+                                <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden group">
 
-            {/* 1. END SCREEN (Cinema Mode Only) */}
-            {isEnded && !isFeedMode && (
-                <div className="absolute inset-0 z-[150] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in">
-                    <h3 className="text-2xl font-oswald text-white mb-6 uppercase">A continuación</h3>
-                    <div className="flex gap-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="w-32 h-48 bg-white/10 rounded-xl animate-pulse"></div>
-                        ))}
-                    </div>
-                    <button onClick={onClose} className="mt-8 text-white/50 hover:text-white underline">Volver al Catálogo</button>
-                </div>
-            )}
+                                    {/* 1. END SCREEN (Cinema Mode Only) */}
+                                    {isEnded && !isFeedMode && (
+                                        <div className="absolute inset-0 z-[150] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in">
+                                            <h3 className="text-2xl font-oswald text-white mb-6 uppercase">A continuación</h3>
+                                            <div className="flex gap-4">
+                                                {[1, 2, 3].map(i => (
+                                                    <div key={i} className="w-32 h-48 bg-white/10 rounded-xl animate-pulse"></div>
+                                                ))}
+                                            </div>
+                                            <button onClick={onClose} className="mt-8 text-white/50 hover:text-white underline">Volver al Catálogo</button>
+                                        </div>
+                                    )}
 
-            {/* 2. LOADING SPINNER - Show if video is NOT ready and NOT timed out */}
-            {!isReady && !player?.paused && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
-                    <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
-                </div>
-            )}
+                                    {/* 2. LOADING SPINNER - Show if video is NOT ready and NOT timed out */}
+                                    {!isReady && !player?.paused && (
+                                        <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
+                                            <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
+                                        </div>
+                                    )}
 
-            {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
-            {/* MANUAL PLAY TRIGGER REMOVED - User requested clean UI, tap screen handles play/pause */}
+                                    {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
+                                    {/* MANUAL PLAY TRIGGER REMOVED - User requested clean UI, tap screen handles play/pause */}
 
-            {/* 3. FEEDBACK ICONS */}
-            {showActionIcon && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
-                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-full text-white">
-                        {showActionIcon === 'pause' && <div className="flex gap-1"><div className="w-2 h-6 bg-white rounded-full" /><div className="w-2 h-6 bg-white rounded-full" /></div>}
-                        {showActionIcon === 'mute' && <VolumeX className="w-8 h-8" />}
-                        {showActionIcon === 'unmute' && <Volume2 className="w-8 h-8" />}
-                    </div>
-                </div>
-            )}
+                                    {/* 3. FEEDBACK ICONS */}
+                                    {showActionIcon && (
+                                        <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
+                                            <div className="bg-black/40 backdrop-blur-md p-4 rounded-full text-white">
+                                                {showActionIcon === 'pause' && <div className="flex gap-1"><div className="w-2 h-6 bg-white rounded-full" /><div className="w-2 h-6 bg-white rounded-full" /></div>}
+                                                {showActionIcon === 'mute' && <VolumeX className="w-8 h-8" />}
+                                                {showActionIcon === 'unmute' && <Volume2 className="w-8 h-8" />}
+                                            </div>
+                                        </div>
+                                    )}
 
-            <div
-                className="w-full h-full select-none"
-                onContextMenu={(e) => e.preventDefault()}
-                onClick={handleTap}
-            >
-                {cloudflareId ? (
-                    <iframe
-                        ref={iframeRef}
-                        // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
-                        // ALWAYS Autoplay + Playsline. 
-                        // We force muted=true in the URL to ensure it starts (browser policy). 
-                        // The SDK/Adapter will unmute it seconds later if the global state is Unmuted.
-                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
-                        allow="autoplay; encrypted-media"
-                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                    />
-                ) : youtubeId ? (
-                    <iframe
-                        ref={iframeRef}
-                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&disablekb=1&fs=0`}
-                        className={`w-full h-full pointer-events-none object-cover`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    />
-                ) : (
-                    // NATIVE FALLBACK (For non-Cloudflare URLs)
-                    // We use explicit <source> tags to hint the browser about the format, 
-                    // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
-                    // for videos uploaded previously with issues.
-                    <video
-                        key={post.videoUrl} // Force recreation if URL changes
-                        ref={onVideoRef}
-                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                        poster={post.poster}
-                        preload="auto"
-                        autoPlay={true}
-                        loop={isFeedMode}
-                        muted={isMuted} // React Prop
-                        playsInline={true} // React Prop
-                        webkit-playsinline="true" // iOS Attribute
-                        x-webkit-airplay="allow"
-                        onTimeUpdate={(e) => {
-                            setCurrentTime(e.currentTarget.currentTime);
-                            if (e.currentTarget.currentTime > 0.1) setIsReady(true);
-                        }}
-                        onLoadedMetadata={(e) => {
-                            setDuration(e.currentTarget.duration);
-                            // Don't set ready here, wait for buffer
-                        }}
-                        onCanPlay={() => setIsReady(true)} // Better signal
-                        onEnded={() => setIsEnded(true)}
-                        onError={(e) => {
-                            // React bubbles 'error' events from <source> tags, 
-                            // but at that point the <video> element itself might not have an error yet (it tries the next source).
-                            // We only care if the VIDEO element itself has failed.
-                            const target = e.target as HTMLElement;
-                            if (target.tagName === 'SOURCE') {
-                                return;
-                            }
-                            if (e.currentTarget.error) {
-                                console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
-                            }
-                        }}
-                    >
-                        <source src={post.videoUrl} type="video/mp4" />
-                        <source src={post.videoUrl} type="video/quicktime" />
-                        <source src={post.videoUrl} /> {/* Fallback catch-all */}
-                    </video>
-                )}
-            </div>
+                                    <div
+                                        className="w-full h-full select-none"
+                                        onContextMenu={(e) => e.preventDefault()}
+                                        onClick={handleTap}
+                                    >
+                                        {/* 1. BACKGROUND POSTER (Prevent Black Screen) */}
+                                        <div className="absolute inset-0 w-full h-full -z-10">
+                                            <Image
+                                                src={post.poster || post.thumbnail_url || "/placeholder-cinema.jpg"}
+                                                alt={post.title}
+                                                fill
+                                                className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                                                priority={false}
+                                            />
+                                        </div>
 
-            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */}
-            {
-                !isFeedMode && (
-                    <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                        <div className="pointer-events-auto">
-                            <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
-                            <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
+                                        {/* 2. ACTIVE PLAYER (Only load when looking at it) */}
+                                        {isInView && (
+                                            <>
+                                                {cloudflareId ? (
+                                                    <iframe
+                                                        ref={iframeRef}
+                                                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
+                                                        allow="autoplay; encrypted-media"
+                                                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                                                    />
+                                                ) : youtubeId ? (
+                                                    <iframe
+                                                        ref={iframeRef}
+                                                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&disablekb=1&fs=0`}
+                                                        className={`w-full h-full pointer-events-none object-cover`}
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    />
+                                                ) : (
+                                                    <video
+                                                        key={post.videoUrl}
+                                                        ref={onVideoRef}
+                                                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                                                        poster={post.poster}
+                                                        preload="auto"
+                                                        autoPlay={true}
+                                                        loop={isFeedMode}
+                                                        muted={isMuted}
+                                                        playsInline={true}
+                                                        webkit-playsinline="true"
+                                                        x-webkit-airplay="allow"
+                                                        onTimeUpdate={(e) => {
+                                                            setCurrentTime(e.currentTarget.currentTime);
+                                                            if (e.currentTarget.currentTime > 0.1) setIsReady(true);
+                                                        }}
+                                                        onLoadedMetadata={(e) => {
+                                                            setDuration(e.currentTarget.duration);
+                                                        }}
+                                                        onCanPlay={() => setIsReady(true)}
+                                                        onEnded={() => setIsEnded(true)}
+                                                    >
+                                                        <source src={post.videoUrl} type="video/mp4" />
+                                                        <source src={post.videoUrl} type="video/quicktime" />
+                                                        <source src={post.videoUrl} />
+                                                    </video>
+                                                )}
+                                            </>
+                                        )}
+                                    </div>
 
-                            {/* Progress Bar only for direct control mode */}
-                            <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                                <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
-                            </div>
-                        </div>
-                    </div>
-                )
-            }
+                                    {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */}
+                                    {
+                                        !isFeedMode && (
+                                            <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
+                                                <div className="pointer-events-auto">
+                                                    <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
+                                                    <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
+
+                                                    {/* Progress Bar only for direct control mode */}
+                                                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                                                        <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    }
 
 
 
-        </div >
-    );
+                                </div >
+                                );
 }
 
-// ----------------------------------------------------------------------
-// 2. SOCIAL INTERFACE (Overlay UI for TikTok/Reels style)
-// ----------------------------------------------------------------------
+                                // ----------------------------------------------------------------------
+                                // 2. SOCIAL INTERFACE (Overlay UI for TikTok/Reels style)
+                                // ----------------------------------------------------------------------
 
-function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, toggleUiVisibility }: any) {
+                                function SocialInterface({post, isMuted, toggleMute, onOpenFull, duration, toggleUiVisibility}: any) {
     const [liked, setLiked] = useState(post.liked_by_user || false);
-    const [saved, setSaved] = useState(false);
-    const [likeCount, setLikeCount] = useState(post.likes || 0);
-    const [commentCount, setCommentCount] = useState(post.comments || 0);
+                                const [saved, setSaved] = useState(false);
+                                const [likeCount, setLikeCount] = useState(post.likes || 0);
+                                const [commentCount, setCommentCount] = useState(post.comments || 0);
 
-    const [following, setFollowing] = useState(post.isFollowing || false);
-    const [isPending, startTransition] = useTransition();
+                                const [following, setFollowing] = useState(post.isFollowing || false);
+                                const [isPending, startTransition] = useTransition();
 
-    // NEW: Comments & Gifting State
-    const [showComments, setShowComments] = useState(false);
-    const [showGifting, setShowGifting] = useState(false);
+                                // NEW: Comments & Gifting State
+                                const [showComments, setShowComments] = useState(false);
+                                const [showGifting, setShowGifting] = useState(false);
 
-    // NEW: Text Expansion State
-    const [expanded, setExpanded] = useState(false);
+                                // NEW: Text Expansion State
+                                const [expanded, setExpanded] = useState(false);
     const isLongDescription = post.description && post.description.length > 100;
 
     // NEW: Sync Real Comment Count on Mount
     useEffect(() => {
         const fetchRealCount = async () => {
-            const { createClient } = await import('@/app/utils/supabase/client');
-            const supabase = createClient();
-            const { count, error } = await supabase
-                .from('comments')
-                .select('*', { count: 'exact', head: true })
-                .eq('target_id', post.id);
+            const {createClient} = await import('@/app/utils/supabase/client');
+                                const supabase = createClient();
+                                const {count, error} = await supabase
+                                .from('comments')
+                                .select('*', {count: 'exact', head: true })
+                                .eq('target_id', post.id);
 
-            if (!error && count !== null) {
-                setCommentCount(count);
+                                if (!error && count !== null) {
+                                    setCommentCount(count);
             }
         };
-        fetchRealCount();
+                                fetchRealCount();
     }, [post.id]);
 
     // EXISTING LIKES SYNC
     useEffect(() => {
-        setLiked(post.liked_by_user);
-        setLikeCount(post.likes);
-        setFollowing(post.isFollowing);
+                                    setLiked(post.liked_by_user);
+                                setLikeCount(post.likes);
+                                setFollowing(post.isFollowing);
     }, [post.liked_by_user, post.likes, post.isFollowing]);
 
     const handleFollow = (e: any) => {
-        e.stopPropagation();
-        if (!post.creatorId) return;
+                                    e.stopPropagation();
+                                if (!post.creatorId) return;
 
-        const newState = !following;
-        setFollowing(newState); // Optimistic
+                                const newState = !following;
+                                setFollowing(newState); // Optimistic
 
         startTransition(async () => {
             try {
-                const { toggleFollow } = await import('@/app/actions/social');
-                await toggleFollow(post.creatorId);
+                const {toggleFollow} = await import('@/app/actions/social');
+                                await toggleFollow(post.creatorId);
             } catch (err) {
-                console.error("Follow failed", err);
-                setFollowing(!newState); // Revert
+                                    console.error("Follow failed", err);
+                                setFollowing(!newState); // Revert
             }
         });
     };
 
     const handleLike = async (e: any) => {
-        e.stopPropagation();
+                                    e.stopPropagation();
 
-        // Optimistic
-        const failState = { liked, likeCount };
-        const newLiked = !liked;
-        setLiked(newLiked);
+                                // Optimistic
+                                const failState = {liked, likeCount};
+                                const newLiked = !liked;
+                                setLiked(newLiked);
         setLikeCount((prev: number) => newLiked ? prev + 1 : prev - 1);
 
-        try {
+                                try {
             const res = await toggleLike(post.id);
-            if (res?.error) {
-                // Revert
-                setLiked(failState.liked);
-                setLikeCount(failState.likeCount);
+                                if (res?.error) {
+                                    // Revert
+                                    setLiked(failState.liked);
+                                setLikeCount(failState.likeCount);
             }
         } catch (err) {
-            setLiked(failState.liked);
-            setLikeCount(failState.likeCount);
+                                    setLiked(failState.liked);
+                                setLikeCount(failState.likeCount);
         }
     };
 
     const handleSave = (e: any) => {
-        e.stopPropagation();
-        setSaved(!saved);
+                                    e.stopPropagation();
+                                setSaved(!saved);
     };
 
     const handleShare = async (e: any) => {
-        e.stopPropagation();
-        if (navigator.share) {
+                                    e.stopPropagation();
+                                if (navigator.share) {
             try {
-                await navigator.share({
-                    title: post.title,
-                    text: `Mira este video increíble en Speedlight: ${post.title}`,
-                    url: window.location.href
-                });
-            } catch (err) { console.log('Share error:', err); }
+                                    await navigator.share({
+                                        title: post.title,
+                                        text: `Mira este video increíble en Speedlight: ${post.title}`,
+                                        url: window.location.href
+                                    });
+            } catch (err) {console.log('Share error:', err); }
         } else {
-            alert('Enlace copiado al portapapeles');
+                                    alert('Enlace copiado al portapapeles');
         }
     };
 
-    return (
-        <div className="w-full h-full pointer-events-none z-20 px-2 md:px-4 flex flex-col justify-between">
+                                return (
+                                <div className="w-full h-full pointer-events-none z-20 px-2 md:px-4 flex flex-col justify-between">
 
-            {/* TOP BAR: Transparent */}
-            <div className="w-full pt-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
-                {/* Mute button moved to bottom right */}
-            </div>
+                                    {/* TOP BAR: Transparent */}
+                                    <div className="w-full pt-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
+        
+        
+        
+        
+        
+        
+                                        {/* Mute button moved to bottom right */}
+                                    </div>
 
-            {/* BOTTOM AREA: Actions & Info */}
-            <div className={`w-full flex items-end justify-between pb-2`}> {/* Raised PB to clear Nav */}
+                                    {/* BOTTOM AREA: Actions & Info */}
+                                    <div className={`w-full flex items-end justify-between pb-2`}> {/* Raised PB to clear Nav */}
 
-                {/* LEFT: INFO */}
-                <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
-                    <div className="flex items-center mb-1">
-                        <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative mr-2 shrink-0">
-                            {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
-                        </div>
-                        <span className="font-bold text-sm text-white drop-shadow-md truncate max-w-[120px] mr-3">
-                            {post.creator || 'SpeedlightUser'}
-                        </span>
+                                        {/* LEFT: INFO */}
+                                        <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
+                                            <div className="flex items-center mb-1">
+                                                <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative mr-2 shrink-0">
+                                                    {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
+                                                </div>
+                                                <span className="font-bold text-sm text-white drop-shadow-md truncate max-w-[120px] mr-3">
+                                                    {post.creator || 'SpeedlightUser'}
+                                                </span>
 
-                        <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleFollow}
-                                disabled={isPending}
-                                className={`px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all ${following
-                                    ? 'bg-white text-black border-white hover:bg-white/90'
-                                    : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
-                                    }`}
-                            >
-                                {following ? 'Siguiendo' : 'Seguir'}
-                            </button>
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={handleFollow}
+                                                        disabled={isPending}
+                                                        className={`px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all ${following
+                                                            ? 'bg-white text-black border-white hover:bg-white/90'
+                                                            : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
+                                                            }`}
+                                                    >
+                                                        {following ? 'Siguiendo' : 'Seguir'}
+                                                    </button>
 
-                            {/* HIDE UI BUTTON (YouTube Style) */}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
-                                className="w-8 h-6 border border-white/40 rounded flex items-center justify-center hover:bg-white/10 hover:border-white transition-colors"
-                                title="Modo Inmersivo"
-                            >
-                                <Maximize2 className="w-3.5 h-3.5 text-white rotate-90" />
-                            </button>
-                        </div>
-                    </div>
-                    <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
+                                                    {/* HIDE UI BUTTON (YouTube Style) */}
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
+                                                        className="w-8 h-6 border border-white/40 rounded flex items-center justify-center hover:bg-white/10 hover:border-white transition-colors"
+                                                        title="Modo Inmersivo"
+                                                    >
+                                                        <Maximize2 className="w-3.5 h-3.5 text-white rotate-90" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>
 
-                    <div className="mb-1 relative">
-                        <p
-                            className="text-white/80 text-xs drop-shadow-md transition-all duration-300"
-                            onClick={() => { if (isLongDescription) setExpanded(!expanded); }}
-                        >
-                            {expanded || !isLongDescription ? (
-                                <>
-                                    {post.description}
-                                    {expanded && (
-                                        <span
-                                            onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
-                                            className="text-white/50 font-bold text-xs ml-2 hover:text-white cursor-pointer"
-                                        >
-                                            Ver menos
-                                        </span>
-                                    )}
-                                </>
-                            ) : (
-                                <>
-                                    {post.description?.slice(0, 130)}...
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-                                        className="font-bold text-white text-xs hover:text-[#FF9800] ml-1"
-                                    >
-                                        Ver más
-                                    </button>
-                                </>
-                            )}
-                        </p>
-                    </div>
+                                            <div className="mb-1 relative">
+                                                <p
+                                                    className="text-white/80 text-xs drop-shadow-md transition-all duration-300"
+                                                    onClick={() => { if (isLongDescription) setExpanded(!expanded); }}
+                                                >
+                                                    {expanded || !isLongDescription ? (
+                                                        <>
+                                                            {post.description}
+                                                            {expanded && (
+                                                                <span
+                                                                    onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+                                                                    className="text-white/50 font-bold text-xs ml-2 hover:text-white cursor-pointer"
+                                                                >
+                                                                    Ver menos
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {post.description?.slice(0, 130)}...
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+                                                                className="font-bold text-white text-xs hover:text-[#FF9800] ml-1"
+                                                            >
+                                                                Ver más
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </p>
+                                            </div>
 
-                    {/* Tags / Music ticker */}
-                    <div className="flex items-center gap-2 text-[10px] text-white/70">
-                        <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm max-w-[200px]">
-                            <span className="animate-pulse flex-shrink-0">♫</span>
-                            <div className="overflow-hidden min-w-0">
-                                <span className={`whitespace-nowrap ${post.music_metadata ? 'animate-marquee' : ''} inline-block`}>
-                                    {post.music_metadata
-                                        ? `${post.music_metadata.name} - ${post.music_metadata.artist} `
-                                        : `Sonido Original - ${post.creator || 'Speedlight'}`
-                                    }
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                            {/* Tags / Music ticker */}
+                                            <div className="flex items-center gap-2 text-[10px] text-white/70">
+                                                <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm max-w-[200px]">
+                                                    <span className="animate-pulse flex-shrink-0">♫</span>
+                                                    <div className="overflow-hidden min-w-0">
+                                                        <span className={`whitespace-nowrap ${post.music_metadata ? 'animate-marquee' : ''} inline-block`}>
+                                                            {post.music_metadata
+                                                                ? `${post.music_metadata.name} - ${post.music_metadata.artist} `
+                                                                : `Sonido Original - ${post.creator || 'Speedlight'}`
+                                                            }
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                {/* RIGHT: ACTIONS SIDEBAR */}
-                <div className="flex flex-col items-center gap-4 pointer-events-auto">
+                                        {/* RIGHT: ACTIONS SIDEBAR */}
+                                        <div className="flex flex-col items-center gap-4 pointer-events-auto">
 
-                    {/* MUTE TOGGLE (Added for Visibility) */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                        className="flex flex-col items-center gap-1 group mb-2"
-                    >
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-white/10 ${isMuted ? 'bg-black/40 text-white/70' : 'bg-white/20 text-white backdrop-blur-md'}`}>
-                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Audio Off' : 'Audio On'}</span>
-                    </button>
+                                            {/* MUTE TOGGLE (Added for Visibility) */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                                                className="flex flex-col items-center gap-1 group mb-2"
+                                            >
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-white/10 ${isMuted ? 'bg-black/40 text-white/70' : 'bg-white/20 text-white backdrop-blur-md'}`}>
+                                                    {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                                                </div>
+                                                <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Audio Off' : 'Audio On'}</span>
+                                            </button>
 
-                    {/* LIKE */}
-                    <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
-                            <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
-                    </button>
+                                            {/* LIKE */}
+                                            <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
+                                                <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
+                                                    <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
+                                            </button>
 
-                    {/* COMMENT (UPDATED WITH CLICK HANDLER) */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
-                        className="flex flex-col items-center gap-1 group"
-                    >
-                        <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <MessageCircle className="w-5 h-5" />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(commentCount)}</span>
-                    </button>
+                                            {/* COMMENT (UPDATED WITH CLICK HANDLER) */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
+                                                className="flex flex-col items-center gap-1 group"
+                                            >
+                                                <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                                                    <MessageCircle className="w-5 h-5" />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(commentCount)}</span>
+                                            </button>
 
-                    {/* GIFT (NEW - FUNCTIONAL) */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); setShowGifting(true); }}
-                        className="flex flex-col items-center gap-1 group"
-                    >
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
-                            <Gift className="w-5 h-5" />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
-                    </button>
+                                            {/* GIFT (NEW - FUNCTIONAL) */}
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); setShowGifting(true); }}
+                                                className="flex flex-col items-center gap-1 group"
+                                            >
+                                                <div className="w-9 h-9 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
+                                                    <Gift className="w-5 h-5" />
+                                                </div>
+                                                <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
+                                            </button>
 
 
 
-                    {/* MORE ACTIONS (MENU) */}
-                    <VideoActionsMenu
-                        post={post}
-                        saved={saved}
-                        onSave={handleSave}
-                        onShare={handleShare}
-                    />
+                                            {/* MORE ACTIONS (MENU) */}
+                                            <VideoActionsMenu
+                                                post={post}
+                                                saved={saved}
+                                                onSave={handleSave}
+                                                onShare={handleShare}
+                                            />
 
-                </div>
-            </div>
+                                        </div>
+                                    </div>
 
-            {/* COMMENTS DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
-            <AnimatePresence>
-                {showComments && (
-                    <div
-                        className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
-                        onClick={(e) => { e.stopPropagation(); setShowComments(false); }}
-                    >
-                        <motion.div
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="w-full h-[70vh] bg-[#050505]/85 backdrop-blur-2xl rounded-t-[32px] overflow-hidden relative border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] flex flex-col"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Glass Shine Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                                    {/* COMMENTS DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
+                                    <AnimatePresence>
+                                        {showComments && (
+                                            <div
+                                                className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
+                                                onClick={(e) => { e.stopPropagation(); setShowComments(false); }}
+                                            >
+                                                <motion.div
+                                                    initial={{ y: "100%" }}
+                                                    animate={{ y: 0 }}
+                                                    exit={{ y: "100%" }}
+                                                    transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                                                    className="w-full h-[70vh] bg-[#050505]/85 backdrop-blur-2xl rounded-t-[32px] overflow-hidden relative border-t border-white/10 shadow-[0_-10px_50px_rgba(0,0,0,0.8)] flex flex-col"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {/* Glass Shine Effect */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
 
-                            {/* Handle */}
-                            <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowComments(false)}>
-                                <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
-                            </div>
+                                                    {/* Handle */}
+                                                    <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowComments(false)}>
+                                                        <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+                                                    </div>
 
-                            {/* Content Container (Scrollable) */}
-                            <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
-                                <div className="-mt-8"> {/* Negative margin to pull headline up if needed, or just let it sit */}
-                                    <CommentsSection
-                                        targetId={post.id}
-                                        targetType="post"
-                                        onCommentAdded={() => setCommentCount((prev: number) => prev + 1)}
-                                    />
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                                    {/* Content Container (Scrollable) */}
+                                                    <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
+                                                        <div className="-mt-8"> {/* Negative margin to pull headline up if needed, or just let it sit */}
+                                                            <CommentsSection
+                                                                targetId={post.id}
+                                                                targetType="post"
+                                                                onCommentAdded={() => setCommentCount((prev: number) => prev + 1)}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        )}
+                                    </AnimatePresence>
 
-            {/* GIFTING DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
-            <AnimatePresence>
-                {showGifting && (
-                    <div
-                        className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
-                        onClick={(e) => { e.stopPropagation(); setShowGifting(false); }}
-                    >
-                        <motion.div
-                            initial={{ y: "100%" }}
-                            animate={{ y: 0 }}
-                            exit={{ y: "100%" }}
-                            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-                            className="w-full h-[70vh] bg-[#050505]/90 backdrop-blur-3xl rounded-t-[32px] overflow-hidden relative border-t border-[#FF9800]/20 shadow-[0_-10px_50px_rgba(255,152,0,0.1)] flex flex-col"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Glass Shine Effect */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-[#FF9800]/5 to-transparent pointer-events-none" />
+                                    {/* GIFTING DRAWER (TIKTOK STYLE - LIQUID GLASS) */}
+                                    <AnimatePresence>
+                                        {showGifting && (
+                                            <div
+                                                className="fixed inset-0 z-[200] flex flex-col justify-end bg-black/50 backdrop-blur-sm pointer-events-auto"
+                                                onClick={(e) => { e.stopPropagation(); setShowGifting(false); }}
+                                            >
+                                                <motion.div
+                                                    initial={{ y: "100%" }}
+                                                    animate={{ y: 0 }}
+                                                    exit={{ y: "100%" }}
+                                                    transition={{ type: "spring", damping: 30, stiffness: 300 }}
+                                                    className="w-full h-[70vh] bg-[#050505]/90 backdrop-blur-3xl rounded-t-[32px] overflow-hidden relative border-t border-[#FF9800]/20 shadow-[0_-10px_50px_rgba(255,152,0,0.1)] flex flex-col"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {/* Glass Shine Effect */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-[#FF9800]/5 to-transparent pointer-events-none" />
 
-                            {/* Handle */}
-                            <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowGifting(false)}>
-                                <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
-                            </div>
+                                                    {/* Handle */}
+                                                    <div className="w-full flex justify-center pt-5 pb-3 shrink-0 cursor-pointer relative z-10" onClick={() => setShowGifting(false)}>
+                                                        <div className="w-12 h-1.5 bg-white/20 rounded-full hover:bg-white/40 transition-colors" />
+                                                    </div>
 
-                            {/* Content Container (Scrollable) */}
-                            <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
-                                <div className="mt-2">
-                                    <GiftingSystem projectTitle={post.title} />
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                                                    {/* Content Container (Scrollable) */}
+                                                    <div className="flex-1 overflow-y-auto px-4 pb-12 relative z-10 scrollbar-hide">
+                                                        <div className="mt-2">
+                                                            <GiftingSystem projectTitle={post.title} />
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        )}
+                                    </AnimatePresence>
 
-        </div >
-    );
+                                </div >
+                                );
 }
 
-// ----------------------------------------------------------------------
-// VIDEO ACTIONS MENU (Now for Everyone + Owner Extras)
-// ----------------------------------------------------------------------
-function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: boolean, onSave: (e: any) => void, onShare: (e: any) => void }) {
-    const { data: session } = useSession();
-    const [isOpen, setIsOpen] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [confirmArchive, setConfirmArchive] = useState(false);
-    const [confirmDelete, setConfirmDelete] = useState(false);
-    const isOwner = session?.user?.id === post.creatorId;
+                                // ----------------------------------------------------------------------
+                                // VIDEO ACTIONS MENU (Now for Everyone + Owner Extras)
+                                // ----------------------------------------------------------------------
+                                function VideoActionsMenu({post, saved, onSave, onShare}: {post: any, saved: boolean, onSave: (e: any) => void, onShare: (e: any) => void }) {
+    const {data: session } = useSession();
+                                const [isOpen, setIsOpen] = useState(false);
+                                const [showEditModal, setShowEditModal] = useState(false);
+                                const [confirmArchive, setConfirmArchive] = useState(false);
+                                const [confirmDelete, setConfirmDelete] = useState(false);
+                                const isOwner = session?.user?.id === post.creatorId;
 
     // if (!isOwner) return null; // REMOVED: Now showing for everyone
 
     const handleArchive = async () => {
         try {
-            await archiveVideo(post.id);
-            toast.success('Video archivado correctamente');
+                                    await archiveVideo(post.id);
+                                toast.success('Video archivado correctamente');
             setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
-            toast.error('Error al archivar');
+                                    toast.error('Error al archivar');
         }
     };
 
     const handleDelete = async () => {
         try {
-            await deleteVideo(post.id);
-            toast.success('Video eliminado');
+                                    await deleteVideo(post.id);
+                                toast.success('Video eliminado');
             setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
-            toast.error('Error al eliminar');
+                                    toast.error('Error al eliminar');
         }
     };
 
-    return (
-        <>
-            <div className="relative">
-                <button
-                    onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
-                    className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}
-                >
-                    <MoreVertical className="w-5 h-5" />
-                </button>
-
-                <AnimatePresence>
-                    {isOpen && (
-                        <>
-                            {/* Backdrop to close */}
-                            <div className="fixed inset-0 z-[290]" onClick={() => setIsOpen(false)} />
-
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                                className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
-                            >
-                                {/* PUBLIC ACTIONS */}
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onSave(e); setIsOpen(false); }}
-                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
-                                >
-                                    <Bookmark className={`w-4 h-4 ${saved ? 'fill-[#FF9800] text-[#FF9800]' : 'text-white'}`} />
-                                    {saved ? 'Guardado' : 'Guardar'}
-                                </button>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); onShare(e); setIsOpen(false); }}
-                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
-                                >
-                                    <Send className="w-4 h-4 text-white" /> Compartir
-                                </button>
-
-                                {/* OWNER ONLY ACTIONS */}
-                                {isOwner && (
-                                    <>
-                                        <div className="h-px bg-white/10 my-1 mx-2"></div>
+                                return (
+                                <>
+                                    <div className="relative">
                                         <button
-                                            onClick={(e) => { e.stopPropagation(); setShowEditModal(true); setIsOpen(false); }}
-                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                            onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+                                            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${isOpen ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}
                                         >
-                                            <Pencil className="w-4 h-4 text-[#FF9800]" /> Editar Video
+                                            <MoreVertical className="w-5 h-5" />
                                         </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setConfirmArchive(true); setIsOpen(false); }}
-                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
-                                        >
-                                            <Archive className="w-4 h-4 text-blue-400" /> Archivar
-                                        </button>
-                                        <button
-                                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setIsOpen(false); }}
-                                            className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
-                                        >
-                                            <Trash2 className="w-4 h-4" /> Eliminar
-                                        </button>
-                                    </>
-                                )}
-                            </motion.div>
-                        </>
-                    )}
-                </AnimatePresence>
-            </div>
 
-            {/* CONFIRMATION MODALS */}
-            <ConfirmModal
-                isOpen={confirmArchive}
-                onClose={() => setConfirmArchive(false)}
-                onConfirm={handleArchive}
-                title="Archivar Video"
-                message="¿Seguro que quieres archivar este video? Se ocultará del feed principal."
-                confirmText="Archivar"
-                variant="info"
-            />
+                                        <AnimatePresence>
+                                            {isOpen && (
+                                                <>
+                                                    {/* Backdrop to close */}
+                                                    <div className="fixed inset-0 z-[290]" onClick={() => setIsOpen(false)} />
 
-            <ConfirmModal
-                isOpen={confirmDelete}
-                onClose={() => setConfirmDelete(false)}
-                onConfirm={handleDelete}
-                title="Eliminar Video"
-                message="¿ESTÁS SEGURO? Esta acción enviará el video a la papelera. Se podrá recuperar desde ajustes."
-                confirmText="Mover a papelera"
-                variant="danger"
-            />
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                                        className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
+                                                    >
+                                                        {/* PUBLIC ACTIONS */}
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); onSave(e); setIsOpen(false); }}
+                                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                                        >
+                                                            <Bookmark className={`w-4 h-4 ${saved ? 'fill-[#FF9800] text-[#FF9800]' : 'text-white'}`} />
+                                                            {saved ? 'Guardado' : 'Guardar'}
+                                                        </button>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); onShare(e); setIsOpen(false); }}
+                                                            className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                                        >
+                                                            <Send className="w-4 h-4 text-white" /> Compartir
+                                                        </button>
 
-            {/* EDIT MODAL */}
-            <AnimatePresence>
-                {showEditModal && (
-                    <EditMetadataModal
-                        post={post}
-                        onClose={() => setShowEditModal(false)}
-                    />
-                )}
-            </AnimatePresence>
-        </>
-    );
+                                                        {/* OWNER ONLY ACTIONS */}
+                                                        {isOwner && (
+                                                            <>
+                                                                <div className="h-px bg-white/10 my-1 mx-2"></div>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setShowEditModal(true); setIsOpen(false); }}
+                                                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                                                >
+                                                                    <Pencil className="w-4 h-4 text-[#FF9800]" /> Editar Video
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setConfirmArchive(true); setIsOpen(false); }}
+                                                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                                                >
+                                                                    <Archive className="w-4 h-4 text-blue-400" /> Archivar
+                                                                </button>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); setIsOpen(false); }}
+                                                                    className="w-full px-4 py-3 text-left text-sm font-bold text-red-500 hover:bg-red-500/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                                                >
+                                                                    <Trash2 className="w-4 h-4" /> Eliminar
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </motion.div>
+                                                </>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+
+                                    {/* CONFIRMATION MODALS */}
+                                    <ConfirmModal
+                                        isOpen={confirmArchive}
+                                        onClose={() => setConfirmArchive(false)}
+                                        onConfirm={handleArchive}
+                                        title="Archivar Video"
+                                        message="¿Seguro que quieres archivar este video? Se ocultará del feed principal."
+                                        confirmText="Archivar"
+                                        variant="info"
+                                    />
+
+                                    <ConfirmModal
+                                        isOpen={confirmDelete}
+                                        onClose={() => setConfirmDelete(false)}
+                                        onConfirm={handleDelete}
+                                        title="Eliminar Video"
+                                        message="¿ESTÁS SEGURO? Esta acción enviará el video a la papelera. Se podrá recuperar desde ajustes."
+                                        confirmText="Mover a papelera"
+                                        variant="danger"
+                                    />
+
+                                    {/* EDIT MODAL */}
+                                    <AnimatePresence>
+                                        {showEditModal && (
+                                            <EditMetadataModal
+                                                post={post}
+                                                onClose={() => setShowEditModal(false)}
+                                            />
+                                        )}
+                                    </AnimatePresence>
+                                </>
+                                );
 }
 
-// ----------------------------------------------------------------------
-// EDIT METADATA MODAL
-// ----------------------------------------------------------------------
-function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }) {
+                                // ----------------------------------------------------------------------
+                                // EDIT METADATA MODAL
+                                // ----------------------------------------------------------------------
+                                function EditMetadataModal({post, onClose}: {post: any, onClose: () => void }) {
     const [title, setTitle] = useState(post.title);
-    const [description, setDescription] = useState(post.description);
-    const [isSaving, setIsSaving] = useState(false);
+                                const [description, setDescription] = useState(post.description);
+                                const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
         if (!title.trim()) return;
-        setIsSaving(true);
-        try {
-            await updateVideoMetadata(post.id, { title, description });
-            window.location.reload();
+                                setIsSaving(true);
+                                try {
+                                    await updateVideoMetadata(post.id, { title, description });
+                                window.location.reload();
         } catch (err) {
-            alert('Error al guardar cambios');
+                                    alert('Error al guardar cambios');
         } finally {
-            setIsSaving(false);
+                                    setIsSaving(false);
         }
     };
 
-    return (
-        <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md" onClick={onClose}>
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white">
-                    <X className="w-6 h-6" />
-                </button>
+                                return (
+                                <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md" onClick={onClose}>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.9 }}
+                                        className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white">
+                                            <X className="w-6 h-6" />
+                                        </button>
 
-                <h3 className="text-xl font-black font-oswald uppercase text-white mb-6">Editar Publicación</h3>
+                                        <h3 className="text-xl font-black font-oswald uppercase text-white mb-6">Editar Publicación</h3>
 
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Título</label>
-                        <input
-                            type="text"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors"
-                        />
-                    </div>
+                                        <div className="space-y-4">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Título</label>
+                                                <input
+                                                    type="text"
+                                                    value={title}
+                                                    onChange={(e) => setTitle(e.target.value)}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors"
+                                                />
+                                            </div>
 
-                    <div className="space-y-2">
-                        <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Descripción</label>
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors resize-none text-sm"
-                        />
-                    </div>
-                </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Descripción</label>
+                                                <textarea
+                                                    value={description}
+                                                    onChange={(e) => setDescription(e.target.value)}
+                                                    rows={4}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors resize-none text-sm"
+                                                />
+                                            </div>
+                                        </div>
 
-                <div className="mt-8 flex gap-3">
-                    <button
-                        onClick={onClose}
-                        className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition-colors"
-                    >
-                        Cancelar
-                    </button>
-                    <button
-                        onClick={handleSave}
-                        disabled={isSaving}
-                        className="flex-1 py-3 rounded-xl bg-[#FF9800] text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
-                    >
-                        {isSaving ? 'Guardando...' : 'Guardar'}
-                    </button>
-                </div>
-            </motion.div>
-        </div>
-    );
+                                        <div className="mt-8 flex gap-3">
+                                            <button
+                                                onClick={onClose}
+                                                className="flex-1 py-3 rounded-xl border border-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white/5 transition-colors"
+                                            >
+                                                Cancelar
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                disabled={isSaving}
+                                                className="flex-1 py-3 rounded-xl bg-[#FF9800] text-black font-bold text-xs uppercase tracking-widest hover:scale-[1.02] transition-all disabled:opacity-50"
+                                            >
+                                                {isSaving ? 'Guardando...' : 'Guardar'}
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                </div>
+                                );
 }
 
-// ----------------------------------------------------------------------
-// UTILITIES
-// ----------------------------------------------------------------------
+                                // ----------------------------------------------------------------------
+                                // UTILITIES
+                                // ----------------------------------------------------------------------
 
 
-function formatTime(seconds: number) {
+                                function formatTime(seconds: number) {
     if (!seconds || isNaN(seconds)) return "0:00";
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+                                const m = Math.floor(seconds / 60);
+                                const s = Math.floor(seconds % 60);
+                                return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 const getCloudflareId = (url: string) => {
     if (!url) return null;
-    const regExp = /(?:cloudflarestream\.com|videodelivery\.net)\/([a-zA-Z0-9]+)/;
-    const match = url.match(regExp);
-    return match ? match[1] : null;
+                                const regExp = /(?:cloudflarestream\.com|videodelivery\.net)\/([a-zA-Z0-9]+)/;
+                                const match = url.match(regExp);
+                                return match ? match[1] : null;
 }
 
 const getYoutubeId = (url: string) => {
     if (!url) return null;
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+                                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/)([^#&?]*).*/;
+                                const match = url.match(regExp);
+                                return (match && match[2].length === 11) ? match[2] : null;
 };
 
 const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(num);
+    return new Intl.NumberFormat('en-US', {notation: "compact", maximumFractionDigits: 1 }).format(num);
 }
