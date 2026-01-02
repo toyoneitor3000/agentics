@@ -213,7 +213,7 @@ function CinemaSocialContent() {
             ---------------------------------------------------------------------- */}
             <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ease-in-out ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90 to-transparent' : 'bg-transparent'} ${isUiVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
 
-                <div className="w-full px-4 md:px-8 flex items-center justify-between py-2 relative">
+                <div className="w-full px-2 md:px-4 flex items-center justify-between py-2 relative">
                     {/* CENTERED TOGGLE (Now Integrated) */}
                     <div className="absolute left-1/2 -translate-x-1/2">
                         <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-[3px] shadow-2xl">
@@ -654,7 +654,7 @@ function YoutubeHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }: a
         <div className="relative w-full h-full group overflow-hidden bg-black">
 
             {/* --- STUDIO SHORTCUT --- */}
-            <div className="absolute top-24 right-4 md:right-8 z-[60] pointer-events-auto animate-in slide-in-from-top-5 delay-500">
+            <div className="absolute top-24 right-2 md:right-4 z-[60] pointer-events-auto animate-in slide-in-from-top-5 delay-500">
                 <Link
                     href="/cinema/upload"
                     className="flex items-center gap-2 px-3 py-1.5 bg-black/40 hover:bg-[#FF9800] backdrop-blur-md border border-white/10 hover:border-[#FF9800] rounded-full transition-all group/btn"
@@ -1417,6 +1417,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                 await navigator.share({
                     title: post.title,
                     text: `Mira este video increíble en Speedlight: ${post.title}`,
+        También los elementos de la barra de navegación. 
                     url: window.location.href
                 });
             } catch (err) { console.log('Share error:', err); }
@@ -1426,7 +1427,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
     };
 
     return (
-        <div className="w-full h-full pointer-events-none z-20 px-4 md:px-8 flex flex-col justify-between">
+        <div className="w-full h-full pointer-events-none z-20 px-2 md:px-4 flex flex-col justify-between">
 
             {/* TOP BAR: Transparent */}
             <div className="w-full pt-4 flex justify-end items-start"> {/* INCREASED TOP PADDING TO CLEAR GLOBAL HEADER */}
@@ -1434,7 +1435,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
             </div>
 
             {/* BOTTOM AREA: Actions & Info */}
-            <div className={`w-full flex items-end justify-between pb-4`}> {/* Raised PB to clear Nav */}
+            <div className={`w-full flex items-end justify-between pb-2`}> {/* Raised PB to clear Nav */}
 
                 {/* LEFT: INFO */}
                 <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
