@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import UserProfile from "@/app/components/profile/UserProfile";
 import { FollowButton } from "@/app/components/profile/FollowButton";
+import MessageButton from "@/app/components/profile/MessageButton";
 export const dynamic = 'force-dynamic';
 
 interface PublicProfilePageProps {
@@ -92,7 +93,10 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             content={content}
             isOwnProfile={isOwnProfile}
             actionButtons={!isOwnProfile ? (
-                <FollowButton targetUserId={id} initialIsFollowing={isFollowing} currentUserId={currentUser?.id} />
+                <div className="flex items-center">
+                    <FollowButton targetUserId={id} initialIsFollowing={isFollowing} currentUserId={currentUser?.id} />
+                    <MessageButton targetUserId={id} />
+                </div>
             ) : null}
         />
     );

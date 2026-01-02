@@ -35,7 +35,7 @@ function CinemaSocialContent() {
     const videoIdParam = searchParams.get('video');
     const [featuredPost, setFeaturedPost] = useState<any>(null);
     const [categories, setCategories] = useState<any>({});
-    const [isMuted, setIsMuted] = useState(false); // Sound ON by default (User Preference)
+    const [isMuted, setIsMuted] = useState(true); // Sound OFF by default for Mobile Autoplay compatibility
 
     // ----------------------------------------------------------------------
     // DUAL MODE ARCHITECTURE
@@ -877,7 +877,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     // We DO NOT play here anymore. We let the effect below handle it.
                 }
             });
-        }, { threshold: 0.5 }); // Lowered to 50% for better mobile detection
+        }, { threshold: 0.3 }); // Lowered to 30% for better mobile detection (address bars etc)
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
@@ -1337,6 +1337,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
                         // Pass 'muted' param BUT Cloudflare JS API (sp.muted) takes precedence after load
                         src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
+                        allow="autoplay; encrypted-media"
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                     />
                 ) : youtubeId ? (
@@ -1358,10 +1359,11 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         poster={post.poster}
                         preload="auto"
                         // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
-                        autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
+                        autoPlay={!isFeedMode} // Enable native autoplay for Modal, Feed handled by Observer (but helps preload)
                         loop={isFeedMode}
                         muted={isMuted}
-                        playsInline
+                        playsInline={true}
+                        webkit-playsinline="true"
                         onTimeUpdate={(e) => {
                             setCurrentTime(e.currentTarget.currentTime);
                             if (e.currentTarget.currentTime > 0.1) setIsReady(true);
@@ -1615,7 +1617,16 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                 {/* RIGHT: ACTIONS SIDEBAR */}
                 <div className="flex flex-col items-center gap-4 pointer-events-auto">
 
-                    {/* ... (Existing Like, Comment, Save, Share, Hide UI) ... */}
+                    {/* MUTE TOGGLE (Added for Visibility) */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
+                        className="flex flex-col items-center gap-1 group mb-2"
+                    >
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-white/10 ${isMuted ? 'bg-black/40 text-white/70' : 'bg-white/20 text-white backdrop-blur-md'}`}>
+                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        </div>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Audio Off' : 'Audio On'}</span>
+                    </button>
 
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
