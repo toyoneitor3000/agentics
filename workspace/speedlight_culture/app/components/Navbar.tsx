@@ -88,7 +88,7 @@ export default function Navbar() {
             {/* Ambient Top Glow (Neon Effect) */}
             <div className={`absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#FF9800] to-transparent transition-opacity duration-700 ${scrolled ? 'opacity-100' : 'opacity-0'}`}></div>
 
-            <div className="container mx-auto px-6 relative flex justify-between items-center">
+            <div className="w-full px-2 md:px-4 relative flex justify-between items-center">
                 {/* 1. Logo & Sponsor - Kinetic Entrance */}
                 <div className="flex items-center gap-8">
                     <div className="flex items-center group cursor-pointer relative">
