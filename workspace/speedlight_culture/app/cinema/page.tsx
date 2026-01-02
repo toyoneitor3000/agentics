@@ -1417,7 +1417,6 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                 await navigator.share({
                     title: post.title,
                     text: `Mira este video increíble en Speedlight: ${post.title}`,
-        También los elementos de la barra de navegación. 
                     url: window.location.href
                 });
             } catch (err) { console.log('Share error:', err); }
@@ -1473,27 +1472,33 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
 
                     <div className="mb-1 relative">
                         <p
-                            className={`text-white/80 text-xs drop-shadow-md transition-all duration-300 ${expanded ? '' : 'line-clamp-2'}`}
+                            className="text-white/80 text-xs drop-shadow-md transition-all duration-300"
                             onClick={() => { if (isLongDescription) setExpanded(!expanded); }}
                         >
-                            {post.description}
-                            {expanded && (
-                                <span
-                                    onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
-                                    className="text-white/50 font-bold text-xs ml-2 hover:text-white cursor-pointer"
-                                >
-                                    Ver menos
-                                </span>
+                            {expanded || !isLongDescription ? (
+                                <>
+                                    {post.description}
+                                    {expanded && (
+                                        <span
+                                            onClick={(e) => { e.stopPropagation(); setExpanded(false); }}
+                                            className="text-white/50 font-bold text-xs ml-2 hover:text-white cursor-pointer"
+                                        >
+                                            Ver menos
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <>
+                                    {post.description?.slice(0, 130)}...
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
+                                        className="font-bold text-white text-xs hover:text-[#FF9800] ml-1"
+                                    >
+                                        Ver más
+                                    </button>
+                                </>
                             )}
                         </p>
-                        {isLongDescription && !expanded && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setExpanded(true); }}
-                                className="absolute bottom-0 right-0 pl-12 pr-1 bg-gradient-to-l from-black via-black/80 to-transparent text-white font-bold text-xs hover:text-[#FF9800]"
-                            >
-                                ... Ver más
-                            </button>
-                        )}
                     </div>
 
                     {/* Tags / Music ticker */}
@@ -1547,21 +1552,7 @@ function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, togg
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
                     </button>
 
-                    {/* BOOKMARK (SAVE) */}
-                    <button onClick={handleSave} className="flex flex-col items-center gap-1 group">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${saved ? 'bg-[#FF9800] text-black' : 'bg-black/20 text-white hover:bg-black/40'}`}>
-                            <Bookmark className={`w-5 h-5 ${saved ? 'fill-current' : ''}`} />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Guardar</span>
-                    </button>
 
-                    {/* SHARE (MESSAGE/SEND) */}
-                    <button onClick={handleShare} className="flex flex-col items-center gap-1 group">
-                        <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <Send className="w-5 h-5" />
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Enviar</span>
-                    </button>
 
                     {/* MORE ACTIONS (MENU) */}
                     <VideoActionsMenu
@@ -1705,8 +1696,20 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
                                 exit={{ opacity: 0, scale: 0.9, y: 10 }}
                                 className="absolute bottom-full right-0 mb-4 w-48 bg-[#0a0a0a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[300]"
                             >
-                                {/* PUBLIC ACTIONS - Just Report/Block in future? For now mostly empty or specific tools */}
-                                {/* Shifted Save/Share to main bar */}
+                                {/* PUBLIC ACTIONS */}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onSave(e); setIsOpen(false); }}
+                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors"
+                                >
+                                    <Bookmark className={`w-4 h-4 ${saved ? 'fill-[#FF9800] text-[#FF9800]' : 'text-white'}`} />
+                                    {saved ? 'Guardado' : 'Guardar'}
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); onShare(e); setIsOpen(false); }}
+                                    className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/10 flex items-center gap-3 transition-colors border-t border-white/5"
+                                >
+                                    <Send className="w-4 h-4 text-white" /> Compartir
+                                </button>
 
                                 {/* OWNER ONLY ACTIONS */}
                                 {isOwner && (

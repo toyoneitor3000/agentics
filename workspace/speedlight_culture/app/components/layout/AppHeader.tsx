@@ -126,7 +126,7 @@ export default function AppHeader() {
                 </button>
             )}
 
-            <header className={`fixed top-0 left-0 right-0 z-[60] flex justify-between items-center px-4 md:px-8 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-14' : ''}`}>
+            <header className={`fixed top-0 left-0 right-0 z-[60] flex justify-between items-center px-2 md:px-4 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-14' : ''}`}>
                 {/* Cinematic Deep Fade Gradient (Background) */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
