@@ -1335,8 +1335,9 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     <iframe
                         ref={iframeRef}
                         // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
-                        // Pass 'muted' param BUT Cloudflare JS API (sp.muted) takes precedence after load
-                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
+                        // ALWAYS Autoplay. The IntersectionObserver will pause it if off-screen.
+                        // This prevents the "First Frame & Stop" issue on mobile.
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
                         allow="autoplay; encrypted-media"
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                     />
@@ -1359,7 +1360,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         poster={post.poster}
                         preload="auto"
                         // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
-                        autoPlay={!isFeedMode} // Enable native autoplay for Modal, Feed handled by Observer (but helps preload)
+                        autoPlay={true} // ALWAYS Autoplay. Let Browser/Observer handle pausing.
                         loop={isFeedMode}
                         muted={isMuted}
                         playsInline={true}
