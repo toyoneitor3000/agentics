@@ -20,7 +20,7 @@ export default function MessagesPage() {
     };
 
     return (
-        <div className="flex h-screen bg-black pt-[70px]"> {/* Add padding for Navbar */}
+        <div className="flex h-screen bg-black pt-[90px] relative"> {/* Add padding for Navbar */}
 
             {/* Sidebar (List) - Hidden on mobile if chat is active */}
             <div className={`w-full md:w-80 lg:w-96 border-r border-[#222] flex flex-col ${activeConversationId ? 'hidden md:flex' : 'flex'}`}>

@@ -1363,9 +1363,8 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         ref={onVideoRef}
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                         poster={post.poster}
-                        preload="metadata" // CHANGED: 'auto' -> 'metadata' to prevent massive bandwidth usage on load
-                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks
-                        autoPlay={false} // CHANGED: false -> Let IntersectionObserver handle play/pause
+                        preload="auto"
+                        autoPlay={true}
                         loop={isFeedMode}
                         muted={isMuted} // React Prop
                         playsInline={true} // React Prop
