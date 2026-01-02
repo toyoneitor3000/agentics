@@ -1367,7 +1367,6 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         autoPlay={true}
                         loop={isFeedMode}
                         muted={isMuted} // React Prop
-                        defaultMuted={true} // Attribute
                         playsInline={true} // React Prop
                         webkit-playsinline="true" // iOS Attribute
                         x-webkit-airplay="allow"
