@@ -857,6 +857,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const cloudflareId = getCloudflareId(post.videoUrl || '');
+    const youtubeId = getYoutubeId(post.videoUrl || '');
 
     // ----------------------------------------------------------------------
     // SMART SCROLL OBSERVER (The "Pause on Scroll" Logic)
@@ -1078,14 +1079,27 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     toggleUiVisibility();
                 } else {
                     // If visible, Toggle Play/Pause
-                    if (player) {
-                        if (player.paused) {
-                            player.play();
+                    const targetPlayer = player || nativeVideoRef.current;
+
+                    if (targetPlayer) {
+                        // Handle Native Element Direct Control if Adapter missing
+                        const isPaused = targetPlayer.paused;
+
+                        if (isPaused) {
+                            targetPlayer.play().catch((e: any) => {
+                                console.log("Play failed", e);
+                                // Try muting if failed
+                                if (targetPlayer instanceof HTMLVideoElement) {
+                                    targetPlayer.muted = true;
+                                    targetPlayer.play();
+                                }
+                            });
                             setShowActionIcon('play');
                         } else {
-                            player.pause();
+                            targetPlayer.pause();
                             setShowActionIcon('pause');
                         }
+
                         setTimeout(() => setShowActionIcon(null), 600);
                         resetIdleTimer(); // Keep UI alive
                     }
@@ -1097,6 +1111,38 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
 
     // Removed handleDown/handleUp (Hold to pause caused issues)
 
+
+
+    // YOUTUBE ADAPTER
+    useEffect(() => {
+        if (!youtubeId || !iframeRef.current) return;
+
+        const adapter = {
+            play: () => {
+                if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+                }
+                return Promise.resolve();
+            },
+            pause: () => {
+                if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }), '*');
+                }
+            },
+            get paused() { return false; }, // Fallback as we can't sync state easily without full API
+            get muted() { return isMuted; },
+            set muted(val: boolean) {
+                if (iframeRef.current?.contentWindow) {
+                    iframeRef.current.contentWindow.postMessage(JSON.stringify({ event: 'command', func: val ? 'mute' : 'unMute', args: [] }), '*');
+                }
+            }
+        };
+        setPlayer(adapter);
+
+        // Force ready for YT
+        const t = setTimeout(() => setIsReady(true), 1000);
+        return () => clearTimeout(t);
+    }, [youtubeId, isMuted]);
 
     // Native Video Ref for fallback
     // ----------------------------------------------------------------------
@@ -1162,27 +1208,50 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             };
             setPlayer(adapter);
         }
-    }, [cloudflareId, isMuted]); // Re-run if mute preference changes (to sync ref) OR handle inside. Actually isMuted change should just update video.muted. 
+    }, [cloudflareId, youtubeId, isMuted, nativeVideoRef.current]); // Added nativeVideoRef dependency for robustness
+
+    // SYNC MUTE PROP TO NATIVE REF 
     // Optimization: Don't recreate adapter on isMuted change. Just sync props.
 
-    // SYNC MUTE PROP TO NATIVE REF
-    useEffect(() => {
-        if (nativeVideoRef.current) {
-            nativeVideoRef.current.muted = isMuted;
-        }
-    }, [isMuted]);
+    // Callback Ref for Video Element to ensure initialization runs when element exists
+    const onVideoRef = useCallback((node: HTMLVideoElement | null) => {
+        nativeVideoRef.current = node; // Keep ref updated
 
-    // FORCE READY STATE (Fix for persistent spinner)
-    useEffect(() => {
-        // If native video exists, we can consider it ready faster
-        if (!cloudflareId && nativeVideoRef.current) {
-            const t = setTimeout(() => setIsReady(true), 500); // Force ready after 500ms for responsiveness
-            return () => clearTimeout(t);
+        if (node && !cloudflareId && !youtubeId) {
+            const adapter = {
+                play: async () => {
+                    try {
+                        await node.play();
+                    } catch (e: any) {
+                        if (e.name === 'AbortError') return;
+                        console.warn("Native Play Interrupted/Failed", e);
+                        if (!node.muted) {
+                            node.muted = true;
+                            try { await node.play(); } catch (retryErr) { }
+                        }
+                    }
+                },
+                pause: () => node.pause(),
+                get muted() { return node.muted; },
+                set muted(val: boolean) { node.muted = val; },
+                get currentTime() { return node.currentTime; },
+                get duration() { return node.duration; },
+                get paused() { return node.paused; }
+            };
+            setPlayer(adapter);
+
+            // Sync Initial Mute
+            node.muted = isMuted;
         }
-        // Fallback safety
-        const safety = setTimeout(() => setIsReady(true), 3000);
-        return () => clearTimeout(safety);
-    }, [cloudflareId]);
+    }, [cloudflareId, youtubeId, isMuted]);
+
+    // Cleanup Effect (Optional, but safe)
+    useEffect(() => {
+        // If we switch away from native, clear player
+        if (cloudflareId || youtubeId) {
+            // Player will be set by other effects
+        }
+    }, [cloudflareId, youtubeId]);
 
     return (
         <div ref={containerRef} className="w-full h-full bg-black relative overflow-hidden group">
@@ -1208,19 +1277,25 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             )}
 
             {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
-            {/* We use a simple boolean flag 'isPaused' synced with state or ref to be 100% sure */}
-            {player?.paused && (
+            {/* Show if player reports paused OR if player isn't ready yet but we have a native video ref (fallback) */}
+            {(player?.paused || (!player && nativeVideoRef.current?.paused)) && (
                 <div
                     className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer bg-black/10 hover:bg-black/30 transition-colors group"
                     onClick={(e) => {
                         e.stopPropagation();
+                        const videoEl = player || nativeVideoRef.current;
+                        if (!videoEl) return;
+
                         // Force Mute on First Play to satisfy Autoplay Policies if needed, 
                         // but normally user interaction (click) allows unmuted.
-                        player.play().catch((e: any) => {
+                        videoEl.play().catch((e: any) => {
                             console.log("Autoplay blocked, trying muted...", e);
-                            player.muted = true;
-                            player.play();
+                            videoEl.muted = true;
+                            videoEl.play();
                         });
+
+                        // If we used the ref directly, we force icon update locally since adapter might not catch it yet
+                        if (!player) setShowActionIcon('play');
                     }}
                 >
                     <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
@@ -1253,66 +1328,79 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=${!isFeedMode}&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                     />
+                ) : youtubeId ? (
+                    <iframe
+                        ref={iframeRef}
+                        src={`https://www.youtube.com/embed/${youtubeId}?autoplay=0&mute=${isMuted ? 1 : 0}&controls=0&loop=1&playlist=${youtubeId}&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1&disablekb=1&fs=0`}
+                        className={`w-full h-full pointer-events-none object-cover`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
                 ) : (
                     // NATIVE FALLBACK (For non-Cloudflare URLs)
                     // We use explicit <source> tags to hint the browser about the format, 
                     // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
-                    // for videos uploaded previously with issues.
-                    <video
-                        key={post.videoUrl} // Force recreation if URL changes
-                        ref={nativeVideoRef}
-                        className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                        poster={post.poster}
-                        preload="auto"
-                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
-                        autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
-                        loop={isFeedMode}
-                        muted={isMuted}
-                        playsInline
-                        onTimeUpdate={(e) => {
-                            setCurrentTime(e.currentTarget.currentTime);
-                            if (e.currentTarget.currentTime > 0.1) setIsReady(true);
-                        }}
-                        onLoadedMetadata={(e) => {
-                            setDuration(e.currentTarget.duration);
-                            // Don't set ready here, wait for buffer
-                        }}
-                        onCanPlay={() => setIsReady(true)} // Better signal
-                        onEnded={() => setIsEnded(true)}
-                        onError={(e) => {
-                            // React bubbles 'error' events from <source> tags, 
-                            // but at that point the <video> element itself might not have an error yet (it tries the next source).
-                            // We only care if the VIDEO element itself has failed.
-                            const target = e.target as HTMLElement;
-                            if (target.tagName === 'SOURCE') {
-                                return;
-                            }
-                            if (e.currentTarget.error) {
-                                console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
-                            }
-                        }}
+                ): (
+                        // NATIVE FALLBACK (For non-Cloudflare URLs)
+                        // We use explicit <source> tags to hint the browser about the format, 
+                        // which helps when the server (Supabase) returns a generic/wrong Content-Type (like application/octet-stream)
+                        // for videos uploaded previously with issues.
+                        <video
+                        key = {post.videoUrl} // Force recreation if URL changes
+                ref={onVideoRef}
+                className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                poster={post.poster}
+                preload="auto"
+                // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
+                autoPlay={false} // ALWAYS controlled by Observer in Feed Mode
+                loop={isFeedMode}
+                muted={isMuted}
+                playsInline
+                onTimeUpdate={(e) => {
+                    setCurrentTime(e.currentTarget.currentTime);
+                    if (e.currentTarget.currentTime > 0.1) setIsReady(true);
+                }}
+                onLoadedMetadata={(e) => {
+                    setDuration(e.currentTarget.duration);
+                    // Don't set ready here, wait for buffer
+                }}
+                onCanPlay={() => setIsReady(true)} // Better signal
+                onEnded={() => setIsEnded(true)}
+                onError={(e) => {
+                    // React bubbles 'error' events from <source> tags, 
+                    // but at that point the <video> element itself might not have an error yet (it tries the next source).
+                    // We only care if the VIDEO element itself has failed.
+                    const target = e.target as HTMLElement;
+                    if (target.tagName === 'SOURCE') {
+                        return;
+                    }
+                    if (e.currentTarget.error) {
+                        console.error("Native Video Error:", e.currentTarget.error, "URL:", post.videoUrl);
+                    }
+                }}
                     >
-                        <source src={post.videoUrl} type="video/mp4" />
-                        <source src={post.videoUrl} type="video/quicktime" />
-                        <source src={post.videoUrl} /> {/* Fallback catch-all */}
-                    </video>
+                <source src={post.videoUrl} type="video/mp4" />
+                <source src={post.videoUrl} type="video/quicktime" />
+                <source src={post.videoUrl} /> {/* Fallback catch-all */}
+            </video>
                 )}
-            </div>
+        </div>
 
-            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */}
-            {!isFeedMode && (
-                <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                    <div className="pointer-events-auto">
-                        <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
-                        <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
+            {/* 5. OVERLAYS (Cinema Mode Controls - Only visible if UI is active and NOT feed mode) */ }
+    {
+        !isFeedMode && (
+            <div className={`absolute inset-x-0 bottom-0 p-6 pt-20 bg-gradient-to-t from-black/90 to-transparent pointer-events-none transition-opacity duration-300 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
+                <div className="pointer-events-auto">
+                    <h3 className="text-xl font-bold font-oswald uppercase text-white mb-1">{post.title}</h3>
+                    <p className="text-white/70 text-xs line-clamp-2 max-w-md mb-4">{post.description}</p>
 
-                        {/* Progress Bar only for direct control mode */}
-                        <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
-                            <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
-                        </div>
+                    {/* Progress Bar only for direct control mode */}
+                    <div className="w-full h-1 bg-white/20 rounded-full overflow-hidden">
+                        <div className="h-full bg-[#FF9800]" style={{ width: `${(currentTime / duration) * 100}%` }} />
                     </div>
                 </div>
-            )}
+            </div>
+        )
+    }
 
 
 
