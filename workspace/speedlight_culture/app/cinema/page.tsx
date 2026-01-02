@@ -862,26 +862,54 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
     // ----------------------------------------------------------------------
     // SMART SCROLL OBSERVER (The "Pause on Scroll" Logic)
     // ----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
+    // 1. SMART LOADER (Pre-mounts content well in advance)
+    // ----------------------------------------------------------------------
+    const [shouldLoad, setShouldLoad] = useState(false);
+
     useEffect(() => {
-        if (!isFeedMode || !containerRef.current || !player) return;
+        if (!isFeedMode || !containerRef.current) {
+             // If not feed mode (modal), load immediately
+             setShouldLoad(true);
+             return;
+        }
+
+        const loader = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                // Load if within 1500px (approx 2 screens)
+                if (entry.isIntersecting) {
+                    setShouldLoad(true);
+                    // Once loaded, we keep it loaded for smoother back-scroll
+                    // Or we can unmount if very far away to save RAM. 
+                    // For now, let's keep it simple: Sticky Load.
+                }
+            });
+        }, { rootMargin: '1500px 0px 1500px 0px' });
+
+        loader.observe(containerRef.current);
+        return () => loader.disconnect();
+    }, [isFeedMode, containerRef.current]);
+
+    // ----------------------------------------------------------------------
+    // 2. PLAYBACK CONTROLLER (Strict Visibility)
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        if (!isFeedMode || !containerRef.current) return;
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // Debug Log to see what's happening
-                // console.log(`Video ${post.title} visibility: around ${Math.round(entry.intersectionRatio * 100)}% | Intersecting: ${entry.isIntersecting}`);
+                const isVisible = entry.isIntersecting;
+                setIsInView(isVisible);
 
-                setIsInView(entry.isIntersecting);
-
-                if (entry.isIntersecting) {
-                    if (onView) onView();
-                    // We DO NOT play here anymore. We let the effect below handle it.
+                if (isVisible && onView) {
+                    onView();
                 }
             });
-        }, { threshold: 0.05, rootMargin: '300px 0px 300px 0px' }); // PRE-LOAD: Start loading 300px before appearing
+        }, { threshold: 0.6 }); // STRICT: Only play if >60% visible
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isFeedMode, containerRef.current, post.title, onView]);
+    }, [isFeedMode, containerRef.current, onView]);
     // ----------------------------------------------------------------------
     // ROBUST AUTOPLAY ENGINE (Reacting to State)
     // ----------------------------------------------------------------------
@@ -1306,13 +1334,13 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             >
 
 
-                {/* 2. ACTIVE PLAYER (Only load when looking at it) */}
-                {isInView && (
+                {/* 2. ACTIVE PLAYER (Only load when shouldLoad is true) */}
+                {shouldLoad && (
                     <>
                         {cloudflareId ? (
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=false&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
                                 allow="autoplay; encrypted-media"
                                 className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             />
@@ -1330,7 +1358,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                                 className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                                 poster={post.poster}
                                 preload="auto"
-                                autoPlay={true}
+                                autoPlay={false}
                                 loop={isFeedMode}
                                 muted={isMuted}
                                 playsInline={true}
