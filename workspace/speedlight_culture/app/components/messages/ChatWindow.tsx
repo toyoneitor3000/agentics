@@ -84,7 +84,7 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
             sender_id: currentUser?.id || 'unknown',
             created_at: new Date().toISOString(),
             type: 'text',
-            avatar_url: currentUser?.image
+            avatar_url: currentUser?.image || undefined
         };
 
         setMessages(prev => [...prev, optimisticMsg]);
