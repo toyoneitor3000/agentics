@@ -468,7 +468,7 @@ function CloudflareHeroPlayer({ videoId, post, isMuted, toggleMute, onOpenFull }
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     // Prevent re-render of iframe src when isMuted changes
-    const src = `https://iframe.videodelivery.net/${videoId}?autoplay=true&loop=true&muted=true&controls=false&preload=true`;
+    const src = `https://iframe.videodelivery.net/${videoId}?autoplay=true&loop=true&muted=true&controls=false&preload=true&playsinline=true`;
 
     // Initialize SDK when script is loaded
     const initPlayer = () => {
@@ -730,7 +730,7 @@ function AmbientCinemaPlayer({ post, isMuted, toggleMute, onOpenFull }: any) {
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                 {cloudflareId ? (
                     <iframe
-                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=true&controls=false`}
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=true&controls=false&playsinline=true`}
                         className="w-full h-full object-cover scale-150 blur-2xl opacity-40 brightness-50"
                         allow="autoplay; encrypted-media"
                     />
@@ -746,7 +746,7 @@ function AmbientCinemaPlayer({ post, isMuted, toggleMute, onOpenFull }: any) {
                 <div className="relative w-full h-full max-w-5xl aspect-video shadow-2xl bg-black rounded-lg overflow-hidden border border-white/10 ring-1 ring-white/5">
                     {cloudflareId ? (
                         <iframe
-                            src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=${isMuted}&controls=false`}
+                            src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=true&muted=${isMuted}&controls=false&playsinline=true`}
                             className="w-full h-full object-contain"
                             allow="autoplay; encrypted-media"
                         />
@@ -877,7 +877,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     // We DO NOT play here anymore. We let the effect below handle it.
                 }
             });
-        }, { threshold: 0.3 }); // Lowered to 30% for better mobile detection (address bars etc)
+        }, { threshold: 0.05 }); // Ultra-low threshold: If ANY part is visible, treat as viewable.
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
@@ -1294,18 +1294,21 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer bg-black/10 hover:bg-black/30 transition-colors group"
                     onClick={(e) => {
                         e.stopPropagation();
-                        const videoEl = player || nativeVideoRef.current;
-                        if (!videoEl) return;
+                        // DIRECT NATIVE PLAY ATTEMPT (Bypassing Adapter for initial kickstart)
+                        if (nativeVideoRef.current) {
+                            nativeVideoRef.current.muted = true; // Force mute at element level
+                            nativeVideoRef.current.play().then(() => {
+                                // If successful, we can unmute if state allows, but safety first
+                                setShowActionIcon('play');
+                            }).catch(err => console.error("Hard play failed", err));
+                        } else {
+                            // Fallback to adapter
+                            videoEl.play().catch((e: any) => {
+                                videoEl.muted = true;
+                                videoEl.play();
+                            });
+                        }
 
-                        // Force Mute on First Play to satisfy Autoplay Policies if needed, 
-                        // but normally user interaction (click) allows unmuted.
-                        videoEl.play().catch((e: any) => {
-                            console.log("Autoplay blocked, trying muted...", e);
-                            videoEl.muted = true;
-                            videoEl.play();
-                        });
-
-                        // If we used the ref directly, we force icon update locally since adapter might not catch it yet
                         if (!player) setShowActionIcon('play');
                     }}
                 >
@@ -1335,9 +1338,10 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                     <iframe
                         ref={iframeRef}
                         // Only autoplay in Cinema Mode. In Feed Mode, the Observer handles play/pause.
-                        // ALWAYS Autoplay. The IntersectionObserver will pause it if off-screen.
-                        // This prevents the "First Frame & Stop" issue on mobile.
-                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=${isMuted}&controls=false`}
+                        // ALWAYS Autoplay + Playsline. 
+                        // We force muted=true in the URL to ensure it starts (browser policy). 
+                        // The SDK/Adapter will unmute it seconds later if the global state is Unmuted.
+                        src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true`}
                         allow="autoplay; encrypted-media"
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                     />
@@ -1359,12 +1363,14 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
                         className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                         poster={post.poster}
                         preload="auto"
-                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks on Supabase/GCS
-                        autoPlay={true} // ALWAYS Autoplay. Let Browser/Observer handle pausing.
+                        // crossOrigin="anonymous" // Removed to prevent strict CORS blocks
+                        autoPlay={true}
                         loop={isFeedMode}
-                        muted={isMuted}
-                        playsInline={true}
-                        webkit-playsinline="true"
+                        muted={isMuted} // React Prop
+                        defaultMuted={true} // Attribute
+                        playsInline={true} // React Prop
+                        webkit-playsinline="true" // iOS Attribute
+                        x-webkit-airplay="allow"
                         onTimeUpdate={(e) => {
                             setCurrentTime(e.currentTarget.currentTime);
                             if (e.currentTarget.currentTime > 0.1) setIsReady(true);
