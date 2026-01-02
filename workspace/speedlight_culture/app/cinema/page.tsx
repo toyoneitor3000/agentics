@@ -115,7 +115,7 @@ function CinemaSocialContent() {
         };
 
         loadContent();
-    }, [videoIdParam]);
+    }, []); // FIXED: Removed videoIdParam to prevent reload loop on deep link update
 
     // Handle initial scroll for deep link
     useEffect(() => {
