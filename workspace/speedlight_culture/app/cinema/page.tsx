@@ -1288,36 +1288,7 @@ function ImmersiveCinemaMode({ post, onClose, isFeedMode = false, isMuted = fals
             )}
 
             {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
-            {/* MANUAL PLAY TRIGGER - Force Show if Paused (Critical for Mobile/Browser Autoplay Block) */}
-            {/* HIDE IN FEED MODE: The whole screen is a tap target, so we don't need a center button cluttering the UI. */}
-            {!isFeedMode && (player?.paused || (!player && nativeVideoRef.current?.paused)) && (
-                <div
-                    className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer bg-black/10 hover:bg-black/30 transition-colors group"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        // DIRECT NATIVE PLAY ATTEMPT (Bypassing Adapter for initial kickstart)
-                        if (nativeVideoRef.current) {
-                            nativeVideoRef.current.muted = true; // Force mute at element level
-                            nativeVideoRef.current.play().then(() => {
-                                // If successful, we can unmute if state allows, but safety first
-                                setShowActionIcon('play');
-                            }).catch(err => console.error("Hard play failed", err));
-                        } else if (player) {
-                            // Fallback to adapter
-                            player.play().catch((e: any) => {
-                                player.muted = true;
-                                player.play();
-                            });
-                        }
-
-                        if (!player) setShowActionIcon('play');
-                    }}
-                >
-                    <div className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl">
-                        <Play className="w-6 h-6 text-white fill-white ml-1" />
-                    </div>
-                </div>
-            )}
+            {/* MANUAL PLAY TRIGGER REMOVED - User requested clean UI, tap screen handles play/pause */}
 
             {/* 3. FEEDBACK ICONS */}
             {showActionIcon && (
