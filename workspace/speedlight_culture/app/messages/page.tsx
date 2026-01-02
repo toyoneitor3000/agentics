@@ -33,7 +33,7 @@ export default function MessagesPage() {
                     <>
                         {/* Mobile Back Button Overlay (Inside Header usually, but here for structure) */}
                         <div className="md:hidden absolute top-4 left-4 z-50">
-                            <button onClick={handleBack} className="p-2 bg-black/50 backdrop-blur rounded-full text-white border border-white/10">
+                            <button onClick={handleBack} className="p-2 bg-black/50 backdrop-blur rounded-xl text-white border border-white/10">
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                         </div>
@@ -41,7 +41,7 @@ export default function MessagesPage() {
                     </>
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-white/20 p-8 text-center">
-                        <div className="w-20 h-20 bg-[#111] rounded-full flex items-center justify-center mb-6 animate-pulse">
+                        <div className="w-20 h-20 bg-[#111] rounded-2xl flex items-center justify-center mb-6 animate-pulse">
                             <MessageSquare className="w-10 h-10" />
                         </div>
                         <h2 className="text-xl font-bold text-white/40 mb-2">Tus Mensajes</h2>

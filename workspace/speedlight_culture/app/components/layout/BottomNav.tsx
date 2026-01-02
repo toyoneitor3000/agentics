@@ -96,7 +96,7 @@ export default function BottomNav() {
                 {isEditMode ? (
                     <button
                         onClick={() => setSelectedSlotForEdit(slotId)}
-                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-full transition-all duration-300 relative
+                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 relative
                             ${isSelectedForEdit
                                 ? 'bg-[#FF9800] text-black animate-pulse ring-2 ring-[#FF9800]/50'
                                 : 'bg-white/5 text-white/60 border border-dashed border-white/30 hover:bg-white/10'
@@ -108,7 +108,7 @@ export default function BottomNav() {
                 ) : (
                     <Link
                         href={app.path}
-                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${active ? 'bg-white/10 text-white backdrop-blur-3xl shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${active ? 'bg-white/10 text-white backdrop-blur-3xl shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
                         <Icon className="w-4 h-4" strokeWidth={active ? 2.5 : 2} />
                     </Link>
@@ -130,12 +130,12 @@ export default function BottomNav() {
             <div
                 className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-500 ease-in-out ${isHidden && !isMenuOpen ? 'translate-y-[180%]' : 'translate-y-0'} w-[94%] max-w-[420px]`}
             >
-                <div className="relative flex items-center justify-between px-1 h-[44px] rounded-full bg-[#0a0a0a]/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] ring-1 ring-black/20">
+                <div className="relative flex items-center justify-between px-1 h-[44px] rounded-2xl bg-[#0a0a0a]/20 backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.8),inset_0_0_0_1px_rgba(255,255,255,0.05)] ring-1 ring-black/20">
 
                     {/* Slot 1: Home (Fixed) */}
                     <Link
                         href="/"
-                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${isActive('/') ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${isActive('/') ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
                         <Home className="w-4 h-4" strokeWidth={isActive('/') ? 2.5 : 2} />
                     </Link>
@@ -151,7 +151,7 @@ export default function BottomNav() {
                     <div className="flex items-center justify-center w-10 h-10 shrink-0 z-10">
                         <Link
                             href="/create"
-                            className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-[#FF9800] to-[#FFB74D] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
+                            className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF9800] to-[#FFB74D] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
                         >
                             <Plus className="w-5 h-5" strokeWidth={3} />
                         </Link>
@@ -169,7 +169,7 @@ export default function BottomNav() {
                             setIsMenuOpen(!isMenuOpen);
                             if (isEditMode) setIsEditMode(false); // Reset edit on toggle
                         }}
-                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-full transition-all duration-300 ${isMenuOpen ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
+                        className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${isMenuOpen ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
                         {isMenuOpen ? <X className="w-4 h-4" strokeWidth={2.5} /> : <Menu className="w-4 h-4" strokeWidth={2} />}
                     </button>

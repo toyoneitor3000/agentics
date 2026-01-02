@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
-import { Send, Image as ImageIcon, MapPin, Mic, MoreVertical } from "lucide-react";
-import { getMessages, sendMessage } from "@/app/actions/messages";
+import { Send, Image as ImageIcon, MapPin, Mic, MoreVertical, Check, CheckCheck, Clock } from "lucide-react";
+import { getMessages, sendMessage, markMessagesAsRead, markMessagesAsDelivered } from "@/app/actions/messages";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useSession } from "@/app/lib/auth-client";
@@ -15,6 +15,9 @@ interface Message {
     created_at: string;
     type: string;
     avatar_url?: string;
+    read_at?: string | null;
+    delivered_at?: string | null;
+    status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 export default function ChatWindow({ conversationId, otherUser }: { conversationId: string, otherUser: any }) {
@@ -36,6 +39,8 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
                 setMessages(data);
                 setLoading(false);
                 scrollToBottom();
+                // Mark as read immediately when opening
+                markMessagesAsRead(conversationId);
             })
             .catch(err => console.error(err));
 
@@ -51,13 +56,35 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
                     filter: `conversation_id=eq.${conversationId}`
                 },
                 (payload) => {
-                    // Check if message already exists (optimistic update handle)
                     const newMsg = payload.new as Message;
+
+                    // If message is from other user, mark it as delivered (and read since we are here)
+                    if (newMsg.sender_id !== currentUser?.id) {
+                        // We are viewing the chat, so mark as read immediately
+                        markMessagesAsRead(conversationId);
+                    }
+
                     setMessages(prev => {
-                        if (prev.find(m => m.id === newMsg.id)) return prev;
+                        // Avoid duplicates from optimistic updates
+                        if (prev.find(m => m.id === newMsg.id)) {
+                            return prev.map(m => m.id === newMsg.id ? { ...newMsg, status: 'sent' } : m);
+                        }
                         return [...prev, newMsg];
                     });
                     scrollToBottom();
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `conversation_id=eq.${conversationId}`
+                },
+                (payload) => {
+                    const updatedMsg = payload.new as Message;
+                    setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
                 }
             )
             .subscribe();
@@ -84,7 +111,8 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
             sender_id: currentUser?.id || 'unknown',
             created_at: new Date().toISOString(),
             type: 'text',
-            avatar_url: currentUser?.image || undefined
+            avatar_url: currentUser?.image || undefined,
+            status: 'sending'
         };
 
         setMessages(prev => [...prev, optimisticMsg]);
@@ -93,8 +121,8 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
 
         try {
             await sendMessage(conversationId, optimisticMsg.content);
-            // The realtime listener will eventually confirm this, 
-            // but we might want to replace the temp ID if we were doing strict state management
+            // Success: update status to 'sent' (though realtime INSERT usually handles this)
+            setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'sent' } : m));
         } catch (error) {
             console.error("Failed to send", error);
             toast.error("Error al enviar mensaje");
@@ -118,14 +146,14 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#111]/50 backdrop-blur-md sticky top-0 z-10">
                 <div className="flex items-center gap-3">
                     <div className="relative">
-                        <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden border border-white/10">
+                        <div className="w-10 h-10 rounded-xl bg-[#222] overflow-hidden border border-white/10">
                             {otherUser?.other_avatar ? (
-                                <Image src={otherUser.other_avatar} alt="User" fill className="object-cover" />
+                                <Image src={otherUser.other_avatar} alt="User" fill className="object-cover rounded-xl" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-white font-bold">{otherUser?.other_name?.[0]}</div>
+                                <div className="w-full h-full flex items-center justify-center text-white font-bold rounded-xl">{otherUser?.other_name?.[0]}</div>
                             )}
                         </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#111]"></div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-md border-2 border-[#111] shadow-[0_0_8px_rgba(76,175,80,0.5)]"></div>
                     </div>
                     <div>
                         <h3 className="text-white font-bold text-sm">{otherUser?.other_name || 'Usuario'}</h3>
@@ -148,9 +176,24 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
                                 : 'bg-[#222] text-white rounded-tl-none border border-white/5'
                                 }`}>
                                 <p className="text-sm md:text-md whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                                <span className={`text-[10px] mt-1 block opacity-60 text-right ${isMe ? 'text-black/60' : 'text-white/40'}`}>
-                                    {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                </span>
+                                <div className={`flex items-center justify-end gap-1 mt-1 opacity-60 ${isMe ? 'text-black/60' : 'text-white/40'}`}>
+                                    <span className="text-[10px]">
+                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </span>
+                                    {isMe && (
+                                        <span className="ml-1">
+                                            {msg.status === 'sending' ? (
+                                                <Clock className="w-3 h-3" />
+                                            ) : msg.read_at ? (
+                                                <CheckCheck className="w-3 h-3 text-blue-600" />
+                                            ) : msg.delivered_at ? (
+                                                <CheckCheck className="w-3 h-3" />
+                                            ) : (
+                                                <Check className="w-3 h-3" />
+                                            )}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );

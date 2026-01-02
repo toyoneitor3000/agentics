@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState, useRef } from "react";
-import { getConversations, startConversation, searchUsers, getSuggestedContacts } from "@/app/actions/messages";
+import { startConversation, searchUsers, getSuggestedContacts, getConversations, markMessagesAsDelivered } from "@/app/actions/messages";
 import Image from "next/image";
 import { Search, UserPlus, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useSession } from '@/app/lib/auth-client';
+import { createClient } from '@/app/utils/supabase/client';
 
 export default function ConversationList({ activeId, onSelect }: { activeId: string | null, onSelect: (id: string, user: any) => void }) {
     const [conversations, setConversations] = useState<any[]>([]);
@@ -13,6 +15,7 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+    const supabase = createClient();
 
     useEffect(() => {
         // Load conversations
@@ -48,7 +51,60 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
         }
     }, [searchQuery]);
 
+    const { data: session } = useSession();
+    const currentUserId = session?.user?.id;
+    const [onlineUsers, setOnlineUsers] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        // Global message listener to mark as delivered (if app is open)
+        const messageChannel = supabase
+            .channel('global_messages')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages'
+                },
+                (payload) => {
+                    const newMsg = payload.new;
+                    // If message is for a conversation I am in (implied by RLS receiving it) and not from me
+                    if (newMsg.sender_id !== currentUserId) {
+                        markMessagesAsDelivered(newMsg.conversation_id);
+                    }
+                }
+            )
+            .subscribe();
+
+        const presenceChannel = supabase.channel('online_users')
+            .on('presence', { event: 'sync' }, () => {
+                const newState = presenceChannel.presenceState();
+                const activeIds = new Set(Object.keys(newState));
+                setOnlineUsers(activeIds);
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({ online_at: new Date().toISOString(), user_id: currentUserId });
+                }
+            });
+
+        return () => {
+            supabase.removeChannel(messageChannel);
+            supabase.removeChannel(presenceChannel);
+        };
+    }, [currentUserId]);
+
+    // ... existing search logic ...
+
+    // Helper for online badge (Squircle)
+    const OnlineBadge = () => (
+        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#4CAF50] rounded-md border-2 border-[#050505] shadow-[0_0_8px_rgba(76,175,80,0.5)]" title="En línea"></div>
+    );
+
     const handleUserSelect = async (user: any) => {
+        // ... (existing handleUserSelect code) ...
         try {
             // Optimistic selection or loading state could go here
             if (user.has_conversation && user.conversation_id) {
@@ -110,22 +166,22 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                     className="p-2 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors rounded-lg mb-1"
                                 >
                                     <div className="relative shrink-0">
-                                        <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden">
+                                        <div className="w-10 h-10 rounded-xl bg-[#222] overflow-hidden">
                                             {user.avatar_url ? (
-                                                <Image src={user.avatar_url} alt="User" fill className="object-cover" />
+                                                <Image src={user.avatar_url} alt="User" fill className="object-cover rounded-xl" />
                                             ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-white font-bold">{user.username?.[0] || 'U'}</div>
+                                                <div className="w-full h-full flex items-center justify-center text-white font-bold rounded-xl">{user.username?.[0] || 'U'}</div>
                                             )}
                                         </div>
-                                        {user.relationship === 'mutual' && (
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#FF9800] rounded-full flex items-center justify-center border-2 border-[#050505]" title="Mutuo">
-                                                <UserPlus className="w-2 h-2 text-black" />
-                                            </div>
-                                        )}
+                                        {/* Shows Green Badge if Online */}
+                                        {onlineUsers.has(user.id) && <OnlineBadge />}
                                     </div>
                                     <div className="flex-1 min-w-0 flex flex-col justify-center">
                                         <h3 className="text-sm font-bold text-white truncate">{user.full_name || user.username}</h3>
-                                        <p className="text-xs text-white/40 truncate">@{user.username}</p>
+                                        <p className="text-xs text-white/40 truncate flex items-center gap-1">
+                                            @{user.username}
+                                            {user.relationship === 'mutual' && <span className="text-[#FF9800] bg-[#FF9800]/10 px-1 rounded text-[9px] ml-1">Mutuo</span>}
+                                        </p>
                                     </div>
                                 </div>
                             ))
@@ -145,14 +201,15 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                             className="p-2 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors rounded-lg group"
                                         >
                                             <div className="relative shrink-0">
-                                                <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden border border-transparent group-hover:border-[#FF9800]/30 transition-colors">
+                                                <div className="w-10 h-10 rounded-xl bg-[#222] overflow-hidden border border-transparent group-hover:border-[#FF9800]/30 transition-colors">
                                                     {user.avatar_url ? (
-                                                        <Image src={user.avatar_url} alt="User" fill className="object-cover" />
+                                                        <Image src={user.avatar_url} alt="User" fill className="object-cover rounded-xl" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-white font-bold">{user.username?.[0] || 'U'}</div>
+                                                        <div className="w-full h-full flex items-center justify-center text-white font-bold rounded-xl">{user.username?.[0] || 'U'}</div>
                                                     )}
                                                 </div>
-                                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full border-2 border-[#050505]"></div>
+                                                {/* Shows Green Badge if Online */}
+                                                {onlineUsers.has(user.id) && <OnlineBadge />}
                                             </div>
                                             <div className="flex-1 min-w-0 flex flex-col justify-center">
                                                 <h3 className="text-sm text-white/90 group-hover:text-white truncate transition-colors">{user.full_name || user.username}</h3>
@@ -183,11 +240,11 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                         className={`p-4 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 ${activeId === c.id ? 'bg-white/5 border-l-2 border-l-[#FF9800]' : 'border-l-2 border-l-transparent'}`}
                                     >
                                         <div className="relative shrink-0">
-                                            <div className="w-12 h-12 rounded-full bg-[#222] overflow-hidden">
+                                            <div className="w-12 h-12 rounded-xl bg-[#222] overflow-hidden">
                                                 {c.other_avatar ? (
-                                                    <Image src={c.other_avatar} alt="User" fill className="object-cover" />
+                                                    <Image src={c.other_avatar} alt="User" fill className="object-cover rounded-xl" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-white font-bold">{c.other_name?.[0] || 'U'}</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-white font-bold rounded-xl">{c.other_name?.[0] || 'U'}</div>
                                                 )}
                                             </div>
                                         </div>
@@ -208,14 +265,9 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                 ))
                             )}
                         </div>
-                    </div>
-                ))
-                        )}
+                    </>
+                )}
             </div>
-        </>
-    )
-}
-            </div >
-        </div >
+        </div>
     );
 }

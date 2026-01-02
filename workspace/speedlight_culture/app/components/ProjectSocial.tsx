@@ -292,7 +292,7 @@ export default function ProjectSocial({ projectId, comments, gifts, user }: Proj
                                         {/* Parent Comment */}
                                         <div className="bg-[#111] border border-[#222] p-6 rounded-2xl flex gap-4">
                                             <div className="flex-shrink-0">
-                                                <Link href={`/profile/${comment.user_id}`} className="block w-10 h-10 rounded-full bg-[#222] overflow-hidden border-2 border-white/10 relative hover:border-[#FF9800] transition-colors">
+                                                <Link href={`/profile/${comment.user_id}`} className="block w-10 h-10 rounded-2xl bg-[#222] overflow-hidden border-2 border-white/10 relative hover:border-[#FF9800] transition-colors">
                                                     {comment.profiles?.avatar_url ? (
                                                         <Image src={comment.profiles.avatar_url} alt="User" fill className="object-cover" />
                                                     ) : (
@@ -396,7 +396,7 @@ export default function ProjectSocial({ projectId, comments, gifts, user }: Proj
                                                 {/* Reply Form */}
                                                 {replyingToCommentId === comment.id && (
                                                     <form onSubmit={(e) => handleReplySubmit(e, comment.id)} className="mt-4 flex gap-3 animate-in fade-in slide-in-from-top-2">
-                                                        <div className="w-8 h-8 rounded-full bg-[#222] overflow-hidden border border-white/10 flex-shrink-0">
+                                                        <div className="w-8 h-8 rounded-xl bg-[#222] overflow-hidden border border-white/10 flex-shrink-0">
                                                             {user?.image ? (
                                                                 <Image src={user.image} alt="Me" width={32} height={32} className="object-cover" />
                                                             ) : (
@@ -427,7 +427,7 @@ export default function ProjectSocial({ projectId, comments, gifts, user }: Proj
                                                 {getReplies(comment.id).map(reply => (
                                                     <div key={reply.id} className="bg-[#111]/50 border border-[#222] p-4 rounded-xl flex gap-3">
                                                         <div className="flex-shrink-0">
-                                                            <Link href={`/profile/${reply.user_id}`} className="block w-8 h-8 rounded-full bg-[#222] overflow-hidden border border-white/10 relative hover:border-[#FF9800] transition-colors">
+                                                            <Link href={`/profile/${reply.user_id}`} className="block w-8 h-8 rounded-xl bg-[#222] overflow-hidden border border-white/10 relative hover:border-[#FF9800] transition-colors">
                                                                 {reply.profiles?.avatar_url ? (
                                                                     <Image src={reply.profiles.avatar_url} alt="User" fill className="object-cover" />
                                                                 ) : (

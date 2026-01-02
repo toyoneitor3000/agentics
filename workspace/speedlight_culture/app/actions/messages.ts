@@ -71,6 +71,42 @@ export async function getMessages(conversationId: string) {
     }
 }
 
+export async function markMessagesAsDelivered(conversationId: string) {
+    const user = await getSessionUser();
+    if (!user) return;
+
+    try {
+        await query(
+            `UPDATE messages 
+             SET delivered_at = NOW() 
+             WHERE conversation_id = $1 
+             AND sender_id != $2 
+             AND delivered_at IS NULL`,
+            [conversationId, user.id]
+        );
+    } catch (e) {
+        console.error("Error marking messages as delivered:", e);
+    }
+}
+
+export async function markMessagesAsRead(conversationId: string) {
+    const user = await getSessionUser();
+    if (!user) return;
+
+    try {
+        await query(
+            `UPDATE messages 
+             SET read_at = NOW(), delivered_at = COALESCE(delivered_at, NOW())
+             WHERE conversation_id = $1 
+             AND sender_id != $2 
+             AND read_at IS NULL`,
+            [conversationId, user.id]
+        );
+    } catch (e) {
+        console.error("Error marking messages as read:", e);
+    }
+}
+
 export async function sendMessage(conversationId: string, content: string, type: string = 'text') {
     const user = await getSessionUser();
     if (!user) return null;
@@ -172,7 +208,7 @@ export async function searchUsers(queryStr: string) {
             LEFT JOIN conversations c ON cp_me.conversation_id = c.id
             WHERE p.id != $1
             AND (p.username ILIKE $2 OR p.full_name ILIKE $2)
-            GROUP BY p.id, f1.follower_id, f2.follower_id, c.id
+            GROUP BY p.id, p.username, p.full_name, p.avatar_url, f1.follower_id, f2.follower_id, c.id
             ORDER BY 
                 (CASE 
                     WHEN f1.follower_id IS NOT NULL AND f2.follower_id IS NOT NULL THEN 1

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { bulkDeleteContent, bulkArchiveContent, bulkUpdateFormat } from "@/app/actions/content";
 import { CheckCircle2, Circle, X, Trash, Archive as ArchiveIcon, LayoutGrid, List as ListIcon, CheckSquare } from "lucide-react";
 import VideoEditModal from '@/app/components/video/VideoEditModal';
+import FollowListModal from './FollowListModal';
 
 interface ProfileProps {
     profile: any;
@@ -46,6 +47,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [editingVideo, setEditingVideo] = useState<any>(null);
+    const [openFollowList, setOpenFollowList] = useState<'followers' | 'following' | null>(null);
 
     // Helper to map tab to DB table
     const getContentType = (tab: TabType): 'projects' | 'gallery_albums' | 'events' | 'cinema_videos' | null => {
@@ -302,7 +304,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                 <div className="flex flex-col items-center text-center">
                     {/* Avatar */}
                     <div className="relative mb-4">
-                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-[#050505] bg-[#1a1a1a] overflow-hidden shadow-2xl relative z-10">
+                        <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl border-4 border-[#050505] bg-[#1a1a1a] overflow-hidden shadow-2xl relative z-10">
                             {profile?.avatar_url ? (
                                 <Image src={profile.avatar_url} alt={profile.full_name || 'User'} fill className="object-cover" />
                             ) : (
@@ -366,17 +368,20 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                         </div>
                     )}
 
-                    {/* 3. STATS BAR (Refined - No Following, 'Seguidores', 'Respeto' for XP) */}
+                    {/* 3. STATS BAR (Refined - Followers Clickable, Likes, XP) */}
                     <div className="grid grid-cols-3 divide-x divide-white/10 w-full max-w-xs mx-auto mb-8 border-t border-b border-white/5 py-3 bg-white/[0.02] rounded-xl">
-                        <div className="flex flex-col items-center">
+                        <button
+                            onClick={() => setOpenFollowList('followers')}
+                            className="flex flex-col items-center hover:bg-white/5 transition-colors rounded-lg -mx-1 py-1 cursor-pointer"
+                        >
                             <span className="text-lg font-bold text-white">{stats.followers}</span>
                             <span className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Seguidores</span>
-                        </div>
-                        <div className="flex flex-col items-center">
+                        </button>
+                        <div className="flex flex-col items-center py-1">
                             <span className="text-lg font-bold text-white">{stats.likes_given}</span>
                             <span className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Likes</span>
                         </div>
-                        <div className="flex flex-col items-center">
+                        <div className="flex flex-col items-center py-1">
                             <span className="text-lg font-bold text-[#FF9800]">{stats.xp}K</span>
                             <span className="text-[9px] text-[#FF9800]/60 uppercase tracking-widest mt-0.5">XP Total</span>
                         </div>
@@ -868,6 +873,14 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     video={editingVideo}
                 />
             )}
+            {/* Follow List Modal */}
+            {openFollowList && (
+                <FollowListModal
+                    userId={profile.id}
+                    type={openFollowList}
+                    onClose={() => setOpenFollowList(null)}
+                />
+            )}
         </div >
     );
 }
@@ -878,6 +891,7 @@ function EmptyState({ icon: Icon, text, subtext }: { icon: any, text: string, su
             <Icon className="w-12 h-12 mb-3 opacity-50" />
             <p className="font-bold uppercase tracking-wider text-sm">{text}</p>
             {subtext && <p className="text-xs mt-1 max-w-[200px] text-center">{subtext}</p>}
+
         </div>
     );
 }

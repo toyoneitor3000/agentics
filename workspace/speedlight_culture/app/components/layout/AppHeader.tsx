@@ -237,11 +237,11 @@ export default function AppHeader() {
                                     <UserBadge role={userRole || 'user'} size="sm" showLabel={true} />
                                 </div>
                                 {user.image ? (
-                                    <div className="w-9 h-9 rounded-full border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">
+                                    <div className="w-9 h-9 rounded-xl border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">
                                         <Image src={user.image} alt={user.name || "User"} width={36} height={36} className="object-cover w-full h-full" />
                                     </div>
                                 ) : (
-                                    <div className="w-9 h-9 rounded-full border border-white/20 bg-white/5 flex items-center justify-center">
+                                    <div className="w-9 h-9 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center">
                                         <User className="w-5 h-5" />
                                     </div>
                                 )}

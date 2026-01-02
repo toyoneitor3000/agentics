@@ -34,7 +34,7 @@ const FeedPostHeader = ({ user, time, action, type, entityId }: { user: any, tim
     return (
         <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#1A0F08]/95 via-[#1A0F08]/50 to-transparent flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
-                <div className="w-10 h-10 rounded-full bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
+                <div className="w-10 h-10 rounded-2xl bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
                     {user.avatar ? (
                         <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
                     ) : (
@@ -110,7 +110,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
     if (item.type === 'workshop') {
         return (
             <div className="glass-premium rounded-3xl overflow-hidden p-6 flex items-center gap-5 transition-all duration-500 hover:scale-[1.01] animate-in fade-in slide-in-from-bottom-4">
-                <div className="w-16 h-16 rounded-full bg-black/40 overflow-hidden relative border border-[#FF9800]/20 shrink-0 shadow-[0_0_20px_rgba(255,152,0,0.1)]">
+                <div className="w-16 h-16 rounded-2xl bg-black/40 overflow-hidden relative border border-[#FF9800]/20 shrink-0 shadow-[0_0_20px_rgba(255,152,0,0.1)]">
                     {item.user.avatar ? <Image src={item.user.avatar} alt={item.user.name} fill className="object-cover" /> : <Wrench className="w-8 h-8 m-4 text-[#FF9800]" />}
                 </div>
                 <div className="flex-1">
@@ -157,7 +157,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
                     </p>
                     <div className="flex items-center justify-between border-t border-white/5 pt-4">
                         <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-white/10 relative overflow-hidden ring-1 ring-[#FF9800]/20">
+                            <div className="w-6 h-6 rounded-lg bg-white/10 relative overflow-hidden ring-1 ring-[#FF9800]/20">
                                 {item.user.avatar && <Image src={item.user.avatar} alt="Author" fill className="object-cover" />}
                             </div>
                             <span className="text-[10px] text-[#F5E6D3]/50 uppercase tracking-widest font-bold">{item.user.name}</span>

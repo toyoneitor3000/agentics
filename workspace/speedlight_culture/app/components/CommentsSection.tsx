@@ -102,7 +102,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
             <div className="space-y-6 mb-8">
                 {/* Pinned Welcome Message */}
                 <div className="flex gap-4 mb-6 pb-6 border-b border-white/5 bg-[#FF9800]/5 p-4 rounded-2xl border border-[#FF9800]/10">
-                    <div className="w-10 h-10 rounded-full bg-[#FF9800]/20 flex items-center justify-center text-[#FF9800] border border-[#FF9800]/20 shrink-0">
+                    <div className="w-10 h-10 rounded-2xl bg-[#FF9800]/20 flex items-center justify-center text-[#FF9800] border border-[#FF9800]/20 shrink-0">
                         <span className="font-bold text-xs">SC</span>
                     </div>
                     <div className="flex-1">
@@ -123,7 +123,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
 
                 {comments.map((comment) => (
                     <div key={comment.id} className="flex gap-4 animate-in fade-in slide-in-from-bottom-2">
-                        <div className="w-10 h-10 rounded-full bg-[#333] overflow-hidden flex-shrink-0 relative">
+                        <div className="w-10 h-10 rounded-2xl bg-[#333] overflow-hidden flex-shrink-0 relative">
                             {comment.profiles?.avatar_url ? (
                                 <Image src={comment.profiles.avatar_url} alt="Ava" fill className="object-cover" />
                             ) : (
@@ -192,7 +192,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
             {user ? (
                 <div className="flex gap-4">
                     <div className="flex flex-col items-center gap-1">
-                        <div className="w-10 h-10 rounded-full bg-[#222] overflow-hidden flex-shrink-0 relative border border-white/10">
+                        <div className="w-10 h-10 rounded-2xl bg-[#222] overflow-hidden flex-shrink-0 relative border border-white/10">
                             {user.image ? (
                                 <Image src={user.image} alt="User" fill className="object-cover" />
                             ) : (
