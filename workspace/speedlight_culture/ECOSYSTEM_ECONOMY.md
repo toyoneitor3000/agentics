@@ -11,7 +11,9 @@
     *   *Capacidades:* Interactúa igual que un usuario (likes, comments, posts) pero tiene acceso exclusivo al **Panel de Publicidad** y Analíticas.
     *   *Distinción:* Avatar distintivo / Insignia de Negocio.
 *   **Fundador (Early Adopter):** Los primeros 500 usuarios registrados.
-    *   *Status:* Insignia permanente "Club 500".
+    *   *Definición:* Es un **Estatus de Honor**, NO un nivel de suscripción.
+    *   *Permanencia:* Es vitalicio. Un Fundador puede ser Rookie, Builder o Elite, pero siempre conservará su número dorado (ej: #042).
+    *   *Visual:* Su número de "Founder ID" siempre se muestra destacado (Dorado/Brillante). Del usuario #501 en adelante, el número es gris o invisible.
 *   **Socio PRO (Suscriptor):**
     *   *Modelo:* Suscripción mensual/anual recurrente.
     *   *Beneficios:* Experiencia 100% libre de publicidad. Herramientas avanzadas de venta/taller.

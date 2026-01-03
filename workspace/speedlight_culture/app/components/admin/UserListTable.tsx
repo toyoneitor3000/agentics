@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { User, Shield, Medal, Calendar, Search } from 'lucide-react';
+import { User, Shield, Medal, Calendar, Search, Star, Trophy, Zap } from 'lucide-react';
 
 interface Profile {
     id: string;
@@ -102,13 +102,53 @@ export default function UserListTable({ users }: { users: Profile[] }) {
                                     </div>
                                 </td>
                                 <td className="p-4">
-                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border ${user.role === 'CEO'
-                                            ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-                                            : 'bg-white/5 text-white/40 border-white/10'
-                                        }`}>
-                                        {user.role === 'CEO' && <Shield className="w-3 h-3" />}
-                                        {user.role || 'Member'}
-                                    </span>
+                                    <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                                        {(() => {
+                                            // Definition of all possible badges
+                                            const badgesDef = [
+                                                { id: 'founder', label: 'Founder', icon: Medal, style: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
+                                                { id: 'ceo', label: 'CEO', icon: Shield, style: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
+                                                { id: 'sponsor', label: 'Sponsor', icon: Star, style: 'bg-[#D32F2F]/10 text-[#D32F2F] border-[#D32F2F]/20' },
+                                                { id: 'elite', label: 'Elite', icon: Trophy, style: 'bg-[#FFEB3B]/10 text-[#FFEB3B] border-[#FFEB3B]/20' },
+                                                { id: 'builder', label: 'Builder', icon: Zap, style: 'bg-[#FF9800]/10 text-[#FF9800] border-[#FF9800]/20' },
+                                                { id: 'rookie', label: 'Rookie', icon: User, style: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+                                            ];
+
+                                            const activeBadges = new Set<string>();
+
+                                            // 1. Founder Badge (Permanent Honor for first 500)
+                                            if (user.founder_number && user.founder_number <= 500) {
+                                                activeBadges.add('founder');
+                                            }
+
+                                            // 2. Current Role Badge
+                                            const r = user.role;
+                                            if (r === 'CEO') activeBadges.add('ceo');
+                                            else if (r === 'Sponsor') activeBadges.add('sponsor');
+                                            else if (r === 'Elite Racer') activeBadges.add('elite');
+                                            else if (r === 'Builder') activeBadges.add('builder');
+                                            else activeBadges.add('rookie'); // Default to Rookie
+
+                                            // 3. GOD MODE: Speedlight Culture Account (Collects ALL Badges)
+                                            if (user.email === 'speedlightculture@gmail.com') {
+                                                activeBadges.add('founder');
+                                                activeBadges.add('ceo');
+                                                activeBadges.add('sponsor');
+                                                activeBadges.add('elite');
+                                                activeBadges.add('builder');
+                                                // activeBadges.add('rookie'); // Optional: usually god mode skips rookie but requested to have 'all'.
+                                            }
+
+                                            return badgesDef
+                                                .filter(b => activeBadges.has(b.id))
+                                                .map(b => (
+                                                    <span key={b.id} className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase border ${b.style}`}>
+                                                        <b.icon className="w-2.5 h-2.5" />
+                                                        {b.label}
+                                                    </span>
+                                                ));
+                                        })()}
+                                    </div>
                                 </td>
                                 <td className="p-4 text-center">
                                     {user.founder_number ? (
