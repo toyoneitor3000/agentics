@@ -23,7 +23,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isUiVisible, setIsUiVisible] = useState(true);
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
     const [isSocialMode, setIsSocialMode] = useState(false);
-    const [showDebugConsole, setShowDebugConsole] = useState(true);
+    const [showDebugConsole, setShowDebugConsole] = useState(false);
 
     const [isManuallyHidden, setIsManuallyHidden] = useState(false);
     const isManuallyHiddenRef = useRef(false); // Ref to access current value in event listeners
