@@ -107,7 +107,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 </div>
             )}
             {/* SYSTEM STATUS / DEBUG CONSOLE (Floating) */}
-            <GlobalDebugConsole />
+            {/* <GlobalDebugConsole /> */}
         </div>
     );
 }
