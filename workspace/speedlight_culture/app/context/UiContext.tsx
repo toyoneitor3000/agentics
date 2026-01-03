@@ -46,7 +46,11 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
 
         if (savedMode) setAutoHideMode(savedMode as any);
         if (savedDuration) setAutoHideDuration(parseInt(savedDuration));
-        if (savedDebug) setShowDebugConsole(savedDebug === 'true');
+        if (savedDebug) {
+            setShowDebugConsole(savedDebug === 'true');
+        } else {
+            setShowDebugConsole(false);
+        }
 
     }, []);
 
