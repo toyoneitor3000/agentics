@@ -150,15 +150,15 @@ function CinemaSocialContent() {
 
     return (
         <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
-            
+
             {/* HEADER TOGGLE */}
             <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-full px-4 flex items-center justify-between py-2 relative">
                     <div className="absolute left-1/2 -translate-x-1/2">
-                         <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-[3px] shadow-2xl">
+                        <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-[3px] shadow-2xl">
                             <button onClick={() => setViewMode('social')} className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase ${viewMode === 'social' ? 'bg-white text-black' : 'text-white/40'}`}>Social</button>
                             <button onClick={() => setViewMode('cinema')} className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase ${viewMode === 'cinema' ? 'bg-[#FF9800] text-black' : 'text-white/40'}`}>Films</button>
-                         </div>
+                        </div>
                     </div>
                     <div className="ml-auto flex items-center gap-4">
                         {isGamepadConnected && <Gamepad2 className="w-4 h-4 text-[#FF9800] animate-pulse" />}
@@ -172,11 +172,11 @@ function CinemaSocialContent() {
                 <div className="animate-in fade-in duration-500 pt-[70px]">
                     <div className="w-full max-w-[1800px] mx-auto relative group aspect-video max-h-[85vh] bg-black shadow-2xl rounded-b-3xl overflow-hidden border-b border-white/5">
                         {featuredPost && (
-                            <AmbientCinemaPlayer 
-                                post={featuredPost} 
-                                isMuted={isMuted} 
-                                toggleMute={() => setIsMuted(!isMuted)} 
-                                onOpenFull={() => setActiveMovie(featuredPost)} 
+                            <AmbientCinemaPlayer
+                                post={featuredPost}
+                                isMuted={isMuted}
+                                toggleMute={() => setIsMuted(!isMuted)}
+                                onOpenFull={() => setActiveMovie(featuredPost)}
                             />
                         )}
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 opacity-40 animate-pulse"><ChevronDown className="w-6 h-6 text-white" /></div>
@@ -194,35 +194,35 @@ function CinemaSocialContent() {
                 <div className="fixed inset-0 z-10 bg-black animate-in slide-in-from-bottom-10 duration-500">
                     {/* Fixed UI Overlay Wrapper */}
                     <div className={`absolute inset-0 z-20 pointer-events-none transition-opacity duration-1000 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                         <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/90" />
                     </div>
 
                     {/* GLOBAL SOCIAL INTERFACE (FIXED OVERLAY) */}
                     {activeSocialPost && (
                         <div className={`absolute inset-0 z-30 pointer-events-none transition-opacity duration-300 pb-14 md:pb-16 ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                            <SocialInterface 
+                            <SocialInterface
                                 post={activeSocialPost}
                                 isMuted={isMuted}
                                 toggleMute={() => setIsMuted(!isMuted)}
-                                onOpenFull={() => {}}
+                                onOpenFull={() => { }}
                                 toggleUiVisibility={toggleUiVisibility}
                             />
                         </div>
                     )}
 
-                    <div 
+                    <div
                         ref={socialFeedRef}
                         className="h-full w-full overflow-y-scroll snap-y snap-mandatory snap-always overscroll-contain no-scrollbar pt-[0px]"
                         onMouseMove={resetIdleTimer} onTouchStart={resetIdleTimer} onClick={resetIdleTimer}
                     >
                         {(categories.vertical || []).map((post: any) => (
-                            <div 
-                                key={post.id} 
-                                id={`video-${post.id}`} 
+                            <div
+                                key={post.id}
+                                id={`video-${post.id}`}
                                 data-video-id={post.id}
                                 className="cinema-feed-item w-full h-full snap-start snap-always relative border-b border-white/5"
                             >
-                                <VideoPlayer 
+                                <VideoPlayer
                                     post={post}
                                     isFeedMode={true}
                                     isActive={activeSocialPost?.id === post.id}
@@ -231,7 +231,7 @@ function CinemaSocialContent() {
                                 />
                             </div>
                         ))}
-                        
+
                         {!isLoading && (!categories.vertical || categories.vertical.length === 0) && (
                             <div className="h-screen flex items-center justify-center text-white/50">No hay contenido vertical aún.</div>
                         )}
@@ -241,8 +241,8 @@ function CinemaSocialContent() {
             {/* IMMERSIVE MODAL (For Cinema Mode Clicks) */}
             {activeMovie && viewMode === 'cinema' && (
                 <div className="fixed inset-0 z-[200] bg-black">
-                     <button className="absolute top-4 right-4 z-50 text-white" onClick={() => setActiveMovie(null)}>Close</button>
-                    <VideoPlayer 
+                    <button className="absolute top-4 right-4 z-50 text-white" onClick={() => setActiveMovie(null)}>Close</button>
+                    <VideoPlayer
                         post={activeMovie}
                         isFeedMode={false}
                         isMuted={isMuted}
@@ -252,7 +252,7 @@ function CinemaSocialContent() {
             )}
 
             <DebugConsole />
-            
+
         </div>
     );
 }
@@ -263,7 +263,7 @@ function CinemaSocialContent() {
 function DebugConsole() {
     const [logs, setLogs] = useState<string[]>([]);
     const [copied, setCopied] = useState(false);
-    
+
     useEffect(() => {
         const hook = (method: 'log' | 'warn' | 'error', args: any[]) => {
             const msg = args.map(a => {
@@ -281,13 +281,13 @@ function DebugConsole() {
         console.log = (...args) => { hook('log', args); oldLog(...args); };
         console.warn = (...args) => { hook('warn', args); oldWarn(...args); };
         console.error = (...args) => { hook('error', args); oldError(...args); };
-        
+
         window.onerror = (msg) => { hook('error', [String(msg)]); return false; };
 
         return () => {
-             console.log = oldLog;
-             console.warn = oldWarn;
-             console.error = oldError;
+            console.log = oldLog;
+            console.warn = oldWarn;
+            console.error = oldError;
         }
     }, []);
 
@@ -313,7 +313,7 @@ function DebugConsole() {
         <div className="fixed bottom-0 left-0 w-full h-48 bg-black/95 z-[10000] text-[#00ff00] text-[10px] font-mono p-2 overflow-y-auto border-t border-green-500/30">
             <div className="flex justify-between items-center mb-1 sticky top-0 bg-black/90 z-10">
                 <span className="text-white bg-green-900/50 px-1">DEBUG CONSOLE</span>
-                <button 
+                <button
                     onClick={handleCopy}
                     className="pointer-events-auto bg-green-600 text-black px-3 py-1 rounded text-[11px] font-bold active:bg-green-400"
                 >
@@ -333,21 +333,21 @@ function AmbientCinemaPlayer({ post, isMuted, toggleMute, onOpenFull }: any) {
     // Ambient Blur Layer only
     return (
         <div className="relative w-full h-full overflow-hidden bg-black group">
-             {/* Background Blur */}
+            {/* Background Blur */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-40 blur-2xl scale-110">
-                 <Image src={post.poster || post.thumbnail_url} alt="bg" fill className="object-cover" />
+                <Image src={post.poster || post.thumbnail_url} alt="bg" fill className="object-cover" />
             </div>
-             {/* Content */}
+            {/* Content */}
             <div className="absolute inset-0 z-10 p-4 flex items-center justify-center">
-                 <div className="w-full h-full max-w-5xl shadow-2xl rounded-lg overflow-hidden border border-white/10 relative">
-                     <VideoPlayer 
+                <div className="w-full h-full max-w-5xl shadow-2xl rounded-lg overflow-hidden border border-white/10 relative">
+                    <VideoPlayer
                         post={post}
                         isFeedMode={false} // Force contain
                         isMuted={isMuted}
                         toggleMute={toggleMute}
-                     />
-                     <div className="absolute inset-0 z-20 cursor-pointer" onClick={onOpenFull} />
-                 </div>
+                    />
+                    <div className="absolute inset-0 z-20 cursor-pointer" onClick={onOpenFull} />
+                </div>
             </div>
         </div>
     )
@@ -388,6 +388,14 @@ export default function CinemaSocialPage() {
         </Suspense>
     );
 }
+
+
+
+
+
+
+
+
 
 
 
