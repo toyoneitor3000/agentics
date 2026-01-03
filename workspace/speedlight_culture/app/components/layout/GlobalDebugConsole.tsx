@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { Database, ShieldCheck, Server, Globe, X, Minus, Maximize2, Move, Copy, Terminal, Activity } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUi } from "@/app/context/UiContext";
+import { createClient } from "@/app/utils/supabase/client";
+import { useSession } from "@/app/lib/auth-client";
 
 type StatusData = {
     status: 'operational' | 'degraded' | 'outage' | 'maintenance';
@@ -17,9 +19,36 @@ type StatusData = {
 
 export default function GlobalDebugConsole() {
     const { showDebugConsole, toggleDebugConsole } = useUi();
+    const { data: session } = useSession();
     const [isMinimized, setIsMinimized] = useState(false);
     const [activeTab, setActiveTab] = useState<'logs' | 'system'>('logs');
     const [mounted, setMounted] = useState(false);
+    const [isAuthorized, setIsAuthorized] = useState(false);
+
+    // --- AUTH & ROLE CHECK ---
+    const supabase = createClient();
+    useEffect(() => {
+        const checkRole = async () => {
+            if (!session?.user) {
+                setIsAuthorized(false);
+                return;
+            }
+
+            const { data } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', session.user.id)
+                .single();
+
+            if (data && (data.role === 'CEO' || data.role === 'ADMIN')) {
+                setIsAuthorized(true);
+            } else {
+                setIsAuthorized(false);
+            }
+        };
+        checkRole();
+    }, [session, supabase]);
+
     const constraintsRef = useRef(null);
 
     useEffect(() => {
@@ -93,7 +122,7 @@ export default function GlobalDebugConsole() {
         }
     };
 
-    if (!mounted || !showDebugConsole) return null;
+    if (!mounted || !showDebugConsole || !isAuthorized) return null;
 
     // determine status color
     let statusColor = "bg-green-500 text-green-500";
