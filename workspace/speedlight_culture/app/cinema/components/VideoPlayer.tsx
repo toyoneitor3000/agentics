@@ -177,7 +177,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                     setIsBlocked(false);
                 }
             });
-        }, { threshold: 0.3 }); // Lower threshold for easier triggering
+        }, { threshold: 0.6 }); // Higher threshold (60%) prevents start/stop loop on scroll bounce
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
