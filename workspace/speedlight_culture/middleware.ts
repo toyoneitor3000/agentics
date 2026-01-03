@@ -4,12 +4,7 @@ import { updateSession } from '@/app/utils/supabase/middleware'
 export async function middleware(request: NextRequest) {
     const host = request.headers.get('host')
 
-    // Redirect speedlightculture.com to www.speedlightculture.com in production
-    if (process.env.NODE_ENV === 'production' && host === 'speedlightculture.com') {
-        const url = request.nextUrl.clone()
-        url.hostname = 'www.speedlightculture.com'
-        return NextResponse.redirect(url)
-    }
+
 
     // Skip Supabase session update for BetterAuth routes
     if (request.nextUrl.pathname.startsWith('/api/auth')) {
