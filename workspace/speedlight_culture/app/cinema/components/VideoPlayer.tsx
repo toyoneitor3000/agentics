@@ -33,8 +33,8 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
     // `isBlocked` means autoplay was blocked and user MUST tap to play
     const [isBlocked, setIsBlocked] = useState(false);
 
-    // `isAttemptingPlay` prevents race conditions from multiple .play() calls
-    const [isAttemptingPlay, setIsAttemptingPlay] = useState(false);
+    // `isAttemptingPlay` converted to Ref to prevent re-render loops during play attempts
+    const isAttemptingPlayRef = useRef(false);
 
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
     // Use isActive prop if available (Feed Mode), otherwise default to true (Cinema Mode)
@@ -81,7 +81,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
     // ----------------------------------------------------------------------
     const attemptPlay = useCallback(async (videoElement: HTMLVideoElement) => {
         // Prevent concurrent .play() calls which cause AbortError
-        if (isAttemptingPlay) {
+        if (isAttemptingPlayRef.current) {
             console.log('[VideoPlayer] Play already in progress, skipping');
             return;
         }
@@ -91,10 +91,10 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
             return;
         }
 
-        setIsAttemptingPlay(true);
+        isAttemptingPlayRef.current = true;
 
         try {
-            // Always ensure muted for autoplay compliance
+            // Always ensure muted for autoplay compliance initially
             videoElement.muted = true;
 
             playPromiseRef.current = videoElement.play();
@@ -122,10 +122,10 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                 setIsBlocked(true);
             }
         } finally {
-            setIsAttemptingPlay(false);
+            isAttemptingPlayRef.current = false;
             playPromiseRef.current = null;
         }
-    }, [isAttemptingPlay, isMuted]);
+    }, [isMuted]);
 
     // ----------------------------------------------------------------------
     // 2. UNIFIED PLAYBACK CONTROLLER
