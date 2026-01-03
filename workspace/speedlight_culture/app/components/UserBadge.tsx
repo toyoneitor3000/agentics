@@ -21,9 +21,10 @@ interface UserBadgeProps {
     founderNumber?: number;
     email?: string;
     size?: 'sm' | 'md' | 'lg';
+    showLabel?: boolean;
 }
 
-export function UserBadge({ role, founderNumber, email, size = 'sm' }: UserBadgeProps) {
+export function UserBadge({ role, founderNumber, email, size = 'sm', showLabel = true }: UserBadgeProps) {
 
     const badges = [];
 
@@ -76,7 +77,7 @@ export function UserBadge({ role, founderNumber, email, size = 'sm' }: UserBadge
                     className={`inline-flex items-center gap-1.5 px-2.5 py-1rounded border rounded-full backdrop-blur-md ${b.style} ${size === 'sm' ? 'text-[9px] py-0.5 px-2' : 'text-[10px] py-1 px-3'}`}
                 >
                     <b.icon className={size === 'sm' ? "w-2.5 h-2.5" : "w-3 h-3"} />
-                    <span className="font-bold uppercase tracking-wider">{b.label}</span>
+                    {showLabel && <span className="font-bold uppercase tracking-wider">{b.label}</span>}
                 </div>
             ))}
         </div>
