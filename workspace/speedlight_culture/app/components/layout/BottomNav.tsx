@@ -102,7 +102,7 @@ export default function BottomNav() {
                                 : 'bg-white/5 text-white/60 border border-dashed border-white/30 hover:bg-white/10'
                             }`}
                     >
-                        <Icon className="w-4 h-4" />
+                        <Icon className="w-[21px] h-[21px]" />
                         <GripVertical className="absolute top-1 right-1 w-2 h-2 opacity-50" />
                     </button>
                 ) : (
@@ -110,7 +110,7 @@ export default function BottomNav() {
                         href={app.path}
                         className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${active ? 'bg-white/10 text-white backdrop-blur-3xl shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Icon className="w-4 h-4" strokeWidth={active ? 2.5 : 2} />
+                        <Icon className="w-[21px] h-[21px]" strokeWidth={active ? 2.5 : 2} />
                     </Link>
                 )}
             </div>
@@ -137,7 +137,7 @@ export default function BottomNav() {
                         href="/"
                         className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${isActive('/') ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        <Home className="w-4 h-4" strokeWidth={isActive('/') ? 2.5 : 2} />
+                        <Home className="w-[21px] h-[21px]" strokeWidth={isActive('/') ? 2.5 : 2} />
                     </Link>
 
                     {/* Slot 2: Flexible Left */}
@@ -153,7 +153,7 @@ export default function BottomNav() {
                             href="/create"
                             className="flex items-center justify-center w-8 h-8 rounded-xl bg-gradient-to-tr from-[#FF9800] to-[#FFB74D] text-black shadow-[0_0_20px_rgba(255,152,0,0.4)] hover:scale-105 active:scale-95 transition-all duration-300"
                         >
-                            <Plus className="w-5 h-5" strokeWidth={3} />
+                            <Plus className="w-[26px] h-[26px]" strokeWidth={3} />
                         </Link>
                     </div>
 
@@ -171,7 +171,7 @@ export default function BottomNav() {
                         }}
                         className={`flex flex-col items-center justify-center w-8 h-8 rounded-xl transition-all duration-300 ${isMenuOpen ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
                     >
-                        {isMenuOpen ? <X className="w-4 h-4" strokeWidth={2.5} /> : <Menu className="w-4 h-4" strokeWidth={2} />}
+                        {isMenuOpen ? <X className="w-[21px] h-[21px]" strokeWidth={2.5} /> : <Menu className="w-[21px] h-[21px]" strokeWidth={2} />}
                     </button>
                 </div>
             </div>
