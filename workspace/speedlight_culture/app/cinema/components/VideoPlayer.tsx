@@ -259,21 +259,49 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     useEffect(() => {
         if (!cloudflareId) return;
 
+        console.log('[VideoPlayer] Cloudflare video detected, ID:', cloudflareId);
+
         const init = () => {
-            if (iframeRef.current && (window as any).Stream) {
-                const sp = (window as any).Stream(iframeRef.current);
-                sp.muted = true; // Always start muted for autoplay
-                sp.loop = isFeedMode;
-                setPlayer(sp);
+            const streamSdk = (window as any).Stream;
 
-                sp.addEventListener('playing', () => {
-                    setIframeReady(true);
-                    setIsBlocked(false);
-                });
-                sp.addEventListener('ended', () => setIsEnded(true));
-                sp.addEventListener('play', () => setIsEnded(false));
+            if (iframeRef.current && streamSdk) {
+                console.log('[VideoPlayer] Stream SDK found, initializing...');
 
-                return true;
+                try {
+                    const sp = streamSdk(iframeRef.current);
+                    sp.muted = true;
+                    sp.loop = isFeedMode;
+                    setPlayer(sp);
+
+                    console.log('[VideoPlayer] Stream player created');
+
+                    sp.addEventListener('playing', () => {
+                        console.log('[VideoPlayer] Cloudflare video is playing');
+                        setIframeReady(true);
+                        setIsBlocked(false);
+                    });
+
+                    sp.addEventListener('error', (e: any) => {
+                        console.error('[VideoPlayer] Cloudflare Stream error:', e);
+                        setIsBlocked(true);
+                    });
+
+                    sp.addEventListener('ended', () => setIsEnded(true));
+                    sp.addEventListener('play', () => setIsEnded(false));
+
+                    sp.addEventListener('loadstart', () => {
+                        console.log('[VideoPlayer] Cloudflare loadstart');
+                    });
+
+                    sp.addEventListener('canplay', () => {
+                        console.log('[VideoPlayer] Cloudflare canplay');
+                    });
+
+                    return true;
+                } catch (e) {
+                    console.error('[VideoPlayer] Failed to init Stream SDK:', e);
+                    return false;
+                }
             }
             return false;
         };
@@ -284,7 +312,8 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                 clearInterval(interval);
             } else {
                 initAttempts.current += 1;
-                if (initAttempts.current > 20) { // ~4 seconds
+                console.log('[VideoPlayer] Waiting for Stream SDK...', initAttempts.current);
+                if (initAttempts.current > 25) { // ~5 seconds
                     clearInterval(interval);
                     console.warn("[VideoPlayer] Cloudflare SDK timeout, enabling native controls");
                     setUseNativeControls(true);
