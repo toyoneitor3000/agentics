@@ -181,24 +181,26 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     }, [isFeedMode, onView]);
 
     // ----------------------------------------------------------------------
-    // 4. MASTER EFFECT: Fallback play after visibility
-    // Only called as a backup if autoPlay attribute didn't work
+    // 4. MASTER EFFECT: Visibility -> Playback
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!isInView) return;
         if (isUserPaused.current) return;
-        if (!isNativeVideo) return; // Cloudflare/YT handle themselves
 
-        // Wait 500ms - if video hasn't started by then, try manual play
-        const timer = setTimeout(() => {
-            if (!hasActuallyPlayed && !isBlocked && nativeVideoRef.current) {
-                console.log('[VideoPlayer] Fallback: autoPlay may have failed, trying manual play');
-                managePlayback(true);
-            }
-        }, 500);
+        // Immediate play attempt when scrolling into view
+        // Relying on native autoPlay isn't enough on some devices
+        if (nativeVideoRef.current && nativeVideoRef.current.paused) {
+            // Defer slightly to ensure not scrolling too fast
+            const timer = setTimeout(() => {
+                if (isInView && !isUserPaused.current) {
+                    console.log('[VideoPlayer] In view, ensuring playback');
+                    managePlayback(true);
+                }
+            }, 50);
+            return () => clearTimeout(timer);
+        }
 
-        return () => clearTimeout(timer);
-    }, [isInView, isNativeVideo, hasActuallyPlayed, isBlocked, managePlayback]);
+    }, [isInView, managePlayback]);
 
     // ----------------------------------------------------------------------
     // 5. HANDLE MANUAL PLAY (When blocked)
@@ -373,23 +375,6 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             onClick={handleTap}
             onContextMenu={(e) => e.preventDefault()}
         >
-            {/* === POSTER LAYER (Native Videos Only) === */}
-            {/* Shows while loading/buffering to prevent black screen */}
-            {isNativeVideo && posterUrl && (
-                <div
-                    className={`absolute inset-0 z-[5] transition-opacity duration-500 pointer-events-none ${hasActuallyPlayed ? 'opacity-0' : 'opacity-100'
-                        }`}
-                >
-                    <Image
-                        src={posterUrl}
-                        alt="Video Thumbnail"
-                        fill
-                        className={`w-full h-full ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                        priority={isInView} // Prioritize loading if in view
-                    />
-                </div>
-            )}
-
             {/* === VIDEO LAYER === */}
             {isInView && (
                 <>
