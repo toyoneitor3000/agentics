@@ -60,6 +60,18 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const youtubeId = getYoutubeId(post.videoUrl || '');
     const isNativeVideo = !cloudflareId && !youtubeId;
 
+    // Log video info on first render
+    useEffect(() => {
+        console.log('[VideoPlayer] Init:', {
+            videoUrl: post.videoUrl,
+            cloudflareId,
+            youtubeId,
+            isNativeVideo,
+            postId: post.id,
+            title: post.title?.substring(0, 30)
+        });
+    }, []);
+
     // ----------------------------------------------------------------------
     // 1. SAFE PLAY CONTROLLER (Prevents AbortError race conditions)
     // ----------------------------------------------------------------------
@@ -163,19 +175,24 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     }, [isFeedMode, onView]);
 
     // ----------------------------------------------------------------------
-    // 4. MASTER EFFECT: Visibility -> Playback
+    // 4. MASTER EFFECT: Fallback play after visibility
+    // Only called as a backup if autoPlay attribute didn't work
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!isInView) return;
         if (isUserPaused.current) return;
+        if (!isNativeVideo) return; // Cloudflare/YT handle themselves
 
-        // Small delay to ensure DOM is ready
+        // Wait 500ms - if video hasn't started by then, try manual play
         const timer = setTimeout(() => {
-            managePlayback(true);
-        }, 100);
+            if (!hasActuallyPlayed && !isBlocked && nativeVideoRef.current) {
+                console.log('[VideoPlayer] Fallback: autoPlay may have failed, trying manual play');
+                managePlayback(true);
+            }
+        }, 500);
 
         return () => clearTimeout(timer);
-    }, [isInView, managePlayback]);
+    }, [isInView, isNativeVideo, hasActuallyPlayed, isBlocked, managePlayback]);
 
     // ----------------------------------------------------------------------
     // 5. HANDLE MANUAL PLAY (When blocked)
@@ -384,34 +401,33 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             playsInline
                             webkit-playsinline="true"
                             preload="auto"
-                            onCanPlay={() => {
-                                console.log('[VideoPlayer] canplay event');
-                                if (isInView && !isUserPaused.current && !isBlocked) {
-                                    managePlayback(true);
-                                }
+                            onLoadedData={() => {
+                                console.log('[VideoPlayer] loadeddata - video ready');
+                            }}
+                            onPlay={() => {
+                                console.log('[VideoPlayer] play event fired');
+                                setHasActuallyPlayed(true);
+                                setIsBlocked(false);
                             }}
                             onTimeUpdate={(e) => {
-                                const currentTime = e.currentTarget.currentTime;
-                                if (currentTime > 0.1 && !hasActuallyPlayed) {
-                                    console.log('[VideoPlayer] Video confirmed playing at', currentTime);
+                                // Backup check: if currentTime > 0.1, video is definitely playing
+                                if (e.currentTarget.currentTime > 0.1 && !hasActuallyPlayed) {
+                                    console.log('[VideoPlayer] confirmed playing via timeupdate');
                                     setHasActuallyPlayed(true);
                                     setIsBlocked(false);
                                 }
                             }}
-                            onPause={(e) => {
-                                if (isInView && !isUserPaused.current && !e.currentTarget.seeking && hasActuallyPlayed) {
-                                    setTimeout(() => {
-                                        if (!isUserPaused.current && isInView) {
-                                            managePlayback(true);
-                                        }
-                                    }, 100);
-                                }
+                            onWaiting={() => {
+                                console.log('[VideoPlayer] waiting (buffering)');
                             }}
-                            onEnded={() => setIsEnded(true)}
+                            onStalled={() => {
+                                console.log('[VideoPlayer] stalled');
+                            }}
                             onError={(e) => {
-                                console.error('[VideoPlayer] Video error:', e);
+                                console.error('[VideoPlayer] error:', e.currentTarget.error?.message);
                                 setIsBlocked(true);
                             }}
+                            onEnded={() => setIsEnded(true)}
                         />
                     )}
                 </>
