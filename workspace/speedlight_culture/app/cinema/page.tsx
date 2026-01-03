@@ -237,15 +237,16 @@ function CinemaSocialContent() {
 // ----------------------------------------------------------------------
 function DebugConsole() {
     const [logs, setLogs] = useState<string[]>([]);
+    const [copied, setCopied] = useState(false);
     
     useEffect(() => {
         const hook = (method: 'log' | 'warn' | 'error', args: any[]) => {
             const msg = args.map(a => {
                 if (typeof a === 'string') return a;
                 if (a instanceof Error) return a.message;
-                try { return JSON.stringify(a).substring(0, 100); } catch { return '[Obj]'; }
+                try { return JSON.stringify(a).substring(0, 500); } catch { return '[Obj]'; }
             }).join(' ');
-            setLogs(prev => [...prev.slice(-20), `[${method.toUpperCase()}] ${msg}`]);
+            setLogs(prev => [...prev.slice(-50), `[${method.toUpperCase()}] ${msg}`]);
         };
 
         const oldLog = console.log;
@@ -263,12 +264,38 @@ function DebugConsole() {
              console.warn = oldWarn;
              console.error = oldError;
         }
-    }, [setLogs]);
+    }, []);
+
+    const handleCopy = async () => {
+        try {
+            await navigator.clipboard.writeText(logs.join('\n'));
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (e) {
+            // Fallback for iOS
+            const textArea = document.createElement('textarea');
+            textArea.value = logs.join('\n');
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
 
     return (
-        <div className="fixed bottom-0 left-0 w-full h-40 bg-black/90 z-[10000] text-[#00ff00] text-[10px] font-mono p-2 overflow-y-auto pointer-events-none opacity-80 border-t border-green-500/30">
-            <div className="text-white bg-green-900/50 px-1 mb-1">DEBUG CONSOLE (Mobile Inspector)</div>
-            {logs.map((l, i) => <div key={i} className="border-b border-white/5 py-0.5">{l}</div>)}
+        <div className="fixed bottom-0 left-0 w-full h-48 bg-black/95 z-[10000] text-[#00ff00] text-[10px] font-mono p-2 overflow-y-auto border-t border-green-500/30">
+            <div className="flex justify-between items-center mb-1 sticky top-0 bg-black/90 z-10">
+                <span className="text-white bg-green-900/50 px-1">DEBUG CONSOLE</span>
+                <button 
+                    onClick={handleCopy}
+                    className="pointer-events-auto bg-green-600 text-black px-3 py-1 rounded text-[11px] font-bold active:bg-green-400"
+                >
+                    {copied ? '✓ Copiado!' : '📋 Copiar'}
+                </button>
+            </div>
+            {logs.map((l, i) => <div key={i} className="border-b border-white/5 py-0.5 break-all">{l}</div>)}
         </div>
     );
 }
