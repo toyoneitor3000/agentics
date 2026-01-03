@@ -100,13 +100,33 @@ function CinemaSocialContent() {
         }
     }, [videoIdParam, viewMode, isLoading]);
 
-    // Update URL on Scroll
+    // Update URL on Scroll matches activeSocialPost
     useEffect(() => {
         if (activeSocialPost && viewMode === 'social') {
             const newUrl = `?video=${activeSocialPost.id}`;
             window.history.replaceState(null, '', newUrl);
         }
     }, [activeSocialPost, viewMode]);
+
+    // GLOBAL INTERSECTION OBSERVER (Fixes iOS flickering)
+    useEffect(() => {
+        if (viewMode !== 'social') return;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.getAttribute('data-video-id');
+                    const post = categories.vertical?.find((p: any) => p.id === id);
+                    if (post) setActiveSocialPost(post);
+                }
+            });
+        }, { threshold: 0.6 });
+
+        const items = document.querySelectorAll('.cinema-feed-item');
+        items.forEach(el => observer.observe(el));
+
+        return () => observer.disconnect();
+    }, [viewMode, categories.vertical]);
 
     // Keyboard & Gamepad
     const socialFeedRef = useRef<HTMLDivElement>(null);
@@ -196,13 +216,18 @@ function CinemaSocialContent() {
                         onMouseMove={resetIdleTimer} onTouchStart={resetIdleTimer} onClick={resetIdleTimer}
                     >
                         {(categories.vertical || []).map((post: any) => (
-                            <div key={post.id} id={`video-${post.id}`} className="w-full h-full snap-start snap-always relative border-b border-white/5">
+                            <div 
+                                key={post.id} 
+                                id={`video-${post.id}`} 
+                                data-video-id={post.id}
+                                className="cinema-feed-item w-full h-full snap-start snap-always relative border-b border-white/5"
+                            >
                                 <VideoPlayer 
                                     post={post}
                                     isFeedMode={true}
+                                    isActive={activeSocialPost?.id === post.id}
                                     isMuted={isMuted}
                                     toggleMute={() => setIsMuted(!isMuted)}
-                                    onView={() => setActiveSocialPost(post)}
                                 />
                             </div>
                         ))}

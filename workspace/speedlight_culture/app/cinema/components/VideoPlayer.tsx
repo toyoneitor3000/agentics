@@ -22,7 +22,7 @@ const getYoutubeId = (url: string) => {
 };
 
 // --- COMPONENT ---
-export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: any) {
+export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }: any) {
     const { toggleUiVisibility, resetIdleTimer, isUiVisible } = useUi();
 
     // === STATE ===
@@ -37,7 +37,8 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const [isAttemptingPlay, setIsAttemptingPlay] = useState(false);
 
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
-    const [isInView, setIsInView] = useState(!isFeedMode);
+    // Use isActive prop if available (Feed Mode), otherwise default to true (Cinema Mode)
+    const isInView = isFeedMode ? isActive : true;
     const [isEnded, setIsEnded] = useState(false);
 
     // Cloudflare/YouTube SDK state
@@ -61,8 +62,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const posterUrl = post.poster || post.thumbnail_url || null;
     const isNativeVideo = !cloudflareId && !youtubeId;
 
-    const onViewRef = useRef(onView);
-    useEffect(() => { onViewRef.current = onView; }, [onView]);
+
 
     // Log video info on first render
     useEffect(() => {
@@ -156,32 +156,11 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     // ----------------------------------------------------------------------
     // 3. VISIBILITY OBSERVER
     // ----------------------------------------------------------------------
-    useEffect(() => {
-        if (!isFeedMode || !containerRef.current) {
-            console.log('[VideoPlayer] Observer skip - not feed mode or no container');
-            return;
-        }
-
-        console.log('[VideoPlayer] Setting up IntersectionObserver');
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const isVisible = entry.isIntersecting;
-                console.log('[VideoPlayer] Visibility changed:', isVisible, 'ratio:', entry.intersectionRatio.toFixed(2));
-                setIsInView(isVisible);
-
-                if (isVisible) {
-                    if (onViewRef.current) onViewRef.current();
-                } else {
-                    setHasActuallyPlayed(false);
-                    setIsBlocked(false);
-                }
-            });
-        }, { threshold: 0.6 }); // Higher threshold (60%) prevents start/stop loop on scroll bounce
-
-        observer.observe(containerRef.current);
-        return () => observer.disconnect();
-    }, [isFeedMode]); // Removed onView to prevent infinite loop re-renders
+    // ----------------------------------------------------------------------
+    // 3. VISIBILITY OBSERVER (REMOVED - Controlled by Parent)
+    // ----------------------------------------------------------------------
+    // Internal observer removed to prevent iOS scroll snap flicker race conditions.
+    // Parent components now determine `isActive` via global observer.
 
     // ----------------------------------------------------------------------
     // 4. MASTER EFFECT: Visibility -> Playback
