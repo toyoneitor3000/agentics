@@ -104,14 +104,20 @@ export default function UserListTable({ users }: { users: Profile[] }) {
                                 <td className="p-4">
                                     <div className="flex flex-wrap gap-1.5 max-w-[220px]">
                                         {(() => {
-                                            // Definition of all possible badges
+                                            // Definition of all possible badges with HISTORICAL DESIGN SYSTEM COLORS
                                             const badgesDef = [
-                                                { id: 'founder', label: 'Founder', icon: Medal, style: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' },
-                                                { id: 'ceo', label: 'CEO', icon: Shield, style: 'bg-amber-500/10 text-amber-500 border-amber-500/20' },
-                                                { id: 'sponsor', label: 'Sponsor', icon: Star, style: 'bg-[#D32F2F]/10 text-[#D32F2F] border-[#D32F2F]/20' },
-                                                { id: 'elite', label: 'Elite', icon: Trophy, style: 'bg-[#FFEB3B]/10 text-[#FFEB3B] border-[#FFEB3B]/20' },
-                                                { id: 'builder', label: 'Builder', icon: Zap, style: 'bg-[#FF9800]/10 text-[#FF9800] border-[#FF9800]/20' },
-                                                { id: 'rookie', label: 'Rookie', icon: User, style: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
+                                                // CEO: Fuego/Luz (Gradient)
+                                                { id: 'ceo', label: 'CEO', icon: Shield, style: 'bg-gradient-to-r from-red-600 to-orange-600 text-white border-none' },
+                                                // Founder: Naranja Speedlight (Brand Identity)
+                                                { id: 'founder', label: 'Founder', icon: Medal, style: 'bg-[#FF9800]/10 text-[#FF9800] border-[#FF9800]/50' },
+                                                // Sponsor: Cian/Turquesa (Official/Verified)
+                                                { id: 'sponsor', label: 'Sponsor', icon: Star, style: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/50' },
+                                                // Elite: Gold (Trophy)
+                                                { id: 'elite', label: 'Elite', icon: Trophy, style: 'bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/50' },
+                                                // Builder: Gris Metálico (Garage/Steel)
+                                                { id: 'builder', label: 'Builder', icon: Zap, style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/50' },
+                                                // Rookie: Blue (Entry Level)
+                                                { id: 'rookie', label: 'Rookie', icon: User, style: 'bg-blue-500/10 text-blue-400 border-blue-500/50' },
                                             ];
 
                                             const activeBadges = new Set<string>();
@@ -127,16 +133,14 @@ export default function UserListTable({ users }: { users: Profile[] }) {
                                             else if (r === 'Sponsor') activeBadges.add('sponsor');
                                             else if (r === 'Elite Racer') activeBadges.add('elite');
                                             else if (r === 'Builder') activeBadges.add('builder');
-                                            else activeBadges.add('rookie'); // Default to Rookie
+                                            else activeBadges.add('rookie');
 
-                                            // 3. GOD MODE: Speedlight Culture Account (Collects ALL Badges)
+                                            // 3. GOD MODE: Speedlight Culture Account (The Holy Trinity of Power)
                                             if (user.email === 'speedlightculture@gmail.com') {
-                                                activeBadges.add('founder');
-                                                activeBadges.add('ceo');
-                                                activeBadges.add('sponsor');
-                                                activeBadges.add('elite');
-                                                activeBadges.add('builder');
-                                                // activeBadges.add('rookie'); // Optional: usually god mode skips rookie but requested to have 'all'.
+                                                activeBadges.clear(); // Clear other logic
+                                                activeBadges.add('ceo');      // Authority
+                                                activeBadges.add('founder');  // Legacy
+                                                activeBadges.add('sponsor');  // Economic Engine
                                             }
 
                                             return badgesDef

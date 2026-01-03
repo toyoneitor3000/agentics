@@ -11,6 +11,7 @@ import { useGamepad } from '@/app/hooks/useGamepad';
 import { VideoPlayer } from './components/VideoPlayer';
 import { SocialInterface } from './components/SocialInterface';
 
+
 // ----------------------------------------------------------------------
 // PAGE COMPONENT
 // ----------------------------------------------------------------------
@@ -26,6 +27,7 @@ function CinemaSocialContent() {
     const [activeMovie, setActiveMovie] = useState<any>(null); // For Cinema Modal
     const [activeSocialPost, setActiveSocialPost] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+
 
     // Context
     const { isUiVisible, resetIdleTimer, setIsSocialMode, toggleUiVisibility } = useUi();
@@ -252,6 +254,39 @@ function CinemaSocialContent() {
             )}
 
             <DebugConsole />
+
+            {/* FORCED LOGIN MODAL */}
+            {showLoginPrompt && (
+                <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4 animate-in fade-in duration-500">
+                    <div className="bg-[#111] border border-white/10 p-8 rounded-3xl max-w-md w-full text-center space-y-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#FF9800] via-red-500 to-[#FF9800]" />
+
+                        <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <div className="w-10 h-10 border-2 border-[#FF9800] rounded-full animate-pulse" />
+                        </div>
+
+                        <h2 className="text-2xl font-bold text-white font-oswald uppercase tracking-wide">
+                            Únete a la Cultura
+                        </h2>
+
+                        <p className="text-white/60 text-sm leading-relaxed">
+                            Para seguir disfrutando del contenido exclusivo de Speedlight Culture y conectar con otros entusiastas, necesitas iniciar sesión.
+                        </p>
+
+                        <div className="pt-4 space-y-3">
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="w-full bg-[#FF9800] hover:bg-[#F57C00] text-black font-bold py-3 px-6 rounded-xl transition-all transform hover:scale-[1.02] active:scale-[0.98] uppercase text-xs tracking-wider"
+                            >
+                                Iniciar Sesión / Registrarse
+                            </button>
+                            <p className="text-[10px] text-white/30 uppercase tracking-widest">
+                                Acceso Requerido
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
         </div>
     );

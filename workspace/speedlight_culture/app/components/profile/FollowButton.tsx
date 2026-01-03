@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserPlus, UserCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toggleFollow } from "@/app/actions/social";
+import { toast } from "sonner";
 
 interface FollowButtonProps {
     targetUserId: string;
@@ -18,12 +19,32 @@ export function FollowButton({ targetUserId, initialIsFollowing, currentUserId }
 
     const handleToggleFollow = async () => {
         if (!currentUserId) {
-            // alert("Inicia sesión para seguir a este usuario.");
             router.push('/login');
             return;
         }
         if (loading) return;
 
+        // Confirmation check for UNFOLLOWING
+        if (isFollowing) {
+            toast("¿Dejar de seguir a este usuario?", {
+                action: {
+                    label: 'Sí, dejar de seguir',
+                    onClick: () => executeToggle()
+                },
+                cancel: {
+                    label: 'Cancelar',
+                    onClick: () => { }
+                },
+                duration: Infinity // Keep open until action
+            });
+            return;
+        }
+
+        // Following is instant, no confirmation needed
+        await executeToggle();
+    };
+
+    const executeToggle = async () => {
         setLoading(true);
         // Optimistic update
         const previousState = isFollowing;
@@ -35,7 +56,7 @@ export function FollowButton({ targetUserId, initialIsFollowing, currentUserId }
         } catch (error) {
             console.error("Error toggling follow:", error);
             setIsFollowing(previousState); // Revert
-            alert("Error al actualizar seguimiento.");
+            toast.error("Error al actualizar seguimiento.");
         } finally {
             setLoading(false);
         }
@@ -46,22 +67,22 @@ export function FollowButton({ targetUserId, initialIsFollowing, currentUserId }
             onClick={handleToggleFollow}
             disabled={loading}
             className={`
-                px-4 py-3 rounded-full text-sm font-bold uppercase tracking-wider flex items-center gap-2 transition-all
+                flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all border
                 ${isFollowing
-                    ? 'bg-[#1a1a1a] hover:bg-red-900/50 border border-[#333] hover:border-red-500 text-white'
-                    : 'bg-[#FF9800] hover:bg-[#F57C00] text-black shadow-[0_0_15px_rgba(255,152,0,0.3)]'
+                    ? 'bg-[#1a1a1a] hover:bg-red-900/50 border-[#333] hover:border-red-500 text-white'
+                    : 'bg-[#FF9800] hover:bg-[#F57C00] border-[#FF9800] text-black shadow-[0_0_15px_rgba(255,152,0,0.3)]'
                 }
             `}
         >
             {loading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
             ) : isFollowing ? (
                 <>
-                    <UserCheck className="w-5 h-5" /> Siguiendo
+                    <UserCheck className="w-4 h-4" /> Siguiendo
                 </>
             ) : (
                 <>
-                    <UserPlus className="w-5 h-5" /> Seguir
+                    <UserPlus className="w-4 h-4" /> Seguir
                 </>
             )}
         </button>

@@ -1,131 +1,84 @@
 "use client";
 
-import { Check, Crown, ShieldCheck, Briefcase } from 'lucide-react';
+import { Check, Crown, ShieldCheck, Briefcase, Star, Trophy, Zap, User, Monitor, Shield } from 'lucide-react';
 
 /*
-  JERARQUÍA DE INSIGNIAS (SPEEDLIGHT CULTURE)
+  JERARQUÍA DE INSIGNIAS (SPEEDLIGHT CULTURE v2)
   
-  1. CEO (Staff): Rojo-Amarillo (Fuego/Luz)
-  2. Fundador (Club 500): Naranja Speedlight
-  3. Official Business (Verificado): Cian/Turquesa (Contraste Tecnológico)
-  4. Business (Silver): Gris Metálico / Café Claro
+  Multibadge System:
+  - Founder: Permanent (Medal/Star) - Indigo
+  - CEO: Amber/Gold w/ Shield
+  - Sponsor: Red w/ Star
+  - Elite: Yellow w/ Trophy
+  - Builder: Orange w/ Zap
+  - Rookie: Blue w/ User
 */
 
-type UserRole = 'ceo' | 'founder' | 'business_verified' | 'business' | 'pro' | 'user';
+type UserRole = 'CEO' | 'Sponsor' | 'Elite Racer' | 'Builder' | 'Rookie' | string;
 
 interface UserBadgeProps {
-    role?: UserRole | string;
+    role?: UserRole;
+    founderNumber?: number;
+    email?: string;
     size?: 'sm' | 'md' | 'lg';
-    showLabel?: boolean; // Si queremos que diga "CEO" o solo el icono
 }
 
-// Sub-componente interno para estilos
-function BadgeContainer({ children, className, glow, size, label, textColor = "text-white" }: any) {
-    const isSmall = size === 'sm';
+export function UserBadge({ role, founderNumber, email, size = 'sm' }: UserBadgeProps) {
 
-    // Ajustes de tamaño
-    const sizeClasses = {
-        sm: "h-auto gap-1", // Compacto para header
-        md: "h-6 px-2.5 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full", // Badge completo para perfiles (Sin borde)
-        lg: "h-7 px-3 bg-gradient-to-r from-red-600 via-orange-500 to-yellow-500 rounded-full"
-    };
+    const badges = [];
 
-    // Si es pequeño (Header), renderizamos solo texto e icono sin fondo
-    if (isSmall) {
-        return (
-            <div className={`inline-flex items-center gap-1.5 align-middle ml-2 ${className}`}>
-                <span className={`text-[10px] font-black uppercase tracking-wider text-[#FF9800]`}>
-                    {label}
-                </span>
-                <div className="w-3 h-3 text-[#FF9800]">
-                    {children}
-                </div>
-            </div>
-        );
+    // GOD MODE Check
+    const isGodMode = email === 'speedlightculture@gmail.com';
+
+    // 1. Founder Check (Permanent)
+    if ((founderNumber && founderNumber <= 500) || isGodMode) {
+        badges.push({
+            id: 'founder',
+            label: 'Founder',
+            icon: Star, // Or Medal
+            style: 'bg-[#FF9800]/10 text-[#FF9800] border-[#FF9800]/50 shadow-[0_0_10px_rgba(255,152,0,0.2)]'
+        });
     }
 
-    // Versión Full (Perfil)
+    // 2. Role Check
+    const r = role || 'Rookie';
+
+    if (r === 'CEO' || isGodMode) {
+        badges.push({ id: 'ceo', label: 'CEO', icon: Shield, style: 'bg-gradient-to-r from-red-600 to-orange-600 text-white border-none shadow-[0_0_15px_rgba(220,38,38,0.4)]' });
+    }
+
+    if (r === 'Sponsor' || isGodMode) {
+        badges.push({ id: 'sponsor', label: 'Sponsor', icon: Star, style: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/50' });
+    }
+
+    if (r === 'Elite Racer' && !isGodMode) {
+        badges.push({ id: 'elite', label: 'Elite', icon: Trophy, style: 'bg-[#FFD700]/10 text-[#FFD700] border-[#FFD700]/50' });
+    }
+
+    if (r === 'Builder' && !isGodMode) {
+        badges.push({ id: 'builder', label: 'Builder', icon: Zap, style: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/50' });
+    }
+
+    // Rookie only appears if no other ROLE is present AND not God Mode
+    const hasSuperiorRole2 = badges.some(b => ['ceo', 'sponsor', 'elite', 'builder'].includes(b.id));
+
+    if (!hasSuperiorRole2 && !isGodMode) {
+        if (r === 'Rookie' || !r) {
+            badges.push({ id: 'rookie', label: 'Rookie', icon: User, style: 'bg-blue-500/10 text-blue-400 border-blue-500/50' });
+        }
+    }
+
     return (
-        <div className={`inline-flex items-center gap-1.5 align-middle ml-2 ${className} ${sizeClasses[size as 'sm' | 'md' | 'lg']} ${glow}`}>
-            {/* Icono */}
-            <div className="w-3.5 h-3.5 flex items-center justify-center text-white">
-                {children}
-            </div>
-            {/* Etiqueta */}
-            {label && (
-                <span className={`text-[10px] font-black uppercase tracking-wider ${textColor} leading-none pt-0.5`}>
-                    {label}
-                </span>
-            )}
+        <div className={`flex flex-wrap items-center gap-2 justify-center ${size === 'sm' ? '' : 'mt-1'}`}>
+            {badges.map(b => (
+                <div
+                    key={b.id}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1rounded border rounded-full backdrop-blur-md ${b.style} ${size === 'sm' ? 'text-[9px] py-0.5 px-2' : 'text-[10px] py-1 px-3'}`}
+                >
+                    <b.icon className={size === 'sm' ? "w-2.5 h-2.5" : "w-3 h-3"} />
+                    <span className="font-bold uppercase tracking-wider">{b.label}</span>
+                </div>
+            ))}
         </div>
     );
-}
-
-export function UserBadge({ role = 'user', size = 'sm', showLabel = false }: UserBadgeProps) {
-
-    // Normalizar rol por si viene de DB como texto
-    let normalizedRole = role.toLowerCase();
-
-    // 1. CEO (Minimal en Header, Full en Perfil)
-    if (normalizedRole === 'ceo' || normalizedRole === 'admin') {
-        return (
-            <BadgeContainer
-                size={size}
-                label="CEO"
-                // En versiones grandes (md/lg) el fondo lo maneja el sizeClasses dentro del componente
-                // En versiones pequeñas (sm) esto se ignora por el if(isSmall)
-                glow="shadow-[0_0_15px_rgba(255,87,34,0.4)]"
-                textColor="text-white"
-            >
-                <Crown className="w-full h-full fill-current" />
-            </BadgeContainer>
-        );
-    }
-
-    // 2. FUNDADOR / CLUB 500
-    if (normalizedRole === 'founder' || normalizedRole === 'club500') {
-        return (
-            <BadgeContainer
-                className="bg-[#FF9800]/10 border-[#FF9800]/50"
-                glow="shadow-[0_0_10px_rgba(255,152,0,0.2)]"
-                size={size}
-                label={showLabel ? "Founder" : undefined}
-                textColor="text-[#FF9800]"
-            >
-                <Crown className="w-full h-full" />
-            </BadgeContainer>
-        );
-    }
-
-    // 3. NEGOCIO OFICIAL
-    if (normalizedRole === 'official_business' || normalizedRole === 'verified_business') {
-        return (
-            <BadgeContainer
-                className="bg-cyan-500/10 border-cyan-400/50"
-                glow="shadow-[0_0_10px_rgba(34,211,238,0.2)]"
-                size={size}
-                label={showLabel ? "Official" : undefined}
-                textColor="text-cyan-400"
-            >
-                <ShieldCheck className="w-full h-full" />
-            </BadgeContainer>
-        );
-    }
-
-    // 4. NEGOCIO NORMAL
-    if (normalizedRole === 'business') {
-        return (
-            <BadgeContainer
-                className="bg-white/5 border-white/20"
-                glow=""
-                size={size}
-                label={showLabel ? "Business" : undefined}
-                textColor="text-neutral-400"
-            >
-                <Briefcase className="w-full h-full" />
-            </BadgeContainer>
-        );
-    }
-
-    return null;
 }

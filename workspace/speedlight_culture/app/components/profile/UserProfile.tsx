@@ -331,7 +331,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     {/* Identifiers */}
                     <div className="flex flex-col items-center justify-center mt-3 mb-1 gap-3">
                         {/* Verified / Role Badge Centered ABOVE Name */}
-                        <UserBadge role={profile?.role} size="md" />
+                        <UserBadge role={profile?.role} founderNumber={profile?.founder_number} email={profile?.email} size="md" />
 
                         <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter italic text-white leading-none text-center">
                             {profile?.full_name || 'Racer Unknown'}
