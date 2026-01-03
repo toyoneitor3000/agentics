@@ -23,7 +23,7 @@ export const auth = betterAuth({
             prompt: "select_account",
         },
     },
-    trustedOrigins: ["http://localhost:3000", "https://speedlightculture.com", "https://www.speedlightculture.com"],
-    baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    trustedOrigins: ["http://localhost:3000", "https://speedlightculture.com", "https://www.speedlightculture.com", ...(process.env.URL ? [process.env.URL] : [])],
+    baseURL: process.env.BETTER_AUTH_URL || process.env.URL || "http://localhost:3000",
     secret: process.env.BETTER_AUTH_SECRET,
 });
