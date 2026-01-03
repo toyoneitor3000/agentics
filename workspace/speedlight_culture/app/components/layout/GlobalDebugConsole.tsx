@@ -19,7 +19,12 @@ export default function GlobalDebugConsole() {
     const { showDebugConsole, toggleDebugConsole } = useUi();
     const [isMinimized, setIsMinimized] = useState(false);
     const [activeTab, setActiveTab] = useState<'logs' | 'system'>('logs');
+    const [mounted, setMounted] = useState(false);
     const constraintsRef = useRef(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // --- SYSTEM STATUS LOGIC ---
     const [statusData, setStatusData] = useState<StatusData | null>(null);
@@ -88,7 +93,7 @@ export default function GlobalDebugConsole() {
         }
     };
 
-    if (!showDebugConsole) return null;
+    if (!mounted || !showDebugConsole) return null;
 
     // determine status color
     let statusColor = "bg-green-500 text-green-500";
@@ -101,10 +106,10 @@ export default function GlobalDebugConsole() {
                 drag
                 dragMomentum={false}
                 dragConstraints={constraintsRef}
-                initial={{ x: 20, y: typeof window !== 'undefined' ? window.innerHeight - 320 : 500 }}
+                initial={{ x: 20, y: window.innerHeight - 320 }}
                 className={`pointer-events-auto absolute flex flex-col transition-all duration-300 shadow-2xl overflow-hidden border border-white/10 ${isMinimized
-                        ? 'bg-[#0A0A0A] rounded-full w-auto items-center justify-center'
-                        : 'bg-[#050505]/95 backdrop-blur-md rounded-xl w-[90vw] max-w-[400px] h-[300px]'
+                    ? 'bg-[#0A0A0A] rounded-full w-auto items-center justify-center'
+                    : 'bg-[#050505]/95 backdrop-blur-md rounded-xl w-[90vw] max-w-[400px] h-[300px]'
                     }`}
             >
                 {/* HEADER */}
