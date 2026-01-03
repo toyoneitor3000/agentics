@@ -115,7 +115,7 @@ export default function RootLayout({
               {children}
             </NavigationLayout>
           </LanguageProvider>
-          <Analytics />
+          {process.env.NODE_ENV === 'production' && <Analytics />}
           <OneSignalInit />
           <Toaster position="top-center" richColors theme="dark" />
         </BackgroundProvider>

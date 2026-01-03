@@ -61,6 +61,9 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const posterUrl = post.poster || post.thumbnail_url || null;
     const isNativeVideo = !cloudflareId && !youtubeId;
 
+    const onViewRef = useRef(onView);
+    useEffect(() => { onViewRef.current = onView; }, [onView]);
+
     // Log video info on first render
     useEffect(() => {
         console.log('[VideoPlayer] Init:', {
@@ -168,7 +171,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                 setIsInView(isVisible);
 
                 if (isVisible) {
-                    if (onView) onView();
+                    if (onViewRef.current) onViewRef.current();
                 } else {
                     setHasActuallyPlayed(false);
                     setIsBlocked(false);
@@ -178,7 +181,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, [isFeedMode, onView]);
+    }, [isFeedMode]); // Removed onView to prevent infinite loop re-renders
 
     // ----------------------------------------------------------------------
     // 4. MASTER EFFECT: Visibility -> Playback
