@@ -7,7 +7,7 @@ import { Lock } from "lucide-react";
 import Link from "next/link";
 import AppHeader from "./AppHeader";
 import BottomNav from "./BottomNav";
-import SystemStatus from "./SystemStatus";
+import GlobalDebugConsole from "./GlobalDebugConsole";
 import InstallPrompt from "../pwa/InstallPrompt";
 import OnboardingGuide from "../onboarding/OnboardingGuide";
 import { UiProvider, useUi } from "../../context/UiContext";
@@ -107,7 +107,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
                 </div>
             )}
             {/* SYSTEM STATUS / DEBUG CONSOLE (Floating) */}
-            <SystemStatus />
+            <GlobalDebugConsole />
         </div>
     );
 }
