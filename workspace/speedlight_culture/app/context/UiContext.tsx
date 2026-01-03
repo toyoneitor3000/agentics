@@ -46,7 +46,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
 
         if (savedMode) setAutoHideMode(savedMode as any);
         if (savedDuration) setAutoHideDuration(parseInt(savedDuration));
-        if (savedDebug !== null) setShowDebugConsole(savedDebug === 'true');
+
     }, []);
 
     const updateSettings = (mode: 'always' | 'cinema-only' | 'never', duration: number) => {
