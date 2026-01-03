@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/react";
+
 import { Unbounded, Space_Grotesk, Chakra_Petch } from "next/font/google"; // AESTHETIC OVERHAUL
 import { Toaster } from "sonner";
 
@@ -115,7 +115,7 @@ export default function RootLayout({
               {children}
             </NavigationLayout>
           </LanguageProvider>
-          {process.env.NODE_ENV === 'production' && <Analytics />}
+
           <OneSignalInit />
           <Toaster position="top-center" richColors theme="dark" />
         </BackgroundProvider>
