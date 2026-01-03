@@ -226,7 +226,9 @@ function CinemaSocialContent() {
                 </div>
             )}
 
+            {/* DEBUG: Uncomment for mobile debugging
             <DebugConsole />
+            */}
             
         </div>
     );

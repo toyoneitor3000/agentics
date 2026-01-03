@@ -2,9 +2,9 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Script from 'next/script';
-import { VolumeX, Volume2 } from "lucide-react";
+import Image from 'next/image';
+import { VolumeX, Volume2, Play } from "lucide-react";
 import { useUi } from '@/app/context/UiContext';
-
 
 // --- UTILITIES ---
 const getCloudflareId = (url: string) => {
@@ -25,87 +25,129 @@ const getYoutubeId = (url: string) => {
 export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: any) {
     const { toggleUiVisibility, resetIdleTimer, isUiVisible } = useUi();
 
-    // State
-    const [isReady, setIsReady] = useState(false);
-    const [isEnded, setIsEnded] = useState(false);
+    // === STATE ===
+    // `hasActuallyPlayed` is THE KEY: Only true when video.currentTime > 0.1
+    // This guarantees we're showing actual video frames, not a black screen.
+    const [hasActuallyPlayed, setHasActuallyPlayed] = useState(false);
+
+    // `isBlocked` means autoplay was blocked and user MUST tap to play
+    const [isBlocked, setIsBlocked] = useState(false);
+
+    // `isAttemptingPlay` prevents race conditions from multiple .play() calls
+    const [isAttemptingPlay, setIsAttemptingPlay] = useState(false);
+
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
-    const [isInView, setIsInView] = useState(!isFeedMode); // Default true if not feed
-    const [isBlocked, setIsBlocked] = useState(false); // New: Track if autoplay was blocked
-    const [player, setPlayer] = useState<any>(null); // Adapter for SDKs
-    const [useNativeControls, setUseNativeControls] = useState(false); // Fallback for blocked scripts
+    const [isInView, setIsInView] = useState(!isFeedMode);
+    const [isEnded, setIsEnded] = useState(false);
+
+    // Cloudflare/YouTube SDK state
+    const [player, setPlayer] = useState<any>(null);
+    const [useNativeControls, setUseNativeControls] = useState(false);
+    const [iframeReady, setIframeReady] = useState(false);
     const initAttempts = useRef(0);
 
-
-    // Refs
+    // === REFS ===
     const containerRef = useRef<HTMLDivElement>(null);
     const nativeVideoRef = useRef<HTMLVideoElement>(null);
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const isUserPaused = useRef(false);
     const lastTapTime = useRef(0);
     const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const playPromiseRef = useRef<Promise<void> | null>(null);
 
-    // Derived
+    // === DERIVED ===
     const cloudflareId = getCloudflareId(post.videoUrl || '');
     const youtubeId = getYoutubeId(post.videoUrl || '');
+    const posterUrl = post.poster || post.thumbnail_url || null;
+    const isNativeVideo = !cloudflareId && !youtubeId;
+
+    // === SHOW POSTER LOGIC ===
+    // Poster is visible UNTIL we have confirmed video playback
+    // For Cloudflare/YouTube, we trust iframe handles this, so poster hides on iframeReady
+    // For native video, poster hides only when hasActuallyPlayed is true
+    const shouldShowPoster = isNativeVideo
+        ? (!hasActuallyPlayed || isBlocked)
+        : (!iframeReady);
 
     // ----------------------------------------------------------------------
-    // 1. UNIFIED PLAYBACK CONTROLLER
+    // 1. SAFE PLAY CONTROLLER (Prevents AbortError race conditions)
+    // ----------------------------------------------------------------------
+    const attemptPlay = useCallback(async (videoElement: HTMLVideoElement) => {
+        // Prevent concurrent .play() calls which cause AbortError
+        if (isAttemptingPlay) {
+            console.log('[VideoPlayer] Play already in progress, skipping');
+            return;
+        }
+
+        if (!videoElement.paused) {
+            console.log('[VideoPlayer] Already playing');
+            return;
+        }
+
+        setIsAttemptingPlay(true);
+
+        try {
+            // Always ensure muted for autoplay compliance
+            videoElement.muted = true;
+
+            playPromiseRef.current = videoElement.play();
+            await playPromiseRef.current;
+
+            console.log('[VideoPlayer] Play succeeded');
+            setIsBlocked(false);
+
+        } catch (error: any) {
+            if (error.name === 'AbortError') {
+                // AbortError means a new play() was called before this finished
+                // This is fine, the new call will handle it
+                console.log('[VideoPlayer] Play aborted (race condition, safe to ignore)');
+            } else if (error.name === 'NotAllowedError') {
+                // iOS Low Power Mode or strict autoplay policy
+                console.warn('[VideoPlayer] Autoplay blocked by browser policy');
+                setIsBlocked(true);
+            } else {
+                console.error('[VideoPlayer] Play failed:', error);
+                setIsBlocked(true);
+            }
+        } finally {
+            setIsAttemptingPlay(false);
+            playPromiseRef.current = null;
+        }
+    }, [isAttemptingPlay]);
+
+    // ----------------------------------------------------------------------
+    // 2. UNIFIED PLAYBACK CONTROLLER
     // ----------------------------------------------------------------------
     const managePlayback = useCallback(async (shouldPlay: boolean) => {
         if (!shouldPlay) {
-            // PAUSE
-            if (nativeVideoRef.current) nativeVideoRef.current.pause();
-            else if (player && typeof player.pause === 'function') player.pause();
-            return;
-        }
-
-        // PLAY (Priority: Native DOM)
-        if (nativeVideoRef.current && !cloudflareId && !youtubeId) {
-            const v = nativeVideoRef.current;
-            if (v.paused) {
-                try {
-                    await v.play();
-                    setIsBlocked(false);
-                } catch (e) {
-                    // Critical: AbortError or NotAllowedError means user MUST interact
-                    console.warn("Native Play Blocked", e);
-
-                    // Fallback Attempt: Mute and Play
-                    if (!v.muted) {
-                        v.muted = true;
-                        try {
-                            await v.play();
-                            setIsBlocked(false);
-                            setIsReady(true);
-                        } catch (err) { // Completely blocked
-                            setIsBlocked(true);
-                            setIsReady(true); // Stop spinner
-                        }
-                    } else {
-                        // Already muted and still blocked
-                        setIsBlocked(true);
-                        setIsReady(true); // Stop spinner
-                    }
-                }
+            // === PAUSE ===
+            if (nativeVideoRef.current) {
+                nativeVideoRef.current.pause();
+            } else if (player && typeof player.pause === 'function') {
+                player.pause();
             }
             return;
         }
 
-        // PLAY (Adapter: Cloudflare/Youtube)
+        // === PLAY (Native Video) ===
+        if (nativeVideoRef.current && isNativeVideo) {
+            await attemptPlay(nativeVideoRef.current);
+            return;
+        }
+
+        // === PLAY (Cloudflare/YouTube SDK) ===
         if (player && typeof player.play === 'function') {
             try {
+                player.muted = true; // Always muted for autoplay
                 await player.play();
-            } catch (e) {
-                if (player.muted === false) {
-                    player.muted = true;
-                    try { await player.play(); } catch (err) { }
-                }
+            } catch (e: any) {
+                console.warn('[VideoPlayer] SDK play failed:', e);
             }
         }
-    }, [player, cloudflareId, youtubeId]);
+    }, [player, isNativeVideo, attemptPlay]);
 
     // ----------------------------------------------------------------------
-    // 2. VISIBILITY OBSERVER
+    // 3. VISIBILITY OBSERVER
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!isFeedMode || !containerRef.current) return;
@@ -114,56 +156,98 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             entries.forEach(entry => {
                 const isVisible = entry.isIntersecting;
                 setIsInView(isVisible);
-                if (isVisible && onView) onView();
+
+                if (isVisible) {
+                    if (onView) onView();
+                } else {
+                    // Reset states when scrolling away so poster shows again on return
+                    setHasActuallyPlayed(false);
+                    setIsBlocked(false);
+                }
             });
-        }, { threshold: 0.5 });
+        }, { threshold: 0.6 }); // Slightly higher threshold for better UX
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
     }, [isFeedMode, onView]);
 
     // ----------------------------------------------------------------------
-    // 3. MASTER EFFECT (State -> Action)
+    // 4. MASTER EFFECT: Visibility -> Playback
     // ----------------------------------------------------------------------
     useEffect(() => {
-        const shouldPlay = isInView && !isUserPaused.current;
-        managePlayback(shouldPlay);
+        if (!isInView) return;
+        if (isUserPaused.current) return;
+
+        // Small delay to ensure DOM is ready
+        const timer = setTimeout(() => {
+            managePlayback(true);
+        }, 100);
+
+        return () => clearTimeout(timer);
     }, [isInView, managePlayback]);
 
+    // ----------------------------------------------------------------------
+    // 5. HANDLE MANUAL PLAY (When blocked)
+    // ----------------------------------------------------------------------
+    const handleManualPlay = useCallback(async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        if (nativeVideoRef.current) {
+            setIsBlocked(false);
+            isUserPaused.current = false;
+
+            try {
+                // User interaction allows unmuted playback
+                nativeVideoRef.current.muted = isMuted;
+                await nativeVideoRef.current.play();
+                console.log('[VideoPlayer] Manual play succeeded');
+            } catch (error) {
+                console.error('[VideoPlayer] Manual play failed:', error);
+                // Last resort: force muted
+                nativeVideoRef.current.muted = true;
+                try {
+                    await nativeVideoRef.current.play();
+                } catch (e) {
+                    setIsBlocked(true);
+                }
+            }
+        }
+    }, [isMuted]);
 
     // ----------------------------------------------------------------------
-    // 4. INTERACTION HANDLERS (Tap, Double Tap)
+    // 6. INTERACTION HANDLERS (Tap, Double Tap)
     // ----------------------------------------------------------------------
     const handleTap = (e: any) => {
         e.stopPropagation();
+
+        // If blocked, the manual play button handles interaction
+        if (isBlocked) return;
+
         const now = Date.now();
         const doubleTapThreshold = 300;
 
         if (lastTapTime.current && (now - lastTapTime.current) < doubleTapThreshold) {
-            // DOUBLE TAP -> Mute
+            // === DOUBLE TAP -> Toggle Mute ===
             if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
             tapTimeoutRef.current = null;
             toggleMute();
-            setShowActionIcon(!isMuted ? 'mute' : 'unmute'); // Logic inverted because toggle hasn't propogated yet? No, use current prop.
-            // Actually toggleMute updates parent state. We show icon based on *intended* state. 
-            // Let's simplified: 
-            setShowActionIcon(isMuted ? 'unmute' : 'mute'); // If currently muted, we are unmuting.
+            setShowActionIcon(isMuted ? 'unmute' : 'mute');
             setTimeout(() => setShowActionIcon(null), 800);
             return;
         }
 
         lastTapTime.current = now;
 
-        // SINGLE TAP -> Play/Pause
+        // === SINGLE TAP -> Toggle Play/Pause or Show UI ===
         tapTimeoutRef.current = setTimeout(() => {
             if (!isUiVisible) {
                 toggleUiVisibility();
                 resetIdleTimer();
             } else {
-                // Toggle Play/Pause
                 const target = nativeVideoRef.current || player;
                 if (target) {
-                    if (target.paused || (target.get && target.get('paused'))) { // YT/CF might differ, but unified logic mostly play/pause
+                    const isPaused = target.paused || (target.get && target.get('paused'));
+                    if (isPaused) {
                         managePlayback(true);
                         isUserPaused.current = false;
                         setShowActionIcon('play');
@@ -179,24 +263,26 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     };
 
     // ----------------------------------------------------------------------
-    // 5. CLOUDFLARE SETUP
+    // 7. CLOUDFLARE SETUP
     // ----------------------------------------------------------------------
     useEffect(() => {
         if (!cloudflareId) return;
 
-        // Polling to find Stream object
         const init = () => {
             if (iframeRef.current && (window as any).Stream) {
                 const sp = (window as any).Stream(iframeRef.current);
-                sp.muted = isMuted;
+                sp.muted = true; // Always start muted for autoplay
                 sp.loop = isFeedMode;
                 setPlayer(sp);
-                setIsReady(true);
 
-                // Sync events
+                sp.addEventListener('playing', () => {
+                    setIframeReady(true);
+                    setIsBlocked(false);
+                });
                 sp.addEventListener('ended', () => setIsEnded(true));
                 sp.addEventListener('play', () => setIsEnded(false));
-                return true; // Success
+
+                return true;
             }
             return false;
         };
@@ -207,18 +293,32 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                 clearInterval(interval);
             } else {
                 initAttempts.current += 1;
-                // If script blocked/failed for ~3s (15 * 200ms), fallback to native controls
-                if (initAttempts.current > 15) {
+                if (initAttempts.current > 20) { // ~4 seconds
                     clearInterval(interval);
-                    console.warn("Cloudflare SDK unreachable. Falling back to native controls.");
+                    console.warn("[VideoPlayer] Cloudflare SDK timeout, enabling native controls");
                     setUseNativeControls(true);
-                    setIsReady(true); // Hide spinner so user sees play button
+                    setIframeReady(true);
                 }
             }
         }, 200);
 
         return () => clearInterval(interval);
-    }, [cloudflareId, isFeedMode, isMuted]);
+    }, [cloudflareId, isFeedMode]);
+
+    // ----------------------------------------------------------------------
+    // 8. SYNC MUTE STATE
+    // ----------------------------------------------------------------------
+    useEffect(() => {
+        if (nativeVideoRef.current && isNativeVideo) {
+            // Only apply mute state if video has actually started (user interacted)
+            if (hasActuallyPlayed && !isBlocked) {
+                nativeVideoRef.current.muted = isMuted;
+            }
+        }
+        if (player) {
+            player.muted = isMuted;
+        }
+    }, [isMuted, player, isNativeVideo, hasActuallyPlayed, isBlocked]);
 
     // ----------------------------------------------------------------------
     // RENDER
@@ -230,7 +330,24 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             onClick={handleTap}
             onContextMenu={(e) => e.preventDefault()}
         >
-            {/* VIDEO LAYER */}
+            {/* === POSTER LAYER (Always visible until video plays) === */}
+            {posterUrl && (
+                <div
+                    className={`absolute inset-0 z-[5] transition-opacity duration-500 ${shouldShowPoster ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        }`}
+                >
+                    <Image
+                        src={posterUrl}
+                        alt={post.title || 'Video thumbnail'}
+                        fill
+                        className={`${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                        priority={isFeedMode}
+                        sizes="100vw"
+                    />
+                </div>
+            )}
+
+            {/* === VIDEO LAYER === */}
             {isInView && (
                 <>
                     {cloudflareId ? (
@@ -238,9 +355,10 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             <Script src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js" />
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=${isMuted}&controls=${useNativeControls}&playsinline=true&preload=true`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=${useNativeControls}&playsinline=true&preload=auto&poster=${encodeURIComponent(posterUrl || '')}`}
                                 className={`w-full h-full ${useNativeControls ? 'pointer-events-auto' : 'pointer-events-none'} ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                                allow="autoplay; encrypted-media"
+                                allow="autoplay; encrypted-media; picture-in-picture"
+                                allowFullScreen
                             />
                         </>
                     ) : youtubeId ? (
@@ -249,69 +367,99 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&loop=1&playlist=${youtubeId}&enablejsapi=1&playsinline=1`}
                             className="w-full h-full pointer-events-none object-cover"
                             allow="autoplay; encrypted-media"
+                            onLoad={() => setIframeReady(true)}
                         />
                     ) : (
                         <video
                             ref={nativeVideoRef}
                             src={post.videoUrl}
-                            poster={post.poster}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             autoPlay
                             loop={isFeedMode}
-                            muted={isMuted}
+                            muted // Always start muted for autoplay compliance
                             playsInline
                             webkit-playsinline="true"
                             preload="auto"
-                            onLoadedData={() => {
-                                setIsReady(true);
-                                // Try playing, if it fails managePlayback will catch it and set isBlocked
-                                if (isInView && !isUserPaused.current) managePlayback(true);
-                            }}
-                            onPause={(e) => {
-                                // Only auto-resume if it wasn't a user interaction
-                                if (isInView && !isUserPaused.current && !e.currentTarget.seeking) {
+                            onCanPlay={() => {
+                                // Video can play, but hasn't necessarily started
+                                console.log('[VideoPlayer] canplay event');
+                                if (isInView && !isUserPaused.current && !isBlocked) {
                                     managePlayback(true);
                                 }
                             }}
+                            onTimeUpdate={(e) => {
+                                // THIS IS THE KEY: Only hide poster when video is ACTUALLY playing
+                                const currentTime = e.currentTarget.currentTime;
+                                if (currentTime > 0.1 && !hasActuallyPlayed) {
+                                    console.log('[VideoPlayer] Video confirmed playing at', currentTime);
+                                    setHasActuallyPlayed(true);
+                                    setIsBlocked(false);
+                                }
+                            }}
+                            onPause={(e) => {
+                                // Auto-resume only if not user-initiated and in view
+                                if (isInView && !isUserPaused.current && !e.currentTarget.seeking && hasActuallyPlayed) {
+                                    // Debounce to avoid rapid pause/play cycles
+                                    setTimeout(() => {
+                                        if (!isUserPaused.current && isInView) {
+                                            managePlayback(true);
+                                        }
+                                    }, 100);
+                                }
+                            }}
                             onEnded={() => setIsEnded(true)}
+                            onError={(e) => {
+                                console.error('[VideoPlayer] Video error:', e);
+                                setIsBlocked(true);
+                            }}
                         />
                     )}
                 </>
             )}
 
-            {/* FEEDBACK ICONS */}
+            {/* === LOADING SPINNER (Only when no poster and loading) === */}
+            {isInView && !hasActuallyPlayed && !isBlocked && !posterUrl && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/40 pointer-events-none">
+                    <div className="w-10 h-10 border-3 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
+                </div>
+            )}
+
+            {/* === BLOCKED/MANUAL PLAY BUTTON (iOS Low Power Mode) === */}
+            {isBlocked && isInView && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer"
+                    onClick={handleManualPlay}
+                >
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20 shadow-2xl hover:scale-110 active:scale-95 transition-transform animate-in zoom-in-75 duration-300">
+                        <Play className="w-8 h-8 text-white fill-white ml-1" />
+                    </div>
+                    <div className="absolute bottom-[30%] text-white/60 text-xs font-medium">
+                        Toca para reproducir
+                    </div>
+                </div>
+            )}
+
+            {/* === FEEDBACK ICONS === */}
             {showActionIcon && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
                     <div className="bg-black/40 backdrop-blur-md p-4 rounded-full text-white">
-                        {showActionIcon === 'pause' && <div className="flex gap-1"><div className="w-2 h-6 bg-white rounded-full" /><div className="w-2 h-6 bg-white rounded-full" /></div>}
+                        {showActionIcon === 'pause' && (
+                            <div className="flex gap-1">
+                                <div className="w-2 h-6 bg-white rounded-full" />
+                                <div className="w-2 h-6 bg-white rounded-full" />
+                            </div>
+                        )}
                         {showActionIcon === 'mute' && <VolumeX className="w-8 h-8" />}
                         {showActionIcon === 'unmute' && <Volume2 className="w-8 h-8" />}
-                        {showActionIcon === 'play' && <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[20px] border-l-white border-b-[10px] border-b-transparent ml-1" />}
+                        {showActionIcon === 'play' && (
+                            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[20px] border-l-white border-b-[10px] border-b-transparent ml-1" />
+                        )}
                     </div>
                 </div>
             )}
 
-            {/* LOADING SPINNER */}
-            {!isReady && isInView && !isBlocked && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
-                    <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
-                </div>
-            )}
-
-            {/* BLOCKED/MANUAL PLAY BUTTON (Low Power Mode Fix) */}
-            {isBlocked && isInView && (
-                <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/20 cursor-pointer animate-in fade-in zoom-in-50">
-                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform">
-                        <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[24px] border-l-white border-b-[12px] border-b-transparent ml-2" />
-                    </div>
-                </div>
-            )}
-
-            {/* UI OVERLAY MOVED TO PAGE LEVEL FOR GLOBAL ALIGNMENT */}
-
-            {/* OVERLAY GRADIENT */}
-            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
-
+            {/* === OVERLAY GRADIENT === */}
+            <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/80 to-transparent pointer-events-none z-[6]" />
         </div>
     );
 }
