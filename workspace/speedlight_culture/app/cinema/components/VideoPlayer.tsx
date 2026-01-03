@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Script from 'next/script';
-import Image from 'next/image';
+
 import { VolumeX, Volume2, Play } from "lucide-react";
 import { useUi } from '@/app/context/UiContext';
 
@@ -58,16 +58,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     // === DERIVED ===
     const cloudflareId = getCloudflareId(post.videoUrl || '');
     const youtubeId = getYoutubeId(post.videoUrl || '');
-    const posterUrl = post.poster || post.thumbnail_url || null;
     const isNativeVideo = !cloudflareId && !youtubeId;
-
-    // === SHOW POSTER LOGIC ===
-    // Poster is visible UNTIL we have confirmed video playback
-    // For Cloudflare/YouTube, we trust iframe handles this, so poster hides on iframeReady
-    // For native video, poster hides only when hasActuallyPlayed is true
-    const shouldShowPoster = isNativeVideo
-        ? (!hasActuallyPlayed || isBlocked)
-        : (!iframeReady);
 
     // ----------------------------------------------------------------------
     // 1. SAFE PLAY CONTROLLER (Prevents AbortError race conditions)
@@ -330,23 +321,6 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             onClick={handleTap}
             onContextMenu={(e) => e.preventDefault()}
         >
-            {/* === POSTER LAYER (Always visible until video plays) === */}
-            {posterUrl && (
-                <div
-                    className={`absolute inset-0 z-[5] transition-opacity duration-500 ${shouldShowPoster ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                        }`}
-                >
-                    <Image
-                        src={posterUrl}
-                        alt={post.title || 'Video thumbnail'}
-                        fill
-                        className={`${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                        priority={isFeedMode}
-                        sizes="100vw"
-                    />
-                </div>
-            )}
-
             {/* === VIDEO LAYER === */}
             {isInView && (
                 <>
@@ -355,7 +329,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             <Script src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js" />
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=${useNativeControls}&playsinline=true&preload=auto&poster=${encodeURIComponent(posterUrl || '')}`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=${useNativeControls}&playsinline=true&preload=auto`}
                                 className={`w-full h-full ${useNativeControls ? 'pointer-events-auto' : 'pointer-events-none'} ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                                 allow="autoplay; encrypted-media; picture-in-picture"
                                 allowFullScreen
@@ -373,22 +347,21 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                         <video
                             ref={nativeVideoRef}
                             src={post.videoUrl}
+                            poster={post.poster || post.thumbnail_url}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             autoPlay
                             loop={isFeedMode}
-                            muted // Always start muted for autoplay compliance
+                            muted
                             playsInline
                             webkit-playsinline="true"
                             preload="auto"
                             onCanPlay={() => {
-                                // Video can play, but hasn't necessarily started
                                 console.log('[VideoPlayer] canplay event');
                                 if (isInView && !isUserPaused.current && !isBlocked) {
                                     managePlayback(true);
                                 }
                             }}
                             onTimeUpdate={(e) => {
-                                // THIS IS THE KEY: Only hide poster when video is ACTUALLY playing
                                 const currentTime = e.currentTarget.currentTime;
                                 if (currentTime > 0.1 && !hasActuallyPlayed) {
                                     console.log('[VideoPlayer] Video confirmed playing at', currentTime);
@@ -397,9 +370,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                                 }
                             }}
                             onPause={(e) => {
-                                // Auto-resume only if not user-initiated and in view
                                 if (isInView && !isUserPaused.current && !e.currentTarget.seeking && hasActuallyPlayed) {
-                                    // Debounce to avoid rapid pause/play cycles
                                     setTimeout(() => {
                                         if (!isUserPaused.current && isInView) {
                                             managePlayback(true);
@@ -415,13 +386,6 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                         />
                     )}
                 </>
-            )}
-
-            {/* === LOADING SPINNER (Only when no poster and loading) === */}
-            {isInView && !hasActuallyPlayed && !isBlocked && !posterUrl && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/40 pointer-events-none">
-                    <div className="w-10 h-10 border-3 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
-                </div>
             )}
 
             {/* === BLOCKED/MANUAL PLAY BUTTON (iOS Low Power Mode) === */}
