@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Database, ShieldCheck, Server, Globe, X } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Database, ShieldCheck, Server, Globe, X, Minus, Maximize2, Move } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUi } from "@/app/context/UiContext";
 
@@ -18,8 +18,9 @@ type StatusData = {
 export default function SystemStatus() {
     const [data, setData] = useState<StatusData | null>(null);
     const [loading, setLoading] = useState(true);
-    const [isHovered, setIsHovered] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
     const { showDebugConsole, toggleDebugConsole } = useUi();
+    const constraintsRef = useRef(null);
 
     useEffect(() => {
         const checkStatus = async () => {
@@ -41,102 +42,103 @@ export default function SystemStatus() {
             }
         };
 
-        checkStatus();
-        // Poll every 60 seconds
-        const interval = setInterval(checkStatus, 60000);
-        return () => clearInterval(interval);
-    }, []);
+        if (showDebugConsole) {
+            checkStatus();
+            // Poll every 60 seconds
+            const interval = setInterval(checkStatus, 60000);
+            return () => clearInterval(interval);
+        }
+    }, [showDebugConsole]);
 
     if (!showDebugConsole) return null;
 
+    // Loading State
     if (loading || !data) {
-        return (
-            <div className="flex items-center gap-2 opacity-50">
-                <span className="w-2 h-2 rounded-full bg-gray-500 animate-pulse"></span>
-                <span>CONNECTING...</span>
-            </div>
-        );
+        return null; // Don't show anything until loaded to avoid flickering
     }
 
-    // Determine colors based on status
+    // Determine colors
     let color = "bg-green-500";
     let textColor = "text-green-500";
-    let label = "OPERATIONAL";
+    let statusLabel = "OPERATIONAL";
 
     if (data.status === 'degraded') {
         color = "bg-yellow-500";
         textColor = "text-yellow-500";
-        label = "DEGRADED";
+        statusLabel = "DEGRADED";
     } else if (data.status === 'outage') {
         color = "bg-red-500";
         textColor = "text-red-500";
-        label = "OUTAGE";
+        statusLabel = "OUTAGE";
     } else if (data.status === 'maintenance') {
         color = "bg-blue-500";
         textColor = "text-blue-500";
-        label = "MAINTENANCE";
+        statusLabel = "MAINTENANCE";
     }
 
-    // Latency color
-    const latency = data.latency;
-    let latencyColor = "text-white/50";
-    if (latency > 200) latencyColor = "text-yellow-500";
-    if (latency > 500) latencyColor = "text-red-500";
-
     return (
-        <div
-            className="relative"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            {/* Main Status Display */}
-            <div className="flex items-center gap-2 cursor-help group">
-                <span className="text-white/30">Status:</span>
-                <span className={`w-2 h-2 rounded-full ${color} ${data.status === 'operational' ? 'animate-pulse' : ''} shadow-[0_0_8px_currentColor] ${textColor}`}></span>
-                <span className={`font-bold ${textColor} tracking-wider`}>{label}</span>
-                {data.latency > 0 && (
-                    <span className={`hidden md:inline text-[9px] font-roboto-mono ml-1 ${latencyColor}`}>
-                        {data.latency}ms
-                    </span>
-                )}
-            </div>
+        <div ref={constraintsRef} className="fixed inset-0 pointer-events-none z-[99999]">
+            <motion.div
+                drag
+                dragMomentum={false}
+                dragConstraints={constraintsRef}
+                initial={{ x: 20, y: typeof window !== 'undefined' ? window.innerHeight - 150 : 500 }}
+                className={`pointer-events-auto absolute bg-[#0A0A0A]/90 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-300 ${isMinimized ? 'rounded-full w-auto' : 'rounded-lg w-64'
+                    }`}
+            >
+                {/* Header (Always Visible) */}
+                <div className={`flex items-center justify-between px-3 py-2 ${isMinimized ? '' : 'border-b border-white/5 bg-white/5 cursor-move'}`}>
 
-            {/* Hover Tooltip (Glassmorphism) */}
-            <AnimatePresence>
-                {isHovered && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute bottom-full left-0 mb-3 w-56 bg-black/80 backdrop-blur-xl border border-white/10 rounded-lg p-4 shadow-2xl z-50 text-xs"
-                    >
-                        <h4 className="border-b border-white/10 pb-2 mb-2 font-bold text-white flex justify-between items-center">
-                            SYSTEM HEALTH
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">{data.region}</span>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleDebugConsole(false);
-                                    }}
-                                    className="text-white/50 hover:text-red-500 transition-colors p-1"
-                                    title="Close Debug Console"
-                                >
-                                    <X className="w-3 h-3" />
-                                </button>
+                    {/* Status Indicator (Visible in both modes) */}
+                    <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${color} ${data.status === 'operational' ? 'animate-pulse' : ''} shadow-[0_0_8px_currentColor]`}></span>
+                        {!isMinimized && <span className="text-[10px] font-bold text-white/50 tracking-widest font-roboto-mono uppercase">DEBUG CONSOLE</span>}
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex items-center gap-1 ml-2">
+                        {/* Min/Max Button */}
+                        <button
+                            onClick={() => setIsMinimized(!isMinimized)}
+                            className="p-1 hover:bg-white/10 rounded-md text-white/50 hover:text-white transition-colors"
+                        >
+                            {isMinimized ? <Maximize2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
+                        </button>
+
+                        {/* Close Button (Only in maximized or handled via other means? Keep it accessible) */}
+                        {!isMinimized && (
+                            <button
+                                onClick={() => toggleDebugConsole(false)}
+                                className="p-1 hover:bg-red-500/20 hover:text-red-500 rounded-md text-white/50 transition-colors"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Extended Details (Hidden when minimized) */}
+                <AnimatePresence>
+                    {!isMinimized && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="p-4 space-y-3 text-xs"
+                        >
+                            <div className="flex justify-between items-center">
+                                <span className="text-white/70 font-bold">Status</span>
+                                <span className={`font-bold ${textColor}`}>{statusLabel}</span>
                             </div>
-                        </h4>
 
-                        <div className="space-y-2">
                             <div className="flex justify-between items-center">
                                 <span className="flex items-center gap-2 text-white/70">
                                     <Database className="w-3 h-3" /> Database
                                 </span>
                                 {data.services.database ? (
-                                    <span className="text-green-500 font-bold text-[10px]">ONLINE</span>
+                                    <span className="text-green-500 font-bold">ONLINE</span>
                                 ) : (
-                                    <span className="text-red-500 font-bold text-[10px]">OFFLINE</span>
+                                    <span className="text-red-500 font-bold">OFFLINE</span>
                                 )}
                             </div>
 
@@ -145,9 +147,9 @@ export default function SystemStatus() {
                                     <ShieldCheck className="w-3 h-3" /> Auth
                                 </span>
                                 {data.services.auth ? (
-                                    <span className="text-green-500 font-bold text-[10px]">SECURE</span>
+                                    <span className="text-green-500 font-bold">SECURE</span>
                                 ) : (
-                                    <span className="text-red-500 font-bold text-[10px]">ISSUES</span>
+                                    <span className="text-red-500 font-bold">ISSUES</span>
                                 )}
                             </div>
 
@@ -157,13 +159,15 @@ export default function SystemStatus() {
                                 </span>
                                 <span className="text-white/50 font-roboto-mono">{data.region}</span>
                             </div>
-                        </div>
 
-                        {/* Triangle pointer */}
-                        <div className="absolute top-full left-6 -mt-1 border-4 border-transparent border-t-black/80"></div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                            <div className="text-[10px] text-white/20 font-mono pt-1 text-center flex justify-between">
+                                <span>Latency: {data.latency}ms</span>
+                                <span className="flex items-center gap-1"><Move className="w-2 h-2" /> Draggable</span>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         </div>
     );
 }

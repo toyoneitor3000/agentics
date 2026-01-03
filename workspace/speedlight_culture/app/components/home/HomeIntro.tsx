@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Play, Zap, Info, Camera, Wrench, ShoppingBag, Globe, Bot, Calendar, GraduationCap } from "lucide-react";
 import { useState } from "react";
-import SystemStatus from "@/app/components/layout/SystemStatus";
+
 
 export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentActivity, isLoggedIn }: { onEnterApp: () => void, onSignUp: () => void, featuredItems: any[], recentActivity: any[], isLoggedIn: boolean }) {
 
@@ -379,7 +379,6 @@ export default function HomeIntro({ onEnterApp, onSignUp, featuredItems, recentA
                         <div className="flex flex-col md:flex-row gap-4 items-center">
                             <span>© {new Date().getFullYear()} Speedlight Culture.</span>
                             <span className="hidden md:inline text-white/10">|</span>
-                            <SystemStatus />
                         </div>
 
                         {/* PurrPurr Badge */}
