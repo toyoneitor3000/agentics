@@ -103,6 +103,11 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
             console.log('[VideoPlayer] Play succeeded');
             setIsBlocked(false);
 
+            // Immediately try to sync valid mute state
+            if (!isMuted) {
+                videoElement.muted = false;
+            }
+
         } catch (error: any) {
             if (error.name === 'AbortError') {
                 // AbortError means a new play() was called before this finished
@@ -120,7 +125,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
             setIsAttemptingPlay(false);
             playPromiseRef.current = null;
         }
-    }, [isAttemptingPlay]);
+    }, [isAttemptingPlay, isMuted]);
 
     // ----------------------------------------------------------------------
     // 2. UNIFIED PLAYBACK CONTROLLER
@@ -147,11 +152,12 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
             try {
                 player.muted = true; // Always muted for autoplay
                 await player.play();
+                if (!isMuted) player.muted = false; // Attempt unmute
             } catch (e: any) {
                 console.warn('[VideoPlayer] SDK play failed:', e);
             }
         }
-    }, [player, isNativeVideo, attemptPlay]);
+    }, [player, isNativeVideo, attemptPlay, isMuted]);
 
     // ----------------------------------------------------------------------
     // 3. VISIBILITY OBSERVER
@@ -335,17 +341,20 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
     // ----------------------------------------------------------------------
     // 8. SYNC MUTE STATE
     // ----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
+    // 8. SYNC MUTE STATE
+    // ----------------------------------------------------------------------
     useEffect(() => {
         if (nativeVideoRef.current && isNativeVideo) {
-            // Only apply mute state if video has actually started (user interacted)
-            if (hasActuallyPlayed && !isBlocked) {
+            // Relaxed check: if video is not blocked and we have an intention to sync
+            if (!isBlocked) {
                 nativeVideoRef.current.muted = isMuted;
             }
         }
         if (player) {
             player.muted = isMuted;
         }
-    }, [isMuted, player, isNativeVideo, hasActuallyPlayed, isBlocked]);
+    }, [isMuted, player, isNativeVideo, isBlocked]);
 
     // ----------------------------------------------------------------------
     // RENDER
