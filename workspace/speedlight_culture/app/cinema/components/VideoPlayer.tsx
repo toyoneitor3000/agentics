@@ -31,6 +31,9 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
     const [isInView, setIsInView] = useState(!isFeedMode); // Default true if not feed
     const [player, setPlayer] = useState<any>(null); // Adapter for SDKs
+    const [useNativeControls, setUseNativeControls] = useState(false); // Fallback for blocked scripts
+    const initAttempts = useRef(0);
+
 
     // Refs
     const containerRef = useRef<HTMLDivElement>(null);
@@ -107,16 +110,9 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     // 3. MASTER EFFECT (State -> Action)
     // ----------------------------------------------------------------------
     useEffect(() => {
-        // Direct DOM Force for "De Una" loading
-        if (isInView && nativeVideoRef.current && !cloudflareId && !youtubeId) {
-            const v = nativeVideoRef.current;
-            if (v.paused) v.play().catch(() => { });
-        }
-
         const shouldPlay = isInView && !isUserPaused.current;
         managePlayback(shouldPlay);
-
-    }, [isInView, managePlayback, cloudflareId, youtubeId]);
+    }, [isInView, managePlayback]);
 
 
     // ----------------------------------------------------------------------
@@ -184,9 +180,27 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                 // Sync events
                 sp.addEventListener('ended', () => setIsEnded(true));
                 sp.addEventListener('play', () => setIsEnded(false));
+                return true; // Success
             }
+            return false;
         };
-        const interval = setInterval(init, 500);
+
+        const interval = setInterval(() => {
+            const success = init();
+            if (success) {
+                clearInterval(interval);
+            } else {
+                initAttempts.current += 1;
+                // If script blocked/failed for ~3s (15 * 200ms), fallback to native controls
+                if (initAttempts.current > 15) {
+                    clearInterval(interval);
+                    console.warn("Cloudflare SDK unreachable. Falling back to native controls.");
+                    setUseNativeControls(true);
+                    setIsReady(true); // Hide spinner so user sees play button
+                }
+            }
+        }, 200);
+
         return () => clearInterval(interval);
     }, [cloudflareId, isFeedMode, isMuted]);
 
@@ -208,8 +222,8 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             <Script src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js" />
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=false&playsinline=true&preload=true`}
-                                className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=${isMuted}&controls=${useNativeControls}&playsinline=true&preload=true`}
+                                className={`w-full h-full ${useNativeControls ? 'pointer-events-auto' : 'pointer-events-none'} ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                                 allow="autoplay; encrypted-media"
                             />
                         </>
@@ -226,18 +240,20 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             src={post.videoUrl}
                             poster={post.poster}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
-                            autoPlay
                             loop={isFeedMode}
                             muted={isMuted}
                             playsInline
+                            webkit-playsinline="true"
                             preload="auto"
-                            onLoadedData={(e) => {
+                            onLoadedData={() => {
                                 setIsReady(true);
-                                if (isInView) e.currentTarget.play().catch(() => { });
-                            }}
-                            onPause={() => {
-                                // Auto-resume if system paused it
                                 if (isInView && !isUserPaused.current) managePlayback(true);
+                            }}
+                            onPause={(e) => {
+                                // Only auto-resume if it wasn't a user interaction
+                                if (isInView && !isUserPaused.current && !e.currentTarget.seeking) {
+                                    managePlayback(true);
+                                }
                             }}
                             onEnded={() => setIsEnded(true)}
                         />

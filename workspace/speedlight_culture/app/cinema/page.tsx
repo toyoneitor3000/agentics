@@ -192,11 +192,11 @@ function CinemaSocialContent() {
 
                     <div 
                         ref={socialFeedRef}
-                        className="h-full w-full overflow-y-scroll snap-y snap-mandatory no-scrollbar pt-[0px]"
+                        className="h-full w-full overflow-y-scroll snap-y snap-mandatory snap-always overscroll-contain no-scrollbar pt-[0px]"
                         onMouseMove={resetIdleTimer} onTouchStart={resetIdleTimer} onClick={resetIdleTimer}
                     >
                         {(categories.vertical || []).map((post: any) => (
-                            <div key={post.id} id={`video-${post.id}`} className="w-full h-[100dvh] snap-start relative border-b border-white/5">
+                            <div key={post.id} id={`video-${post.id}`} className="w-full h-full snap-start snap-always relative border-b border-white/5">
                                 <VideoPlayer 
                                     post={post}
                                     isFeedMode={true}
@@ -226,7 +226,50 @@ function CinemaSocialContent() {
                     />
                 </div>
             )}
+            
+            <DebugConsole />
 
+        </div>
+    );
+}
+
+// ----------------------------------------------------------------------
+// DEBUG COMPONENT
+// ----------------------------------------------------------------------
+function DebugConsole() {
+    const [logs, setLogs] = useState<string[]>([]);
+    
+    useEffect(() => {
+        const hook = (method: 'log' | 'warn' | 'error', args: any[]) => {
+            const msg = args.map(a => {
+                if (typeof a === 'string') return a;
+                if (a instanceof Error) return a.message;
+                try { return JSON.stringify(a).substring(0, 100); } catch { return '[Obj]'; }
+            }).join(' ');
+            setLogs(prev => [...prev.slice(-20), `[${method.toUpperCase()}] ${msg}`]);
+        };
+
+        const oldLog = console.log;
+        const oldWarn = console.warn;
+        const oldError = console.error;
+
+        console.log = (...args) => { hook('log', args); oldLog(...args); };
+        console.warn = (...args) => { hook('warn', args); oldWarn(...args); };
+        console.error = (...args) => { hook('error', args); oldError(...args); };
+        
+        window.onerror = (msg) => { hook('error', [String(msg)]); return false; };
+
+        return () => {
+             console.log = oldLog;
+             console.warn = oldWarn;
+             console.error = oldError;
+        }
+    }, []);
+
+    return (
+        <div className="fixed bottom-0 left-0 w-full h-40 bg-black/90 z-[10000] text-[#00ff00] text-[10px] font-mono p-2 overflow-y-auto pointer-events-none opacity-80 border-t border-green-500/30">
+            <div className="text-white bg-green-900/50 px-1 mb-1">DEBUG CONSOLE (Mobile Inspector)</div>
+            {logs.map((l, i) => <div key={i} className="border-b border-white/5 py-0.5">{l}</div>)}
         </div>
     );
 }
