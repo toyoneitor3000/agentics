@@ -8,6 +8,8 @@ interface UiContextType {
     isBottomNavVisible: boolean;
     isSocialMode: boolean;
     setIsSocialMode: (value: boolean) => void;
+    showDebugConsole: boolean;
+    toggleDebugConsole: (value: boolean) => void;
     resetIdleTimer: () => void;
     toggleUiVisibility: () => void;
     autoHideMode: 'always' | 'cinema-only' | 'never';
@@ -21,6 +23,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isUiVisible, setIsUiVisible] = useState(true);
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
     const [isSocialMode, setIsSocialMode] = useState(false);
+    const [showDebugConsole, setShowDebugConsole] = useState(true);
 
     const [isManuallyHidden, setIsManuallyHidden] = useState(false);
     const isManuallyHiddenRef = useRef(false); // Ref to access current value in event listeners
@@ -39,8 +42,11 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const savedMode = localStorage.getItem('autoHideMode');
         const savedDuration = localStorage.getItem('autoHideDuration');
+        const savedDebug = localStorage.getItem('showDebugConsole');
+
         if (savedMode) setAutoHideMode(savedMode as any);
         if (savedDuration) setAutoHideDuration(parseInt(savedDuration));
+        if (savedDebug !== null) setShowDebugConsole(savedDebug === 'true');
     }, []);
 
     const updateSettings = (mode: 'always' | 'cinema-only' | 'never', duration: number) => {
@@ -49,6 +55,11 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('autoHideMode', mode);
         localStorage.setItem('autoHideDuration', duration.toString());
         resetIdleTimer();
+    };
+
+    const toggleDebugConsole = (value: boolean) => {
+        setShowDebugConsole(value);
+        localStorage.setItem('showDebugConsole', String(value));
     };
 
     const toggleUiVisibility = () => {
@@ -126,7 +137,9 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
             toggleUiVisibility,
             autoHideMode,
             autoHideDuration,
-            updateSettings
+            updateSettings,
+            showDebugConsole,
+            toggleDebugConsole
         }}>
             {children}
         </UiContext.Provider>

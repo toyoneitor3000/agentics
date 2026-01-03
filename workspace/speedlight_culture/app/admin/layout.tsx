@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { User, Database, Megaphone } from "lucide-react";
+import { User, Database, Megaphone, Settings } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
@@ -62,6 +62,10 @@ export default async function AdminLayout({
                     <Link href="/admin/data" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-[#BCAAA4] hover:text-white transition-colors group">
                         <Database className="w-5 h-5 group-hover:text-[#FF9800] transition-colors" />
                         <span className="font-bold text-sm tracking-wide">Base de Datos</span>
+                    </Link>
+                    <Link href="/admin/settings" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-[#BCAAA4] hover:text-white transition-colors group">
+                        <Settings className="w-5 h-5 group-hover:text-[#FF9800] transition-colors" />
+                        <span className="font-bold text-sm tracking-wide">Configuración</span>
                     </Link>
                 </nav>
 

@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Database, ShieldCheck, Server, Globe } from "lucide-react";
+import { Database, ShieldCheck, Server, Globe, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useUi } from "@/app/context/UiContext";
 
 type StatusData = {
     status: 'operational' | 'degraded' | 'outage' | 'maintenance';
@@ -18,6 +19,7 @@ export default function SystemStatus() {
     const [data, setData] = useState<StatusData | null>(null);
     const [loading, setLoading] = useState(true);
     const [isHovered, setIsHovered] = useState(false);
+    const { showDebugConsole, toggleDebugConsole } = useUi();
 
     useEffect(() => {
         const checkStatus = async () => {
@@ -44,6 +46,8 @@ export default function SystemStatus() {
         const interval = setInterval(checkStatus, 60000);
         return () => clearInterval(interval);
     }, []);
+
+    if (!showDebugConsole) return null;
 
     if (loading || !data) {
         return (
@@ -109,7 +113,19 @@ export default function SystemStatus() {
                     >
                         <h4 className="border-b border-white/10 pb-2 mb-2 font-bold text-white flex justify-between items-center">
                             SYSTEM HEALTH
-                            <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">{data.region}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-white/50">{data.region}</span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleDebugConsole(false);
+                                    }}
+                                    className="text-white/50 hover:text-red-500 transition-colors p-1"
+                                    title="Close Debug Console"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
                         </h4>
 
                         <div className="space-y-2">
