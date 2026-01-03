@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:fix-founders": "node fix_founder_numbers.js"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

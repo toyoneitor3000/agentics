@@ -118,10 +118,10 @@ export default function EditProfilePage() {
     if (loading) return <div className="min-h-screen bg-[#050505] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" /></div>;
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white">
+        <div className="min-h-screen bg-[#050505] text-white pt-[100px]">
             <div className="max-w-xl mx-auto pb-20">
                 {/* Header */}
-                <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-md border-b border-[#222] px-4 py-4 flex items-center justify-between">
+                <header className="sticky top-[60px] z-40 bg-[#050505]/80 backdrop-blur-md border-b border-[#222] px-4 py-4 flex items-center justify-between">
                     <Link href="/profile" className="p-2 -ml-2 text-white/60 hover:text-white">
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
