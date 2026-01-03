@@ -234,7 +234,7 @@ export default function AppHeader() {
                                 <div className="flex flex-col items-end hidden md:flex">
                                     <span className="text-xs font-bold uppercase tracking-wider">{user.name?.split(' ')[0]}</span>
                                     {/* Badge in Header */}
-                                    <UserBadge role={userRole || 'user'} size="sm" showLabel={true} />
+                                    <UserBadge role={userRole || 'user'} size="sm" />
                                 </div>
                                 {user.image ? (
                                     <div className="w-9 h-9 rounded-xl border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">

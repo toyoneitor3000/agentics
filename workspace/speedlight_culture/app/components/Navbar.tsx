@@ -157,7 +157,7 @@ export default function Navbar() {
                                         <div className="p-4 border-b border-white/5 bg-white/5">
                                             <p className="text-xs text-[#8D6E63] uppercase tracking-wider mb-1 flex items-center justify-between">
                                                 Conectado como
-                                                <UserBadge role={userRole || 'user'} size="sm" showLabel={true} />
+                                                <UserBadge role={userRole || 'user'} size="sm" />
                                             </p>
                                             <p className="text-sm font-bold text-white truncate">{user.name || user.email}</p>
                                         </div>

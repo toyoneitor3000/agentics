@@ -74,7 +74,7 @@ export function UserBadge({ role, founderNumber, email, size = 'sm', showLabel =
             {badges.map(b => (
                 <div
                     key={b.id}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1rounded border rounded-full backdrop-blur-md ${b.style} ${size === 'sm' ? 'text-[9px] py-0.5 px-2' : 'text-[10px] py-1 px-3'}`}
+                    className={`inline-flex items-center gap-1.5 border rounded-full backdrop-blur-md ${b.style} ${size === 'sm' ? 'text-[9px] py-0.5 px-2' : 'text-[10px] py-1 px-3'}`}
                 >
                     <b.icon className={size === 'sm' ? "w-2.5 h-2.5" : "w-3 h-3"} />
                     {showLabel && <span className="font-bold uppercase tracking-wider">{b.label}</span>}
