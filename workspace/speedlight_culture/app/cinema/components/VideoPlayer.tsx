@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react';
 import Script from 'next/script';
-
+import Image from 'next/image';
 import { VolumeX, Volume2, Play } from "lucide-react";
 import { useUi } from '@/app/context/UiContext';
 
@@ -58,6 +58,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     // === DERIVED ===
     const cloudflareId = getCloudflareId(post.videoUrl || '');
     const youtubeId = getYoutubeId(post.videoUrl || '');
+    const posterUrl = post.poster || post.thumbnail_url || null;
     const isNativeVideo = !cloudflareId && !youtubeId;
 
     // Log video info on first render
@@ -372,6 +373,23 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             onClick={handleTap}
             onContextMenu={(e) => e.preventDefault()}
         >
+            {/* === POSTER LAYER (Native Videos Only) === */}
+            {/* Shows while loading/buffering to prevent black screen */}
+            {isNativeVideo && posterUrl && (
+                <div
+                    className={`absolute inset-0 z-[5] transition-opacity duration-500 pointer-events-none ${hasActuallyPlayed ? 'opacity-0' : 'opacity-100'
+                        }`}
+                >
+                    <Image
+                        src={posterUrl}
+                        alt="Video Thumbnail"
+                        fill
+                        className={`w-full h-full ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                        priority={isInView} // Prioritize loading if in view
+                    />
+                </div>
+            )}
+
             {/* === VIDEO LAYER === */}
             {isInView && (
                 <>
@@ -398,7 +416,8 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                         <video
                             ref={nativeVideoRef}
                             src={post.videoUrl}
-                            poster={post.poster || post.thumbnail_url}
+                            // Keep native poster as backup, but our custom layer does the real job
+                            poster={posterUrl}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             autoPlay
                             loop={isFeedMode}
