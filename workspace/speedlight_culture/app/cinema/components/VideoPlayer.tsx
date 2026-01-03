@@ -30,6 +30,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     const [isEnded, setIsEnded] = useState(false);
     const [showActionIcon, setShowActionIcon] = useState<string | null>(null);
     const [isInView, setIsInView] = useState(!isFeedMode); // Default true if not feed
+    const [isBlocked, setIsBlocked] = useState(false); // New: Track if autoplay was blocked
     const [player, setPlayer] = useState<any>(null); // Adapter for SDKs
     const [useNativeControls, setUseNativeControls] = useState(false); // Fallback for blocked scripts
     const initAttempts = useRef(0);
@@ -64,11 +65,26 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
             if (v.paused) {
                 try {
                     await v.play();
+                    setIsBlocked(false);
                 } catch (e) {
+                    // Critical: AbortError or NotAllowedError means user MUST interact
                     console.warn("Native Play Blocked", e);
+
+                    // Fallback Attempt: Mute and Play
                     if (!v.muted) {
                         v.muted = true;
-                        try { await v.play(); } catch (err) { }
+                        try {
+                            await v.play();
+                            setIsBlocked(false);
+                            setIsReady(true);
+                        } catch (err) { // Completely blocked
+                            setIsBlocked(true);
+                            setIsReady(true); // Stop spinner
+                        }
+                    } else {
+                        // Already muted and still blocked
+                        setIsBlocked(true);
+                        setIsReady(true); // Stop spinner
                     }
                 }
             }
@@ -240,6 +256,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             src={post.videoUrl}
                             poster={post.poster}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
+                            autoPlay
                             loop={isFeedMode}
                             muted={isMuted}
                             playsInline
@@ -247,6 +264,7 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                             preload="auto"
                             onLoadedData={() => {
                                 setIsReady(true);
+                                // Try playing, if it fails managePlayback will catch it and set isBlocked
                                 if (isInView && !isUserPaused.current) managePlayback(true);
                             }}
                             onPause={(e) => {
@@ -273,10 +291,19 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
                 </div>
             )}
 
-            {/* LOADING SPINNER (Failsafe for stalled vids) */}
-            {!isReady && isInView && (
+            {/* LOADING SPINNER */}
+            {!isReady && isInView && !isBlocked && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/20 pointer-events-none">
                     <div className="w-8 h-8 border-2 border-white/20 border-t-[#FF9800] rounded-full animate-spin" />
+                </div>
+            )}
+
+            {/* BLOCKED/MANUAL PLAY BUTTON (Low Power Mode Fix) */}
+            {isBlocked && isInView && (
+                <div className="absolute inset-0 flex items-center justify-center z-20 bg-black/20 cursor-pointer animate-in fade-in zoom-in-50">
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center border border-white/30 hover:scale-110 transition-transform">
+                        <div className="w-0 h-0 border-t-[12px] border-t-transparent border-l-[24px] border-l-white border-b-[12px] border-b-transparent ml-2" />
+                    </div>
                 </div>
             )}
 
