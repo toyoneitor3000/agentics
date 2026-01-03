@@ -153,22 +153,27 @@ export function VideoPlayer({ post, isFeedMode, isMuted, toggleMute, onView }: a
     // 3. VISIBILITY OBSERVER
     // ----------------------------------------------------------------------
     useEffect(() => {
-        if (!isFeedMode || !containerRef.current) return;
+        if (!isFeedMode || !containerRef.current) {
+            console.log('[VideoPlayer] Observer skip - not feed mode or no container');
+            return;
+        }
+
+        console.log('[VideoPlayer] Setting up IntersectionObserver');
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const isVisible = entry.isIntersecting;
+                console.log('[VideoPlayer] Visibility changed:', isVisible, 'ratio:', entry.intersectionRatio.toFixed(2));
                 setIsInView(isVisible);
 
                 if (isVisible) {
                     if (onView) onView();
                 } else {
-                    // Reset states when scrolling away so poster shows again on return
                     setHasActuallyPlayed(false);
                     setIsBlocked(false);
                 }
             });
-        }, { threshold: 0.6 }); // Slightly higher threshold for better UX
+        }, { threshold: 0.3 }); // Lower threshold for easier triggering
 
         observer.observe(containerRef.current);
         return () => observer.disconnect();
