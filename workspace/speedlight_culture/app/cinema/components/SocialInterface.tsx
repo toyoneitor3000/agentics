@@ -347,7 +347,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                 title={`¿Dejar de seguir a ${post.creator}?`}
                 message="Dejarás de ver su contenido en tu feed de seguidos."
                 confirmText="Dejar de seguir"
-                variant="danger"
+                variant="info"
             />
 
         </div >
