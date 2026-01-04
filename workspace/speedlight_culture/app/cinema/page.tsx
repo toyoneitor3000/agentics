@@ -27,6 +27,7 @@ function CinemaSocialContent() {
     const [activeMovie, setActiveMovie] = useState<any>(null); // For Cinema Modal
     const [activeSocialPost, setActiveSocialPost] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const initialScrollRef = useRef(false); // To prevent scroll loop
 
 
     // Context
@@ -93,12 +94,16 @@ function CinemaSocialContent() {
     }, []);
 
     // Scroll to Video (Deep Link)
+    // Scroll to Video (Deep Link) - PROTECTED FROM LOOPS
     useEffect(() => {
-        if (videoIdParam && viewMode === 'social' && !isLoading) {
-            setTimeout(() => {
-                const el = document.getElementById(`video-${videoIdParam}`);
-                if (el) el.scrollIntoView({ behavior: 'auto' });
-            }, 500);
+        if (viewMode === 'social' && !isLoading && !initialScrollRef.current) {
+            if (videoIdParam) {
+                setTimeout(() => {
+                    const el = document.getElementById(`video-${videoIdParam}`);
+                    if (el) el.scrollIntoView({ behavior: 'auto' });
+                }, 500);
+            }
+            initialScrollRef.current = true;
         }
     }, [videoIdParam, viewMode, isLoading]);
 
@@ -148,6 +153,17 @@ function CinemaSocialContent() {
         window.addEventListener('keydown', handleKey);
         return () => window.removeEventListener('keydown', handleKey);
     }, [viewMode]);
+
+    // Auto-Scroll Handler
+    const handleVideoEnd = (currentId: string) => {
+        if (!categories.vertical) return;
+        const idx = categories.vertical.findIndex((p: any) => p.id === currentId);
+        if (idx !== -1 && idx < categories.vertical.length - 1) {
+            const nextPost = categories.vertical[idx + 1];
+            const el = document.getElementById(`video-${nextPost.id}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
 
 
     return (
@@ -230,6 +246,7 @@ function CinemaSocialContent() {
                                     isActive={activeSocialPost?.id === post.id}
                                     isMuted={isMuted}
                                     toggleMute={() => setIsMuted(!isMuted)}
+                                    onVideoEnd={() => handleVideoEnd(post.id)}
                                 />
                             </div>
                         ))}

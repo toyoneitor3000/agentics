@@ -22,8 +22,8 @@ const getYoutubeId = (url: string) => {
 };
 
 // --- COMPONENT ---
-export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }: any) {
-    const { toggleUiVisibility, resetIdleTimer, isUiVisible } = useUi();
+export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, onVideoEnd }: any) {
+    const { toggleUiVisibility, resetIdleTimer, isUiVisible, autoScrollEnabled } = useUi();
 
     // === STATE ===
     // `hasActuallyPlayed` is THE KEY: Only true when video.currentTime > 0.1
@@ -283,7 +283,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                 try {
                     const sp = streamSdk(iframeRef.current);
                     sp.muted = true;
-                    sp.loop = isFeedMode;
+                    sp.loop = isFeedMode && !autoScrollEnabled;
                     setPlayer(sp);
 
                     console.log('[VideoPlayer] Stream player created');
@@ -299,7 +299,10 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                         setIsBlocked(true);
                     });
 
-                    sp.addEventListener('ended', () => setIsEnded(true));
+                    sp.addEventListener('ended', () => {
+                        setIsEnded(true);
+                        if (autoScrollEnabled && onVideoEnd) onVideoEnd();
+                    });
                     sp.addEventListener('play', () => setIsEnded(false));
 
                     sp.addEventListener('loadstart', () => {
@@ -374,7 +377,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                             <Script src="https://embed.cloudflarestream.com/embed/r4xu.fla9.latest.js" />
                             <iframe
                                 ref={iframeRef}
-                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode}&muted=true&controls=${useNativeControls}&playsinline=true&preload=auto`}
+                                src={`https://iframe.videodelivery.net/${cloudflareId}?autoplay=true&loop=${isFeedMode && !autoScrollEnabled}&muted=true&controls=${useNativeControls}&playsinline=true&preload=auto`}
                                 className={`w-full h-full ${useNativeControls ? 'pointer-events-auto' : 'pointer-events-none'} ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                                 allow="autoplay; encrypted-media; picture-in-picture"
                                 allowFullScreen
@@ -396,7 +399,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                             poster={posterUrl}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             autoPlay
-                            loop={isFeedMode}
+                            loop={isFeedMode && !autoScrollEnabled}
                             muted
                             playsInline
                             webkit-playsinline="true"
@@ -427,7 +430,10 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute }:
                                 console.error('[VideoPlayer] error:', e.currentTarget.error?.message);
                                 setIsBlocked(true);
                             }}
-                            onEnded={() => setIsEnded(true)}
+                            onEnded={() => {
+                                setIsEnded(true);
+                                if (autoScrollEnabled && onVideoEnd) onVideoEnd();
+                            }}
                         />
                     )}
                 </>

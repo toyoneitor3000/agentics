@@ -5,8 +5,9 @@ import Image from 'next/image';
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Gift,
     Volume2, VolumeX, Maximize2, Bookmark, Send,
-    Pencil, Archive, Trash2, X
+    Pencil, Archive, Trash2, X, ArrowDownCircle
 } from "lucide-react";
+import { useUi } from '@/app/context/UiContext';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from '@/app/lib/auth-client';
 import { toggleLike, archiveVideo, deleteVideo, updateVideoMetadata } from '@/app/actions/cinema';
@@ -348,6 +349,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
 
 function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: boolean, onSave: (e: any) => void, onShare: (e: any) => void }) {
     const { data: session } = useSession();
+    const { autoScrollEnabled, toggleAutoScroll } = useUi();
     const [isOpen, setIsOpen] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [confirmArchive, setConfirmArchive] = useState(false);
@@ -393,8 +395,19 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
                             initial={{ opacity: 0, scale: 0.8, x: 20 }}
                             animate={{ opacity: 1, scale: 1, x: 0 }}
                             exit={{ opacity: 0, scale: 0.8, x: 20 }}
-                            className="absolute bottom-full right-0 mb-2 w-48 bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50 py-1"
+                            className="absolute bottom-full right-0 mb-2 w-56 bg-[#111] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50 py-1"
                         >
+                            <div className="px-4 py-3 flex items-center justify-between border-b border-white/5">
+                                <span className="text-sm font-bold text-white flex items-center gap-2">
+                                    <ArrowDownCircle className="w-4 h-4 text-[#FF9800]" /> Auto-Scroll
+                                </span>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); toggleAutoScroll(!autoScrollEnabled); }}
+                                    className={`w-10 h-5 rounded-full p-1 transition-colors relative ${autoScrollEnabled ? 'bg-[#FF9800]' : 'bg-white/10'}`}
+                                >
+                                    <div className={`w-3 h-3 bg-white rounded-full shadow-md transition-transform ${autoScrollEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
+                                </button>
+                            </div>
                             <button
                                 onClick={onSave}
                                 className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors"

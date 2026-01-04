@@ -15,6 +15,8 @@ interface UiContextType {
     autoHideMode: 'always' | 'cinema-only' | 'never';
     autoHideDuration: number;
     updateSettings: (mode: 'always' | 'cinema-only' | 'never', duration: number) => void;
+    autoScrollEnabled: boolean;
+    toggleAutoScroll: (value: boolean) => void;
 }
 
 const UiContext = createContext<UiContextType | undefined>(undefined);
@@ -24,6 +26,7 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
     const [isSocialMode, setIsSocialMode] = useState(false);
     const [showDebugConsole, setShowDebugConsole] = useState(false);
+    const [autoScrollEnabled, setAutoScrollEnabled] = useState(false);
 
     const [isManuallyHidden, setIsManuallyHidden] = useState(false);
     const isManuallyHiddenRef = useRef(false); // Ref to access current value in event listeners
@@ -52,6 +55,9 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
             setShowDebugConsole(false);
         }
 
+        const savedAutoScroll = localStorage.getItem('autoScrollEnabled');
+        if (savedAutoScroll) setAutoScrollEnabled(savedAutoScroll === 'true');
+
     }, []);
 
     const updateSettings = (mode: 'always' | 'cinema-only' | 'never', duration: number) => {
@@ -65,6 +71,11 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
     const toggleDebugConsole = (value: boolean) => {
         setShowDebugConsole(value);
         localStorage.setItem('showDebugConsole', String(value));
+    };
+
+    const toggleAutoScroll = (value: boolean) => {
+        setAutoScrollEnabled(value);
+        localStorage.setItem('autoScrollEnabled', String(value));
     };
 
     const toggleUiVisibility = () => {
@@ -144,7 +155,9 @@ export function UiProvider({ children }: { children: React.ReactNode }) {
             autoHideDuration,
             updateSettings,
             showDebugConsole,
-            toggleDebugConsole
+            toggleDebugConsole,
+            autoScrollEnabled,
+            toggleAutoScroll
         }}>
             {children}
         </UiContext.Provider>
