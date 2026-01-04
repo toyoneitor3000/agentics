@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Gift,
-    Volume2, VolumeX, Maximize2, Bookmark, Send,
+    Volume2, VolumeX, Bookmark, Send,
     Pencil, Archive, Trash2, X, ArrowDownCircle
 } from "lucide-react";
 import { useUi } from '@/app/context/UiContext';
@@ -155,14 +155,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                                 {following ? 'Siguiendo' : 'Seguir'}
                             </button>
 
-                            {/* HIDE UI BUTTON (YouTube Style) */}
-                            <button
-                                onClick={(e) => { e.stopPropagation(); if (toggleUiVisibility) toggleUiVisibility(); }}
-                                className="w-8 h-6 border border-white/40 rounded flex items-center justify-center hover:bg-white/10 hover:border-white transition-colors"
-                                title="Modo Inmersivo"
-                            >
-                                <Maximize2 className="w-3.5 h-3.5 text-white rotate-90" />
-                            </button>
+
                         </div>
                     </div>
                     <h2 className="text-white font-bold text-base leading-tight mb-2 drop-shadow-lg line-clamp-2">{post.title}</h2>

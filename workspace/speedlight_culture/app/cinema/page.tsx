@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, Suspense } from 'react';
-import { Plus, Gamepad2, ChevronDown, Play } from "lucide-react";
+import { Gamepad2, ChevronDown, Play, Maximize2 } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -172,6 +172,16 @@ function CinemaSocialContent() {
             {/* HEADER TOGGLE */}
             <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-full px-4 flex items-center justify-between py-2 relative">
+                    {/* LEFT: EXPAND SCREEN */}
+                    <div className="flex items-center">
+                        <button
+                            onClick={toggleUiVisibility}
+                            className="w-9 h-9 flex items-center justify-center bg-white/5 rounded-full hover:bg-white/20 transition-colors text-white"
+                        >
+                            <Maximize2 className="w-4 h-4" />
+                        </button>
+                    </div>
+
                     <div className="absolute left-1/2 -translate-x-1/2">
                         <div className="flex items-center bg-white/5 backdrop-blur-xl border border-white/10 rounded-full p-[3px] shadow-2xl">
                             <button onClick={() => setViewMode('social')} className={`px-4 py-1 rounded-full text-[9px] font-bold uppercase ${viewMode === 'social' ? 'bg-white text-black' : 'text-white/40'}`}>Social</button>
@@ -180,7 +190,6 @@ function CinemaSocialContent() {
                     </div>
                     <div className="ml-auto flex items-center gap-4">
                         {isGamepadConnected && <Gamepad2 className="w-4 h-4 text-[#FF9800] animate-pulse" />}
-                        <Link href="/cinema/upload" className="w-9 h-9 flex items-center justify-center bg-white/5 rounded-full hover:bg-[#FF9800] transition-colors"><Plus className="w-4 h-4" /></Link>
                     </div>
                 </div>
             </div>
