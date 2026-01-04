@@ -64,16 +64,22 @@ export default async function ProfilePage() {
         supabase.from('projects').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('gallery_albums').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('events').select('*').eq('created_by', user.id).order('date', { ascending: true }),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
+        supabase.from('follows').select('follower_id').eq('following_id', user.id),
+        supabase.from('follows').select('following_id').eq('follower_id', user.id),
         supabase.from('likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
         supabase.from('cinema_videos').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('cinema_likes').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
     ]);
 
+    const followers = followersRes.data?.map(f => f.follower_id) || [];
+    const following = followingRes.data?.map(f => f.following_id) || [];
+    const followersSet = new Set(followers);
+    const friendsCount = following.filter(id => followersSet.has(id)).length;
+
     const stats = {
-        followers: followersRes.count || 0,
-        following: followingRes.count || 0,
+        followers: followers.length,
+        following: following.length,
+        friends: friendsCount,
         likes_given: (likesRes.count || 0) + (cinemaLikesRes.count || 0),
         xp: profile?.xp || 0,
         level: profile?.level || 1,

@@ -19,6 +19,7 @@ interface ProfileProps {
     stats: {
         followers: number;
         following: number;
+        friends?: number;
         likes_given: number;
         xp: number;
         level: number;
@@ -47,7 +48,8 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
     const [isBulkActionLoading, setIsBulkActionLoading] = useState(false);
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [editingVideo, setEditingVideo] = useState<any>(null);
-    const [openFollowList, setOpenFollowList] = useState<'followers' | 'following' | null>(null);
+
+    const [openFollowList, setOpenFollowList] = useState<'followers' | 'following' | 'friends' | null>(null);
 
     // Helper to map tab to DB table
     const getContentType = (tab: TabType): 'projects' | 'gallery_albums' | 'events' | 'cinema_videos' | null => {
@@ -371,15 +373,15 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
                     {/* 3. STATS BAR (Refined - Followers Clickable, Likes, XP) */}
                     <div className="grid grid-cols-3 divide-x divide-white/10 w-full max-w-xs mx-auto mb-8 border-t border-b border-white/5 py-3 bg-white/[0.02] rounded-xl">
                         <button
-                            onClick={() => setOpenFollowList('followers')}
+                            onClick={() => isOwnProfile && setOpenFollowList('followers')}
                             className="flex flex-col items-center hover:bg-white/5 transition-colors rounded-lg -mx-1 py-1 cursor-pointer"
                         >
                             <span className="text-lg font-bold text-white">{stats.followers}</span>
                             <span className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Seguidores</span>
                         </button>
-                        <div className="flex flex-col items-center py-1">
-                            <span className="text-lg font-bold text-white">{stats.likes_given}</span>
-                            <span className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Likes</span>
+                        <div className="flex flex-col items-center py-1 cursor-pointer hover:bg-white/5 transition-colors rounded-lg -mx-1" onClick={() => isOwnProfile && setOpenFollowList('friends')}>
+                            <span className="text-lg font-bold text-white">{stats.friends ?? 0}</span>
+                            <span className="text-[9px] text-white/40 uppercase tracking-widest mt-0.5">Amigos</span>
                         </div>
                         <div className="flex flex-col items-center py-1">
                             <span className="text-lg font-bold text-[#FF9800]">{stats.xp}K</span>

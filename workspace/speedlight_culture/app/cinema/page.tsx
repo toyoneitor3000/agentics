@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState, Suspense } from 'react';
-import { Gamepad2, ChevronDown, Play, Maximize2 } from "lucide-react";
+import { Gamepad2, ChevronDown, Play, Maximize, Volume2, VolumeX } from "lucide-react";
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -171,14 +171,15 @@ function CinemaSocialContent() {
 
             {/* HEADER TOGGLE */}
             <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
-                <div className="w-full px-4 flex items-center justify-between py-2 relative">
+                <div className="w-full px-2 flex items-center justify-between py-2 relative">
                     {/* LEFT: EXPAND SCREEN */}
                     <div className="flex items-center">
                         <button
                             onClick={toggleUiVisibility}
-                            className="w-9 h-9 flex items-center justify-center bg-white/5 rounded-full hover:bg-white/20 transition-colors text-white"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-all"
+                            title="Modo Inmersivo"
                         >
-                            <Maximize2 className="w-4 h-4" />
+                            <Maximize className="w-5 h-5" />
                         </button>
                     </div>
 
@@ -190,6 +191,12 @@ function CinemaSocialContent() {
                     </div>
                     <div className="ml-auto flex items-center gap-4">
                         {isGamepadConnected && <Gamepad2 className="w-4 h-4 text-[#FF9800] animate-pulse" />}
+                        <button
+                            onClick={() => setIsMuted(!isMuted)}
+                            className="w-8 h-8 rounded-xl flex items-center justify-center bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-all"
+                        >
+                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                        </button>
                     </div>
                 </div>
             </div>

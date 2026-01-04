@@ -35,13 +35,20 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     }
 
     // 2. Fetch Content (Projects, Albums, Events, Followers, Videos)
-    const [projectsRes, albumsRes, eventsRes, followersRes, videosRes] = await Promise.all([
+    const [projectsRes, albumsRes, eventsRes, followersRes, followingRes, videosRes] = await Promise.all([
         supabase.from('projects').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         supabase.from('gallery_albums').select('*').eq('user_id', id).order('created_at', { ascending: false }),
         supabase.from('events').select('*').eq('created_by', id).order('date', { ascending: true }),
-        supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', id),
+        supabase.from('follows').select('follower_id').eq('following_id', id),
+        supabase.from('follows').select('following_id').eq('follower_id', id),
         supabase.from('cinema_videos').select('*').eq('user_id', id).eq('status', 'approved').order('created_at', { ascending: false })
     ]);
+
+    // Calculate Friends (Mutual)
+    const followers = followersRes.data?.map(f => f.follower_id) || [];
+    const following = followingRes.data?.map(f => f.following_id) || [];
+    const followersSet = new Set(followers);
+    const friendsCount = following.filter(id => followersSet.has(id)).length;
 
     // 3. Calculate Total Likes Received on User's Projects
     const projects = projectsRes.data || [];
@@ -57,9 +64,10 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     }
 
     const stats = {
-        followers: followersRes.count || 0,
-        following: 0, // Hidden per design
-        likes_given: totalLikesReceived, // Mapping to "likes_given" prop which displays "Likes"
+        followers: followers.length,
+        following: following.length,
+        friends: friendsCount,
+        likes_given: totalLikesReceived,
         xp: profile.xp || 0,
         level: profile.level || 1,
         join_date: new Date(profile.created_at || Date.now()).toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })

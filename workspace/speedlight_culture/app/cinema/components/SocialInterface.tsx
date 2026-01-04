@@ -4,7 +4,7 @@ import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Gift,
-    Volume2, VolumeX, Bookmark, Send,
+    Bookmark, Send,
     Pencil, Archive, Trash2, X, ArrowDownCircle
 } from "lucide-react";
 import { useUi } from '@/app/context/UiContext';
@@ -33,6 +33,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
     // NEW: Comments & Gifting State
     const [showComments, setShowComments] = useState(false);
     const [showGifting, setShowGifting] = useState(false);
+    const [showUnfollowModal, setShowUnfollowModal] = useState(false);
 
     // NEW: Text Expansion State
     const [expanded, setExpanded] = useState(false);
@@ -62,10 +63,18 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
         setFollowing(post.isFollowing);
     }, [post.liked_by_user, post.likes, post.isFollowing]);
 
-    const handleFollow = (e: any) => {
+    const handleFollowClick = (e: any) => {
         e.stopPropagation();
         if (!post.creatorId) return;
 
+        if (following) {
+            setShowUnfollowModal(true);
+        } else {
+            executeFollowToggle();
+        }
+    };
+
+    const executeFollowToggle = () => {
         const newState = !following;
         setFollowing(newState); // Optimistic
 
@@ -136,7 +145,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                 {/* LEFT: INFO */}
                 <div className="flex-1 mr-12 pointer-events-auto text-shadow-sm">
                     <div className="flex items-center mb-1">
-                        <div className="w-8 h-8 rounded-full bg-neutral-800 border-2 border-white overflow-hidden relative mr-2 shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-neutral-800 border-2 border-black/70 overflow-hidden relative mr-2 shrink-0">
                             {post.avatar ? <Image src={post.avatar} alt="u" fill className="object-cover" /> : null}
                         </div>
                         <span className="font-bold text-sm text-white drop-shadow-md truncate max-w-[120px] mr-3">
@@ -145,10 +154,10 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
 
                         <div className="flex items-center gap-2">
                             <button
-                                onClick={handleFollow}
+                                onClick={handleFollowClick}
                                 disabled={isPending}
                                 className={`px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all ${following
-                                    ? 'bg-white text-black border-white hover:bg-white/90'
+                                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-500/40'
                                     : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
                                     }`}
                             >
@@ -210,42 +219,33 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                 {/* RIGHT: ACTIONS SIDEBAR */}
                 <div className="flex flex-col items-center gap-4 pointer-events-auto pr-1">
 
-                    {/* MUTE TOGGLE (Added for Visibility) */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleMute(); }}
-                        className="flex flex-col items-center gap-1 group mb-2"
-                    >
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 border border-white/10 ${isMuted ? 'bg-black/40 text-white/70' : 'bg-white/20 text-white backdrop-blur-md'}`}>
-                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">{isMuted ? 'Audio Off' : 'Audio On'}</span>
-                    </button>
+
 
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 scale-110' : 'bg-black/20 text-white hover:bg-black/40'}`}>
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-black/20 backdrop-blur-md text-white hover:bg-black/40'}`}>
                             <Heart className={`w-5 h-5 ${liked ? 'fill-current' : ''}`} />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(likeCount)}</span>
                     </button>
 
-                    {/* COMMENT (UPDATED WITH CLICK HANDLER) */}
+                    {/* COMMENT */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
                         className="flex flex-col items-center gap-1 group"
                     >
-                        <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                        <div className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all">
                             <MessageCircle className="w-5 h-5" />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">{formatNumber(commentCount)}</span>
                     </button>
 
-                    {/* GIFT (NEW - FUNCTIONAL) */}
+                    {/* GIFT */}
                     <button
                         onClick={(e) => { e.stopPropagation(); setShowGifting(true); }}
                         className="flex flex-col items-center gap-1 group"
                     >
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-[#FF9800] bg-black/20 hover:bg-[#FF9800]/20 transition-all">
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[#FF9800] bg-black/20 backdrop-blur-md hover:bg-[#FF9800]/20 transition-all">
                             <Gift className="w-5 h-5" />
                         </div>
                         <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
@@ -336,6 +336,20 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                 )}
             </AnimatePresence>
 
+            {/* CONFIRM UNFOLLOW MODAL */}
+            <ConfirmModal
+                isOpen={showUnfollowModal}
+                onClose={() => setShowUnfollowModal(false)}
+                onConfirm={() => {
+                    executeFollowToggle();
+                    setShowUnfollowModal(false);
+                }}
+                title={`¿Dejar de seguir a ${post.creator}?`}
+                message="Dejarás de ver su contenido en tu feed de seguidos."
+                confirmText="Dejar de seguir"
+                variant="danger"
+            />
+
         </div >
     );
 }
@@ -375,7 +389,7 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
                 onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
                 className="flex flex-col items-center gap-1 group"
             >
-                <div className="w-9 h-9 rounded-full bg-black/20 flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                <div className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all">
                     <MoreHorizontal className="w-5 h-5" />
                 </div>
             </button>

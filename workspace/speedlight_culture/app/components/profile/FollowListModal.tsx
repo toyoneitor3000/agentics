@@ -9,7 +9,7 @@ import { UserBadge } from "../UserBadge";
 
 interface FollowListModalProps {
     userId: string;
-    type: 'followers' | 'following';
+    type: 'followers' | 'following' | 'friends';
     onClose: () => void;
 }
 
@@ -23,35 +23,67 @@ export default function FollowListModal({ userId, type, onClose }: FollowListMod
             setLoading(true);
             let data: any[] = [];
 
-            // 2-step query to avoid complex join issues
-            if (type === 'followers') {
-                const { data: follows } = await supabase
-                    .from('follows')
-                    .select('follower_id')
-                    .eq('following_id', userId);
+            try {
+                if (type === 'friends') {
+                    // Mutual followers
+                    // 1. Get who follows me
+                    const { data: followers } = await supabase
+                        .from('follows')
+                        .select('follower_id')
+                        .eq('following_id', userId);
 
-                const ids = follows?.map(f => f.follower_id) || [];
-                if (ids.length > 0) {
-                    const { data: profiles } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .in('id', ids);
-                    data = profiles || [];
-                }
-            } else {
-                const { data: follows } = await supabase
-                    .from('follows')
-                    .select('following_id')
-                    .eq('follower_id', userId);
+                    const followerIds = new Set(followers?.map(f => f.follower_id) || []);
 
-                const ids = follows?.map(f => f.following_id) || [];
-                if (ids.length > 0) {
-                    const { data: profiles } = await supabase
-                        .from('profiles')
-                        .select('*')
-                        .in('id', ids);
-                    data = profiles || [];
+                    // 2. Get who I follow
+                    const { data: following } = await supabase
+                        .from('follows')
+                        .select('following_id')
+                        .eq('follower_id', userId);
+
+                    // 3. Find intersection
+                    const friendIds = following
+                        ?.map(f => f.following_id)
+                        .filter(id => followerIds.has(id)) || [];
+
+                    if (friendIds.length > 0) {
+                        const { data: profiles } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .in('id', friendIds);
+                        data = profiles || [];
+                    }
+
+                } else if (type === 'followers') {
+                    const { data: follows } = await supabase
+                        .from('follows')
+                        .select('follower_id')
+                        .eq('following_id', userId);
+
+                    const ids = follows?.map(f => f.follower_id) || [];
+                    if (ids.length > 0) {
+                        const { data: profiles } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .in('id', ids);
+                        data = profiles || [];
+                    }
+                } else {
+                    const { data: follows } = await supabase
+                        .from('follows')
+                        .select('following_id')
+                        .eq('follower_id', userId);
+
+                    const ids = follows?.map(f => f.following_id) || [];
+                    if (ids.length > 0) {
+                        const { data: profiles } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .in('id', ids);
+                        data = profiles || [];
+                    }
                 }
+            } catch (error) {
+                console.error("Error fetching users:", error);
             }
 
             setUsers(data);
@@ -68,6 +100,22 @@ export default function FollowListModal({ userId, type, onClose }: FollowListMod
         }
     };
 
+    const getTitle = () => {
+        switch (type) {
+            case 'followers': return 'Seguidores';
+            case 'following': return 'Seguidos';
+            case 'friends': return 'Amigos';
+        }
+    };
+
+    const getEmptyText = () => {
+        switch (type) {
+            case 'followers': return 'Sin seguidores';
+            case 'following': return 'No sigues a nadie';
+            case 'friends': return 'Sin amigos aún';
+        }
+    };
+
     return (
         <div
             onClick={handleBackdropClick}
@@ -76,7 +124,7 @@ export default function FollowListModal({ userId, type, onClose }: FollowListMod
             <div className="bg-[#1a1a1a] w-full max-w-sm rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
                 <div className="flex items-center justify-between p-4 border-b border-white/5 bg-[#1a1a1a]">
                     <h2 className="text-white font-bold text-sm uppercase tracking-wider">
-                        {type === 'followers' ? 'Seguidores' : 'Seguidos'}
+                        {getTitle()}
                     </h2>
                     <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white">
                         <X className="w-5 h-5" />
@@ -118,7 +166,7 @@ export default function FollowListModal({ userId, type, onClose }: FollowListMod
                     ) : (
                         <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                             <p className="text-white/30 text-xs font-bold uppercase tracking-widest">
-                                {type === 'followers' ? 'Sin seguidores' : 'No sigues a nadie'}
+                                {getEmptyText()}
                             </p>
                         </div>
                     )}
