@@ -32,10 +32,10 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
         if (!session?.user) {
             // If not logged in, start timer
-            console.log("[Global] Guest detected. Starting 1m timer.");
+            console.log("[Global] Guest detected. Starting 30s timer.");
             timer = setTimeout(() => {
                 setShowLoginPrompt(true);
-            }, 60000); // 1 minute
+            }, 30000); // 30 seconds
         } else {
             console.log("[Global] User logged in:", session.user.email);
         }

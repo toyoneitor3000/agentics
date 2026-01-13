@@ -23,12 +23,17 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     });
     const currentUser = session?.user;
 
-    // 1. Fetch Profile
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', id)
-        .single();
+    // 1. Fetch Profile (Support UUID or Username)
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+    let query = supabase.from('profiles').select('*');
+    if (isUuid) {
+        query = query.eq('id', id);
+    } else {
+        query = query.ilike('username', id);
+    }
+
+    const { data: profile } = await query.single();
 
     if (!profile) {
         return <div className="min-h-screen bg-black text-white flex items-center justify-center">Usuario no encontrado</div>;
@@ -36,12 +41,12 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
 
     // 2. Fetch Content (Projects, Albums, Events, Followers, Videos)
     const [projectsRes, albumsRes, eventsRes, followersRes, followingRes, videosRes] = await Promise.all([
-        supabase.from('projects').select('*').eq('user_id', id).order('created_at', { ascending: false }),
-        supabase.from('gallery_albums').select('*').eq('user_id', id).order('created_at', { ascending: false }),
-        supabase.from('events').select('*').eq('created_by', id).order('date', { ascending: true }),
-        supabase.from('follows').select('follower_id').eq('following_id', id),
-        supabase.from('follows').select('following_id').eq('follower_id', id),
-        supabase.from('cinema_videos').select('*').eq('user_id', id).eq('status', 'approved').order('created_at', { ascending: false })
+        supabase.from('projects').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }),
+        supabase.from('gallery_albums').select('*').eq('user_id', profile.id).order('created_at', { ascending: false }),
+        supabase.from('events').select('*').eq('created_by', profile.id).order('date', { ascending: true }),
+        supabase.from('follows').select('follower_id').eq('following_id', profile.id),
+        supabase.from('follows').select('following_id').eq('follower_id', profile.id),
+        supabase.from('cinema_videos').select('*').eq('user_id', profile.id).eq('status', 'approved').order('created_at', { ascending: false })
     ]);
 
     // Calculate Friends (Mutual)
@@ -87,12 +92,12 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             .from('follows')
             .select('*')
             .eq('follower_id', currentUser.id)
-            .eq('following_id', id)
+            .eq('following_id', profile.id)
             .single();
         isFollowing = !!followData;
     }
 
-    const isOwnProfile = currentUser?.id === id;
+    const isOwnProfile = currentUser?.id === profile.id;
 
     return (
         <UserProfile
@@ -102,8 +107,8 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
             isOwnProfile={isOwnProfile}
             actionButtons={!isOwnProfile ? (
                 <div className="flex items-center">
-                    <FollowButton targetUserId={id} initialIsFollowing={isFollowing} currentUserId={currentUser?.id} />
-                    <MessageButton targetUserId={id} />
+                    <FollowButton targetUserId={profile.id} initialIsFollowing={isFollowing} currentUserId={currentUser?.id} />
+                    <MessageButton targetUserId={profile.id} />
                 </div>
             ) : null}
         />

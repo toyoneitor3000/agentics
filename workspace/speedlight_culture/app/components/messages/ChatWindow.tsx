@@ -157,7 +157,9 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
                     </div>
                     <div>
                         <h3 className="text-white font-bold text-sm">{otherUser?.other_name || 'Usuario'}</h3>
-                        <p className="text-white/40 text-xs">En línea</p>
+                        <p className="text-white/40 text-xs">
+                            {otherUser?.is_group ? 'Grupo' : 'En línea'}
+                        </p>
                     </div>
                 </div>
                 <button className="text-white/40 hover:text-white p-2 text-2xl">

@@ -172,15 +172,9 @@ function CinemaSocialContent() {
             {/* HEADER TOGGLE */}
             <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-full px-2 flex items-center justify-between py-2 relative">
-                    {/* LEFT: EXPAND SCREEN */}
+                    {/* LEFT: EXPAND SCREEN - MOVED TO SOCIAL INTERFACE */}
                     <div className="flex items-center">
-                        <button
-                            onClick={toggleUiVisibility}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-all"
-                            title="Modo Inmersivo"
-                        >
-                            <Maximize className="w-5 h-5" />
-                        </button>
+                        {/* Maximize button removed */}
                     </div>
 
                     <div className="absolute left-1/2 -translate-x-1/2">
@@ -191,12 +185,7 @@ function CinemaSocialContent() {
                     </div>
                     <div className="ml-auto flex items-center gap-4">
                         {isGamepadConnected && <Gamepad2 className="w-4 h-4 text-[#FF9800] animate-pulse" />}
-                        <button
-                            onClick={() => setIsMuted(!isMuted)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center bg-black/20 backdrop-blur-md text-white hover:bg-black/40 transition-all"
-                        >
-                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                        </button>
+                        {/* Mute button removed - Moved to Center Overlay */}
                     </div>
                 </div>
             </div>

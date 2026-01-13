@@ -5,8 +5,9 @@ import Image from 'next/image';
 import {
     Heart, MessageCircle, Share2, MoreHorizontal, Gift,
     Bookmark, Send,
-    Pencil, Archive, Trash2, X, ArrowDownCircle
+    Pencil, Archive, Trash2, X, ArrowDownCircle, Download, Maximize
 } from "lucide-react";
+import { downloadWithWatermark } from '@/app/utils/downloadWithWatermark';
 import { useUi } from '@/app/context/UiContext';
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from '@/app/lib/auth-client';
@@ -221,6 +222,16 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
 
 
 
+                    {/* MAXIMIZE / FULLSCREEN */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleUiVisibility(); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <Maximize className="w-5 h-5" />
+                        </div>
+                    </button>
+
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
                         <div className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 ${liked ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-black/20 backdrop-blur-md text-white hover:bg-black/40'}`}>
@@ -292,7 +303,7 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                                 <div className="-mt-8"> {/* Negative margin to pull headline up if needed, or just let it sit */}
                                     <CommentsSection
                                         targetId={post.id}
-                                        targetType="post"
+                                        targetType="cinema"
                                         onCommentAdded={() => setCommentCount((prev: number) => prev + 1)}
                                     />
                                 </div>
@@ -361,7 +372,7 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
     const [showEditModal, setShowEditModal] = useState(false);
     const [confirmArchive, setConfirmArchive] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
-    const isOwner = session?.user?.id === post.creatorId;
+    const isOwner = session?.user?.id === post.creatorId || session?.user?.email === 'speedlightculture@gmail.com';
 
     const handleArchive = async () => {
         try {
@@ -380,6 +391,17 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
             setTimeout(() => window.location.reload(), 1500);
         } catch (err) {
             toast.error('Error al eliminar');
+        }
+    };
+
+    const handleDownload = async (e: any) => {
+        e.stopPropagation();
+        setIsOpen(false);
+        // Use either videoUrl or fallback
+        if (post.videoUrl) {
+            await downloadWithWatermark(post.videoUrl);
+        } else {
+            toast.error("URL de video no encontrada");
         }
     };
 
@@ -427,6 +449,12 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
                                 className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
                             >
                                 <Share2 className="w-4 h-4 text-white" /> Compartir
+                            </button>
+                            <button
+                                onClick={handleDownload}
+                                className="w-full px-4 py-3 text-left text-sm font-bold text-white hover:bg-white/5 flex items-center gap-3 transition-colors"
+                            >
+                                <Download className="w-4 h-4 text-white" /> Descargar
                             </button>
 
                             {isOwner && (

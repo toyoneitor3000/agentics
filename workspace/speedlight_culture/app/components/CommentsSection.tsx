@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/app/utils/supabase/client';
 import { Send, MessageSquare, Heart, Reply, Gift } from 'lucide-react';
 import { useSession } from '@/app/lib/auth-client';
+import Link from 'next/link';
 import Image from "next/image";
 import { toast } from 'sonner';
 
@@ -24,6 +25,9 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
     const [comments, setComments] = useState<Comment[]>([]);
     const [activeGiftMenu, setActiveGiftMenu] = useState<string | null>(null);
     const [newComment, setNewComment] = useState('');
+    const [mentionCandidates, setMentionCandidates] = useState<any[]>([]);
+    const [showMentions, setShowMentions] = useState(false);
+    const [cursorPos, setCursorPos] = useState(0);
     const { data: session } = useSession(); // Unified Auth
     const user = session?.user;
 
@@ -60,6 +64,66 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
         if (data) setComments(data as any);
     };
 
+    // --- MENTION LOGIC ---
+    const searchUsers = async (query: string) => {
+        if (query.length < 1) {
+            setMentionCandidates([]);
+            setShowMentions(false);
+            return;
+        }
+
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url')
+            .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+            .limit(5);
+
+        if (error) {
+            console.error("Error searching users:", error);
+            return;
+        }
+
+        if (data && data.length > 0) {
+            setMentionCandidates(data);
+            setShowMentions(true);
+        } else {
+            setShowMentions(false);
+        }
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const value = e.target.value;
+        const pos = e.target.selectionStart;
+        setNewComment(value);
+        setCursorPos(pos);
+
+        // Detect @mention
+        const textBeforeCursor = value.slice(0, pos);
+        const lastAt = textBeforeCursor.lastIndexOf('@');
+
+        if (lastAt !== -1) {
+            const query = textBeforeCursor.slice(lastAt + 1);
+            // Allow only valid username characters (no spaces)
+            if (!/\s/.test(query)) {
+                searchUsers(query);
+            } else {
+                setShowMentions(false);
+            }
+        } else {
+            setShowMentions(false);
+        }
+    };
+
+    const insertMention = (username: string) => {
+        const textBefore = newComment.slice(0, cursorPos);
+        const textAfter = newComment.slice(cursorPos);
+        const lastAt = textBefore.lastIndexOf('@');
+
+        const newText = textBefore.slice(0, lastAt) + `@${username} ` + textAfter;
+        setNewComment(newText);
+        setShowMentions(false);
+    };
+
     const [isPosting, setIsPosting] = useState(false);
 
     const handlePost = async () => {
@@ -69,6 +133,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
         try {
             console.log("Posting comment...", { user_id: user.id, target_id: targetId, content: newComment });
 
+            // Ensure targetId is robustly handled, even if strict triggers are tricky
             const { error } = await supabase.from('comments').insert({
                 user_id: user.id,
                 target_id: targetId,
@@ -138,7 +203,17 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
                                 <span className="text-xs text-white/40">{new Date(comment.created_at).toLocaleDateString()}</span>
                             </div>
                             <p className="text-white/80 text-sm leading-relaxed bg-[#111] p-3 rounded-tr-xl rounded-br-xl rounded-bl-xl border border-[#222]">
-                                {comment.content}
+                                {comment.content.split(' ').map((word, i) => {
+                                    if (word.startsWith('@')) {
+                                        const username = word.substring(1); // Remove '@'
+                                        return (
+                                            <Link key={i} href={`/profile/${username}`} className="text-[#FF9800] font-bold cursor-pointer hover:underline mx-0.5">
+                                                {word}
+                                            </Link>
+                                        );
+                                    }
+                                    return <span key={i}>{word} </span>;
+                                })}
                             </p>
 
                             {/* COMMENT ACTIONS: Like, Reply, Gift */}
@@ -204,9 +279,40 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
                     </div>
                     <div className="flex-1 relative">
                         <div className="text-xs text-white/50 mb-1 ml-1 font-bold">{user.name}</div>
+
+                        {/* Mention Suggestions Dropdown */}
+                        {showMentions && mentionCandidates.length > 0 && (
+                            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#1A0F08] border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2">
+                                <div className="px-3 py-2 text-[10px] text-[#FF9800] font-bold uppercase tracking-wider bg-[#FF9800]/10 border-b border-[#FF9800]/10">
+                                    Sugerencias
+                                </div>
+                                {mentionCandidates.map((candidate) => (
+                                    <button
+                                        key={candidate.id}
+                                        onClick={() => insertMention(candidate.username)}
+                                        className="w-full flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors text-left group"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-black/50 overflow-hidden relative border border-white/10 group-hover:border-[#FF9800]/50 transition-colors">
+                                            {candidate.avatar_url ? (
+                                                <Image src={candidate.avatar_url} alt={candidate.username || 'User'} fill className="object-cover" />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-white/50 text-xs font-bold">
+                                                    {candidate.username.charAt(0).toUpperCase()}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-white group-hover:text-[#FF9800] transition-colors">@{candidate.username}</p>
+                                            <p className="text-xs text-white/40 truncate max-w-[120px]">{candidate.full_name}</p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         <textarea
                             value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
+                            onChange={handleInputChange}
                             placeholder="Escribe un comentario..."
                             className="w-full bg-[#0a0a0a] border border-[#333] rounded-xl p-4 text-white focus:outline-none focus:border-[#FF9800] transition-colors resize-none pr-12"
                             rows={3}

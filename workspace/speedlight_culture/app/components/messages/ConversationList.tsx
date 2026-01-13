@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { startConversation, searchUsers, getSuggestedContacts, getConversations, markMessagesAsDelivered } from "@/app/actions/messages";
 import Image from "next/image";
-import { Search, UserPlus, MessageCircle } from "lucide-react";
+import { Search, UserPlus, MessageCircle, Plus, Users } from "lucide-react";
+import NewChatModal from "./NewChatModal";
 import { toast } from "sonner";
 import { useSession } from '@/app/lib/auth-client';
 import { createClient } from '@/app/utils/supabase/client';
@@ -14,6 +15,7 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [isNewChatOpen, setIsNewChatOpen] = useState(false);
     const searchTimeout = useRef<NodeJS.Timeout | null>(null);
     const supabase = createClient();
 
@@ -136,14 +138,22 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
     return (
         <div className="h-full flex flex-col bg-[#050505] border-r border-white/5">
             <div className="p-4 border-b border-white/5">
-                <h2 className="text-xl font-bold text-white mb-4 font-oswald uppercase">Mensajes</h2>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-white font-oswald uppercase">Mensajes</h2>
+                    <button
+                        onClick={() => setIsNewChatOpen(true)}
+                        className="p-2 bg-[#FF9800] text-black rounded-full hover:bg-[#FF9800]/90 transition-colors shadow-lg shadow-orange-500/20"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
+                </div>
                 <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar personas..."
+                        placeholder="Buscar personas o grupos..."
                         className="w-full bg-[#111] border border-[#222] rounded-lg pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#FF9800]/50 placeholder-white/20"
                     />
                 </div>
@@ -236,21 +246,36 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                 conversations.map((c) => (
                                     <div
                                         key={c.id}
-                                        onClick={() => onSelect(c.id, c)}
+                                        onClick={() => onSelect(c.id, {
+                                            other_name: c.is_group ? c.group_name : (c.other_name || c.other_username),
+                                            other_avatar: c.is_group ? c.group_image : c.other_avatar,
+                                            other_user_id: c.is_group ? null : c.other_user_id,
+                                            is_group: c.is_group
+                                        })}
                                         className={`p-4 flex gap-3 cursor-pointer hover:bg-white/5 transition-colors border-b border-white/5 ${activeId === c.id ? 'bg-white/5 border-l-2 border-l-[#FF9800]' : 'border-l-2 border-l-transparent'}`}
                                     >
                                         <div className="relative shrink-0">
-                                            <div className="w-12 h-12 rounded-xl bg-[#222] overflow-hidden">
-                                                {c.other_avatar ? (
-                                                    <Image src={c.other_avatar} alt="User" fill className="object-cover rounded-xl" />
+                                            <div className="w-12 h-12 rounded-xl bg-[#222] overflow-hidden flex items-center justify-center">
+                                                {c.is_group ? (
+                                                    c.group_image ? (
+                                                        <Image src={c.group_image} alt="Group" fill className="object-cover rounded-xl" />
+                                                    ) : (
+                                                        <Users className="w-6 h-6 text-white/50" />
+                                                    )
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-white font-bold rounded-xl">{c.other_name?.[0] || 'U'}</div>
+                                                    c.other_avatar ? (
+                                                        <Image src={c.other_avatar} alt="User" fill className="object-cover rounded-xl" />
+                                                    ) : (
+                                                        <span className="text-white font-bold">{c.other_name?.[0] || 'U'}</span>
+                                                    )
                                                 )}
                                             </div>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-baseline mb-1">
-                                                <h3 className={`text-sm truncate ${activeId === c.id ? 'text-white font-bold' : 'text-white/80'}`}>{c.other_name || 'Usuario'}</h3>
+                                                <h3 className={`text-sm truncate ${activeId === c.id ? 'text-white font-bold' : 'text-white/80'}`}>
+                                                    {c.is_group ? c.group_name : (c.other_name || 'Usuario')}
+                                                </h3>
                                                 {c.last_message_at && (
                                                     <span className="text-[10px] text-white/30">
                                                         {new Date(c.last_message_at).toLocaleDateString()}
@@ -258,6 +283,7 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                                                 )}
                                             </div>
                                             <p className={`text-xs truncate ${activeId === c.id ? 'text-white/60' : 'text-white/40'}`}>
+                                                {c.is_group && <Users className="w-3 h-3 inline mr-1 opacity-50" />}
                                                 {c.last_message || 'Inicia la conversación...'}
                                             </p>
                                         </div>
@@ -268,6 +294,31 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
                     </>
                 )}
             </div>
+            <NewChatModal
+                isOpen={isNewChatOpen}
+                onClose={() => setIsNewChatOpen(false)}
+                onConversationCreated={(id, user) => {
+                    getConversations().then(setConversations); // Refresh list
+                    if (user) {
+                        onSelect(id, user);
+                    } else {
+                        // For groups, we might need to fetch the group details or just select it using ID
+                        // The user param might be null for groups unless we construct a fake object
+                        // Let's refetch to be safe
+                        getConversations().then(convos => {
+                            setConversations(convos);
+                            const newGroup = convos.find((c: any) => c.id === id);
+                            if (newGroup) {
+                                onSelect(id, {
+                                    other_name: newGroup.group_name,
+                                    other_avatar: newGroup.group_image,
+                                    is_group: true
+                                });
+                            }
+                        });
+                    }
+                }}
+            />
         </div>
     );
 }

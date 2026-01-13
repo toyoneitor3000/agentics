@@ -231,38 +231,32 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
         const doubleTapThreshold = 300;
 
         if (lastTapTime.current && (now - lastTapTime.current) < doubleTapThreshold) {
-            // === DOUBLE TAP -> Toggle Mute ===
+            // === DOUBLE TAP -> Toggle Play/Pause ===
             if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
             tapTimeoutRef.current = null;
-            toggleMute();
-            setShowActionIcon(isMuted ? 'unmute' : 'mute');
-            setTimeout(() => setShowActionIcon(null), 800);
+
+            const target = nativeVideoRef.current || player;
+            if (target) {
+                const isPaused = target.paused || (target.get && target.get('paused'));
+                if (isPaused) {
+                    managePlayback(true);
+                    isUserPaused.current = false;
+                    setShowActionIcon('play');
+                } else {
+                    managePlayback(false);
+                    isUserPaused.current = true;
+                    setShowActionIcon('pause');
+                }
+            }
             return;
         }
 
         lastTapTime.current = now;
 
-        // === SINGLE TAP -> Toggle Play/Pause or Show UI ===
+        // === SINGLE TAP -> Toggle UI Visibility ===
         tapTimeoutRef.current = setTimeout(() => {
-            if (!isUiVisible) {
-                toggleUiVisibility();
-                resetIdleTimer();
-            } else {
-                const target = nativeVideoRef.current || player;
-                if (target) {
-                    const isPaused = target.paused || (target.get && target.get('paused'));
-                    if (isPaused) {
-                        managePlayback(true);
-                        isUserPaused.current = false;
-                        setShowActionIcon('play');
-                    } else {
-                        managePlayback(false);
-                        isUserPaused.current = true;
-                        setShowActionIcon('pause');
-                    }
-                    setTimeout(() => setShowActionIcon(null), 600);
-                }
-            }
+            toggleUiVisibility();
+            resetIdleTimer();
         }, doubleTapThreshold);
     };
 
@@ -450,6 +444,24 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                     </div>
                     <div className="absolute bottom-[30%] text-white/60 text-xs font-medium">
                         Toca para reproducir
+                    </div>
+                </div>
+            )}
+
+            {/* === CENTER MUTE BUTTON (Visible Initially) === */}
+            {isMuted && !isBlocked && isInView && (
+                <div
+                    className="absolute inset-0 flex items-center justify-center z-30 cursor-pointer animate-in fade-in duration-300"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMute();
+                        // Optional: Show immediate feedback or just let the button disappear
+                        setShowActionIcon('unmute');
+                        setTimeout(() => setShowActionIcon(null), 600);
+                    }}
+                >
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:scale-110 active:scale-95 transition-all">
+                        <VolumeX className="w-8 h-8 text-white" />
                     </div>
                 </div>
             )}

@@ -42,27 +42,78 @@ export default function AppHeader() {
     const showBackButton = pathname && !mainPages.includes(pathname);
 
     const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
+    const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
     const [showIgWarning, setShowIgWarning] = useState(false);
 
     // --- INTELLIGENCE AT THE EDGE: NOTIFICATIONS & ENVIRONMENT ---
+    // --- REALTIME NOTIFICATIONS & MESSAGES CHECK ---
     useEffect(() => {
-        if (!user) return; // Don't run notification logic if no user
+        if (!user) return;
 
-        // Simple logic: Check localStorage for a 'last_read' timestamp vs a 'latest_content' timestamp shim
-        const checkNotifications = () => {
-            // Example: If user hasn't checked notifications in 24h, show dot.
-            const lastChecked = localStorage.getItem('last_notification_check');
-            const now = Date.now();
+        // 1. Initial Check from DB (Notifications)
+        const checkUnreadNotifications = async () => {
+            const { count, error } = await supabase
+                .from('notifications')
+                .select('*', { count: 'exact', head: true })
+                .eq('recipient_id', user.id)
+                .eq('is_read', false);
 
-            if (!lastChecked) {
+            if (!error && count !== null && count > 0) {
                 setHasUnreadNotifications(true);
-            } else {
-                const diffHours = (now - parseInt(lastChecked)) / (1000 * 60 * 60);
-                if (diffHours > 24) setHasUnreadNotifications(true);
             }
         };
-        checkNotifications();
-    }, [user]);
+        checkUnreadNotifications();
+
+        // 2. Initial Check from DB (Messages)
+        const checkUnreadMessages = async () => {
+            // RLS filters ensuring we only count messages in OUR conversations
+            const { count, error } = await supabase
+                .from('messages')
+                .select('*', { count: 'exact', head: true })
+                .is('read_at', null)
+                .neq('sender_id', user.id); // Not sent by me
+
+            if (!error && count !== null && count > 0) {
+                setHasUnreadMessages(true);
+            }
+        };
+        checkUnreadMessages();
+
+        // 3. Realtime Listener
+        const channel = supabase
+            .channel('header_updates')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `recipient_id=eq.${user.id}`,
+                },
+                () => {
+                    setHasUnreadNotifications(true);
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages'
+                },
+                (payload) => {
+                    // Optimized: Only re-check if sender is not me
+                    if (payload.new.sender_id !== user.id) {
+                        checkUnreadMessages();
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, supabase]);
 
     // --- INSTAGRAM / IN-APP BROWSER DETECTION ---
     useEffect(() => {
@@ -88,6 +139,10 @@ export default function AppHeader() {
     const handleNotificationClick = () => {
         setHasUnreadNotifications(false);
         localStorage.setItem('last_notification_check', Date.now().toString());
+    };
+
+    const handleMessageClick = () => {
+        setHasUnreadMessages(false);
     };
 
     const handleSignOut = async () => {
@@ -146,9 +201,13 @@ export default function AppHeader() {
                             <>
                                 <Link
                                     href="/messages"
+                                    onClick={handleMessageClick}
                                     className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
                                 >
                                     <MessageCircle className="w-6 h-6" />
+                                    {hasUnreadMessages && (
+                                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
+                                    )}
                                 </Link>
                                 <Link
                                     href="/notifications"
@@ -157,7 +216,7 @@ export default function AppHeader() {
                                 >
                                     <Bell className="w-6 h-6" />
                                     {hasUnreadNotifications && (
-                                        <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
+                                        <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
                                 </Link>
                             </>
@@ -204,9 +263,13 @@ export default function AppHeader() {
                             <>
                                 <Link
                                     href="/messages"
+                                    onClick={handleMessageClick}
                                     className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
                                 >
                                     <MessageCircle className="w-5 h-5" />
+                                    {hasUnreadMessages && (
+                                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
+                                    )}
                                 </Link>
                                 <Link
                                     href="/notifications"
@@ -215,7 +278,7 @@ export default function AppHeader() {
                                 >
                                     <Bell className="w-5 h-5" />
                                     {hasUnreadNotifications && (
-                                        <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF0000] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF0000]" />
+                                        <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
                                 </Link>
                             </>
