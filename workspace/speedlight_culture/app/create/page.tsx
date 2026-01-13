@@ -72,7 +72,10 @@ export default function CreatePage() {
                     {/* OPTION 4: CINEMA SOCIAL (VERTICAL TALL CARD) - MOVED TO FIRST */}
                     <Link href="/cinema/upload" className="group relative h-[550px] lg:h-auto lg:row-span-2 border border-white/10 rounded-2xl overflow-hidden ring-1 ring-[#FF9800]/20 hover:ring-[#FF9800] hover:scale-[1.01] transition-all duration-500 bg-[#0A0A0A]">
                         {/* Different BG for Social - New Image V2 */}
-                        <div className="absolute inset-0 bg-[url('/social-cinema-bg-v2.png')] bg-cover bg-center opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 pointer-events-none"></div>
+                        <div
+                            className="absolute inset-0 bg-cover bg-center opacity-40 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700 pointer-events-none"
+                            style={{ backgroundImage: "url('/social-cinema-bg-v2.png')" }}
+                        ></div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent pointer-events-none"></div>
 
                         <div className="absolute top-6 left-6 w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">

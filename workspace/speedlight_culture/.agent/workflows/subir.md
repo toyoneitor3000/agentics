@@ -2,6 +2,9 @@
 description: Realiza un commit detallado, hace push a GitHub y despliega a producción.
 ---
 
+// turbo-all
+
+
 1. Analiza los cambios pendientes utilizando `git status` y `git diff`.
 2. Añade todos los cambios al stage:
    ```bash
