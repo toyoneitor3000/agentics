@@ -330,7 +330,7 @@ export default function AppHeader() {
                                         {/* Admin Link */}
                                         {isAdmin && (
                                             <Link
-                                                href="/admin/users"
+                                                href="/admin"
                                                 className="px-4 py-3 text-sm text-white/80 hover:text-[#FF9800] hover:bg-white/5 flex items-center gap-3 transition-colors border-b border-white/5"
                                                 onClick={() => setIsMenuOpen(false)}
                                             >

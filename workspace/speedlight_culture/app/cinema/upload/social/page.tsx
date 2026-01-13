@@ -9,6 +9,9 @@ import Link from 'next/link';
 import { useDropzone } from 'react-dropzone';
 import SpotifySearch from '@/app/components/cinema/SpotifySearch';
 import LocationInput from '@/app/components/LocationInput';
+import { extractAudioSnippet } from '@/app/utils/ffmpegClient';
+import { identifyAudio } from '@/app/actions/music';
+import { toast } from 'sonner';
 
 // Helper for file size
 const formatFileSize = (bytes: number) => {
@@ -40,6 +43,7 @@ export default function UploadSocialPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isAutoDetecting, setIsAutoDetecting] = useState(false);
 
     // Success Modal State
     const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -70,16 +74,59 @@ export default function UploadSocialPage() {
 
                 if (!isVertical) {
                     setFormatError("⚠️ Formato Incorrecto: Este espacio es solo para videos verticales (9:16). Por favor sube tu video en la sección 'Cinema Films'.");
-                    // We might still keep the file selected but block submission, or clear it.
-                    // Let's keep it but show big error.
                     console.error("❌ Invalid Format for Social: Horizontal detected");
                 } else {
                     console.log(`📱 Detected Valid Format: Vertical (Social) [${video.videoWidth}x${video.videoHeight}]`);
+
+                    // 3. AUTO-DETECT MUSIC (Only if valid format)
+                    detectMusic(file);
                 }
             };
             video.src = URL.createObjectURL(file);
         }
     }, [title]);
+
+    const detectMusic = async (file: File) => {
+        setIsAutoDetecting(true);
+        const toastId = toast.loading("Analizando audio del video...");
+
+        try {
+            // 1. Extract audio snippet (15s)
+            console.log("🔊 Extracting audio...");
+            const audioBlob = await extractAudioSnippet(file, 15);
+
+            // 2. Identify
+            console.log("🎵 Identifying...");
+            const formData = new FormData();
+            formData.append('file', audioBlob as Blob);
+
+            const res = await identifyAudio(formData);
+
+            if (res.success && res.data) {
+                console.log("✅ Music Detected:", res.data);
+                setMusicMetadata({
+                    name: res.data.name,
+                    artist: res.data.artist,
+                    cover: res.data.image,
+                    id: 'acr-' + Date.now()
+                });
+                toast.success(`Música detectada: ${res.data.name}`, { id: toastId });
+            } else {
+                console.warn("⚠️ No music detected:", res.error);
+                // Don't error blocking, just notify
+                if (res.error?.includes('configuración')) {
+                    toast.error("Configuración faltante para auto-detectar.", { id: toastId });
+                } else {
+                    toast.info("No se pudo identificar la música automáticamente.", { id: toastId });
+                }
+            }
+        } catch (e) {
+            console.error("Audio detection error", e);
+            toast.error("Error analizando audio.", { id: toastId });
+        } finally {
+            setIsAutoDetecting(false);
+        }
+    };
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
@@ -442,8 +489,14 @@ export default function UploadSocialPage() {
                     <div className="pt-4 mt-auto space-y-4 relative z-10 transition-opacity duration-300" style={{ opacity: formatError ? 0.3 : 1, pointerEvents: formatError ? 'none' : 'auto' }}>
 
                         {/* SPOTIFY SEARCH INTEGRATION */}
-                        <div className="pt-2">
-                            <SpotifySearch onSelect={(track: any) => setMusicMetadata(track)} />
+                        <div className="pt-2 relative">
+                            {isAutoDetecting && (
+                                <div className="absolute top-0 right-0 z-20 flex items-center gap-2 text-[10px] text-green-500 font-bold bg-green-500/10 px-2 py-1 rounded-full animate-pulse">
+                                    <Loader2 className="w-3 h-3 animate-spin" />
+                                    ANALIZANDO AUDIO...
+                                </div>
+                            )}
+                            <SpotifySearch onSelect={(track: any) => setMusicMetadata(track)} initialTrack={musicMetadata} />
                         </div>
 
                         <button

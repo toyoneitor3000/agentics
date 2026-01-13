@@ -93,10 +93,10 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
     return (
         <div className="bg-[#1A0F08] border border-[#FF9800]/20 rounded-2xl p-6 md:p-8">
             <h3 className="text-2xl font-bold text-[#F5E6D3] mb-2 flex items-center gap-2">
-                <span className="text-[#FF9800]">🎁</span> Apoya este Proyecto
+                <span className="text-[#FF9800]">⚡</span> Potencia este Proyecto
             </h3>
             <p className="text-[#BCAAA4] mb-8 text-sm">
-                Selecciona una parte virtual para donar. El 100% del valor (menos fees) va directo a {projectTitle}.
+                Selecciona una mejora técnica para instalar. El 100% del valor (menos fees) va directo a {projectTitle}.
             </p>
 
             {/* Grid of Gifts */}
@@ -153,18 +153,19 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
                                         Procesando Nequi...
                                     </>
                                 ) : (
-                                    <>Enviar Donación</>
+                                    <>Instalar Mejora</>
                                 )}
+
                             </button>
                         ) : (
                             <div className="space-y-3">
                                 <Link href="/login" className="block w-full">
                                     <button className="w-full py-4 rounded-xl font-bold uppercase tracking-wider bg-[#2C1810] text-[#BCAAA4] border border-[#FF9800]/30 hover:bg-[#FF9800] hover:text-black transition-all">
-                                        Inicia sesión para donar
+                                        Inicia sesión para potenciar
                                     </button>
                                 </Link>
                                 <p className="text-xs text-center text-[#8D6E63]">
-                                    Necesitas una cuenta Speedlight ID para gestionar tus donaciones.
+                                    Necesitas una cuenta Speedlight ID para gestionar tus aportes.
                                 </p>
                             </div>
                         )}
@@ -182,10 +183,10 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
                     <div className="bg-[#1A0F08] border border-[#FF9800] p-8 rounded-2xl max-w-sm w-full text-center relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-t from-[#FF9800]/20 to-transparent"></div>
                         <div className="relative z-10">
-                            <div className="text-6xl mb-4 animate-bounce">🎉</div>
-                            <h3 className="text-2xl font-bold text-[#F5E6D3] mb-2">¡Donación Exitosa!</h3>
-                            <p className="text-[#BCAAA4]">Has enviado un <strong>{selectedGiftData?.name}</strong> a {projectTitle}.</p>
-                            <p className="text-xs text-[#8D6E63] mt-4">Gracias por apoyar la cultura.</p>
+                            <div className="text-6xl mb-4 animate-bounce">⚡</div>
+                            <h3 className="text-2xl font-bold text-[#F5E6D3] mb-2">¡Mejora Instalada!</h3>
+                            <p className="text-[#BCAAA4]">Has instalado un <strong>{selectedGiftData?.name}</strong> en {projectTitle}.</p>
+                            <p className="text-xs text-[#8D6E63] mt-4">Gracias por potenciar la cultura.</p>
                         </div>
                     </div>
                 </div>

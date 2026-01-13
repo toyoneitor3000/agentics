@@ -164,7 +164,7 @@ export default function Navbar() {
                                         <div className="p-2 space-y-1">
                                             {/* Admin Link for CEO/Admins */}
                                             {isAdmin && (
-                                                <Link href="/admin/users" className="flex items-center gap-3 px-3 py-2 text-sm text-[#FFD700] hover:bg-[#FFD700]/10 rounded-lg transition-colors border border-[#FFD700]/20" onClick={() => setIsMenuOpen(false)}>
+                                                <Link href="/admin" className="flex items-center gap-3 px-3 py-2 text-sm text-[#FFD700] hover:bg-[#FFD700]/10 rounded-lg transition-colors border border-[#FFD700]/20" onClick={() => setIsMenuOpen(false)}>
                                                     <LayoutDashboard className="w-4 h-4" /> Admin Panel
                                                 </Link>
                                             )}

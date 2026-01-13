@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { User, Database, Megaphone, Settings } from "lucide-react";
+import { User, Database, Megaphone, Settings, LayoutDashboard } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/lib/auth";
@@ -51,9 +51,13 @@ export default async function AdminLayout({
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2">
+                    <Link href="/admin" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-[#BCAAA4] hover:text-white transition-colors group">
+                        <LayoutDashboard className="w-5 h-5 group-hover:text-[#FF9800] transition-colors" />
+                        <span className="font-bold text-sm tracking-wide">Control de Misión</span>
+                    </Link>
                     <Link href="/admin/users" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-[#BCAAA4] hover:text-white transition-colors group">
                         <User className="w-5 h-5 group-hover:text-[#FF9800] transition-colors" />
-                        <span className="font-bold text-sm tracking-wide">Usuarios</span>
+                        <span className="font-bold text-sm tracking-wide">Directorio de Pilotos</span>
                     </Link>
                     <Link href="/admin/ads" className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-white/5 text-[#BCAAA4] hover:text-white transition-colors group">
                         <Megaphone className="w-5 h-5 group-hover:text-[#FF9800] transition-colors" />

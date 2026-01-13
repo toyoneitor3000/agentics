@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
     Home, Compass, Play, ShoppingBag, GraduationCap, Calendar, Wrench,
-    MessageSquare, Image as ImageIcon, Search, Plus, Menu, X, Settings2, GripVertical
+    MessageSquare, Image as ImageIcon, Search, Plus, Menu, X, Settings2, GripVertical, Zap
 } from "lucide-react";
 import { useScrollDirection } from "@/app/hooks/useScrollDirection";
 import { useState, useEffect } from "react";
@@ -20,6 +20,7 @@ const ALL_APPS: Record<string, { name: string, icon: any, path: string }> = {
     '/workshops': { name: "Talleres", icon: Wrench, path: '/workshops' },
     '/events': { name: "Eventos", icon: Calendar, path: '/events' },
     '/autostudio': { name: "AutoStudio", icon: MessageSquare, path: '/autostudio' },
+    '/news': { name: "News", icon: Zap, path: '/news' },
 };
 
 export default function BottomNav() {

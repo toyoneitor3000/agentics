@@ -170,7 +170,7 @@ function CinemaSocialContent() {
         <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
 
             {/* HEADER TOGGLE */}
-            <div className={`fixed top-[50px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
+            <div className={`fixed top-[65px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
                 <div className="w-full px-2 flex items-center justify-between py-2 relative">
                     {/* LEFT: EXPAND SCREEN - MOVED TO SOCIAL INTERFACE */}
                     <div className="flex items-center">

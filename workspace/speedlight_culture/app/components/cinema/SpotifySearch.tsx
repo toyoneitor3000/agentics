@@ -17,6 +17,13 @@ export default function SpotifySearch({ onSelect, initialTrack }: SpotifySearchP
     const [selectedTrack, setSelectedTrack] = useState<any>(initialTrack || null);
     const [isOpen, setIsOpen] = useState(false);
 
+    // Sync externally provided track
+    useEffect(() => {
+        if (initialTrack) {
+            setSelectedTrack(initialTrack);
+        }
+    }, [initialTrack]);
+
     // Debounce
     useEffect(() => {
         const timeoutId = setTimeout(async () => {

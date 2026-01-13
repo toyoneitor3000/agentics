@@ -7,9 +7,16 @@ description: Realiza un commit detallado, hace push a GitHub y despliega a produ
    ```bash
    git add .
    ```
-3. Genera un mensaje de commit **detallado** y **descriptivo** que explique los cambios realizados y ejecuta el commit.
+3. Genera un mensaje de commit en **español** que sea **exhaustivo y detallado**.
+   - El título debe ser claro y conciso.
+   - El cuerpo del mensaje debe listar los cambios técnicos específicos.
+   - Explica el propósito de los cambios (el "por qué").
+   - Utiliza formato de lista `*` para múltiples cambios.
+   
+   Ejemplo del comando final que deberías generar (pero con el mensaje real):
    ```bash
-   git commit -m "Mensaje detallado generado..."
+   git commit -m "Título del cambio: Refactorización de X" -m "* Se actualizó el archivo Y para mejorar el rendimiento.
+   * Se corrigió el bug en Z que causaba un crash."
    ```
 4. Sube los cambios a GitHub (asegúrate de estar en la rama correcta, por defecto `main`):
    ```bash

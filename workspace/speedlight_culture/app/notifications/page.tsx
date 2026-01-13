@@ -177,7 +177,12 @@ export default function NotificationsPage() {
                     {!loading && filteredNotifications.map((notif) => (
                         <div
                             key={notif.id}
-                            onClick={() => !notif.is_read && markOneAsRead(notif.id)}
+                            onClick={() => {
+                                if (!notif.is_read) markOneAsRead(notif.id);
+                                if (notif.target_type === 'news') {
+                                    window.location.href = '/news';
+                                }
+                            }}
                             className={`relative flex items-start gap-4 p-4 rounded-xl border transition-all group cursor-pointer 
                                 ${!notif.is_read
                                     ? 'bg-white/10 border-white/20'

@@ -3,10 +3,11 @@
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
 import {
-    Heart, MessageCircle, Share2, MoreHorizontal, Gift,
+    Heart, MessageCircle, Share2, MoreHorizontal, Zap,
     Bookmark, Send,
-    Pencil, Archive, Trash2, X, ArrowDownCircle, Download, Maximize
+    Pencil, Archive, Trash2, X, ArrowDownCircle, Download, Maximize, Music, Search, Wand2, Link as LinkIcon
 } from "lucide-react";
+import { extractMusicFromUrl, searchMusiciTunes } from '@/app/actions/music';
 import { downloadWithWatermark } from '@/app/utils/downloadWithWatermark';
 import { useUi } from '@/app/context/UiContext';
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +24,8 @@ const formatNumber = (num: number) => {
 }
 
 export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duration, toggleUiVisibility }: any) {
+    const { data: session } = useSession();
+    const isOwner = session?.user?.id === post.creatorId;
     const [liked, setLiked] = useState(post.liked_by_user || false);
     const [saved, setSaved] = useState(false);
     const [likeCount, setLikeCount] = useState(post.likes || 0);
@@ -154,16 +157,15 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                         </span>
 
                         <div className="flex items-center gap-2">
-                            <button
-                                onClick={handleFollowClick}
-                                disabled={isPending}
-                                className={`px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all ${following
-                                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20 hover:bg-blue-500/20 hover:text-blue-300 hover:border-blue-500/40'
-                                    : 'bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white'
-                                    }`}
-                            >
-                                {following ? 'Siguiendo' : 'Seguir'}
-                            </button>
+                            {!isOwner && !following && (
+                                <button
+                                    onClick={handleFollowClick}
+                                    disabled={isPending}
+                                    className="px-3 py-1 rounded text-[10px] font-bold uppercase border transition-all bg-transparent text-white border-white/40 hover:bg-white/10 hover:border-white"
+                                >
+                                    Seguir
+                                </button>
+                            )}
 
 
                         </div>
@@ -222,15 +224,6 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
 
 
 
-                    {/* MAXIMIZE / FULLSCREEN */}
-                    <button
-                        onClick={(e) => { e.stopPropagation(); toggleUiVisibility(); }}
-                        className="flex flex-col items-center gap-1 group"
-                    >
-                        <div className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all">
-                            <Maximize className="w-5 h-5" />
-                        </div>
-                    </button>
 
                     {/* LIKE */}
                     <button onClick={handleLike} className="flex flex-col items-center gap-1 group">
@@ -257,10 +250,22 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                         className="flex flex-col items-center gap-1 group"
                     >
                         <div className="w-9 h-9 rounded-xl flex items-center justify-center text-[#FF9800] bg-black/20 backdrop-blur-md hover:bg-[#FF9800]/20 transition-all">
-                            <Gift className="w-5 h-5" />
+                            <Zap className="w-5 h-5 fill-current" />
                         </div>
-                        <span className="text-[10px] font-bold text-white drop-shadow-md">Regalar</span>
+                        <span className="text-[10px] font-bold text-white drop-shadow-md">Potenciar</span>
                     </button>
+
+                    {/* MAXIMIZE / FULLSCREEN */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); toggleUiVisibility(); }}
+                        className="flex flex-col items-center gap-1 group"
+                    >
+                        <div className="w-9 h-9 rounded-xl bg-black/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-black/40 transition-all">
+                            <Maximize className="w-5 h-5" />
+                        </div>
+                    </button>
+
+
 
 
 
@@ -522,13 +527,32 @@ function VideoActionsMenu({ post, saved, onSave, onShare }: { post: any, saved: 
 function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }) {
     const [title, setTitle] = useState(post.title);
     const [description, setDescription] = useState(post.description);
+
+    // Music State
+    const [musicName, setMusicName] = useState(post.music_metadata?.name || '');
+    const [musicArtist, setMusicArtist] = useState(post.music_metadata?.artist || '');
+
+    // Tools State
+    const [showTools, setShowTools] = useState(false);
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isScanning, setIsScanning] = useState(false);
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+
     const [isSaving, setIsSaving] = useState(false);
 
     const handleSave = async () => {
         if (!title.trim()) return;
         setIsSaving(true);
         try {
-            await updateVideoMetadata(post.id, { title, description });
+            await updateVideoMetadata(post.id, {
+                title,
+                description,
+                music_metadata: {
+                    name: musicName,
+                    artist: musicArtist
+                }
+            });
             window.location.reload();
         } catch (err) {
             alert('Error al guardar cambios');
@@ -537,13 +561,45 @@ function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }
         }
     };
 
+    const handleExtract = async () => {
+        if (!sourceUrl) return;
+        setIsScanning(true);
+        try {
+            const res = await extractMusicFromUrl(sourceUrl);
+            if (res.success && res.data) {
+                setMusicName(res.data.name);
+                setMusicArtist(res.data.artist);
+                toast.success("¡Música detectada!");
+                setShowTools(false);
+            } else {
+                toast.error(res.error || "No se pudo detectar");
+            }
+        } catch (e) {
+            toast.error("Error de conexión");
+        } finally {
+            setIsScanning(false);
+        }
+    }
+
+    const handleSearch = async () => {
+        if (!searchQuery) return;
+        setIsScanning(true);
+        const res = await searchMusiciTunes(searchQuery);
+        if (res.success && res.results) {
+            setSearchResults(res.results);
+        } else {
+            toast.error("Sin resultados");
+        }
+        setIsScanning(false);
+    }
+
     return (
         <div className="fixed inset-0 z-[500] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md" onClick={onClose}>
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-md w-full shadow-2xl relative"
+                className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-lg w-full shadow-2xl relative max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white">
@@ -553,6 +609,7 @@ function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }
                 <h3 className="text-xl font-black font-oswald uppercase text-white mb-6">Editar Publicación</h3>
 
                 <div className="space-y-4">
+                    {/* Basic Info */}
                     <div className="space-y-2">
                         <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Título</label>
                         <input
@@ -568,9 +625,139 @@ function EditMetadataModal({ post, onClose }: { post: any, onClose: () => void }
                         <textarea
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            rows={4}
+                            rows={3}
                             className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#FF9800] transition-colors resize-none text-sm"
                         />
+                    </div>
+
+                    <div className="h-px bg-white/10 my-2" />
+
+                    {/* Music Section */}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-bold text-[#FF9800] uppercase tracking-widest pl-1">Información de Audio</label>
+                            <button
+                                onClick={() => setShowTools(!showTools)}
+                                className="text-[10px] font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 px-2 py-1 rounded"
+                            >
+                                <Wand2 className="w-3 h-3" /> {showTools ? 'Ocultar Herramientas' : 'Detectar / Buscar'}
+                            </button>
+                        </div>
+
+                        {/* Tools Panel */}
+                        <AnimatePresence>
+                            {showTools && (
+                                <motion.div
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: "auto", opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="bg-blue-900/10 border border-blue-500/30 rounded-xl p-4 overflow-hidden"
+                                >
+                                    <div className="space-y-4">
+                                        {/* Option A: Link */}
+                                        <div>
+                                            <p className="text-[10px] text-white/60 mb-2 font-bold uppercase">Opción A: Pegar Link Original (TikTok)</p>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <LinkIcon className="absolute left-3 top-3 w-4 h-4 text-white/40" />
+                                                    <input
+                                                        placeholder="https://www.tiktok.com/@user/video/..."
+                                                        className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white"
+                                                        value={sourceUrl}
+                                                        onChange={(e) => setSourceUrl(e.target.value)}
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={handleExtract}
+                                                    disabled={isScanning || !sourceUrl}
+                                                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-2 rounded-lg disabled:opacity-50"
+                                                >
+                                                    {isScanning ? '...' : 'Extraer'}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-px bg-white/10 flex-1" />
+                                            <span className="text-[10px] text-white/30 font-bold">O</span>
+                                            <div className="h-px bg-white/10 flex-1" />
+                                        </div>
+
+                                        {/* Option B: Search */}
+                                        <div>
+                                            <p className="text-[10px] text-white/60 mb-2 font-bold uppercase">Opción B: Buscar en iTunes</p>
+                                            <div className="flex gap-2 mb-2">
+                                                <div className="relative flex-1">
+                                                    <Search className="absolute left-3 top-3 w-4 h-4 text-white/40" />
+                                                    <input
+                                                        placeholder="Ej: Bad Bunny - Monaco"
+                                                        className="w-full bg-black/50 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-white"
+                                                        value={searchQuery}
+                                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                                    />
+                                                </div>
+                                                <button
+                                                    onClick={handleSearch}
+                                                    disabled={isScanning || !searchQuery}
+                                                    className="bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3 py-2 rounded-lg"
+                                                >
+                                                    Buscar
+                                                </button>
+                                            </div>
+
+                                            {/* Results */}
+                                            {searchResults.length > 0 && (
+                                                <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                                                    {searchResults.map((result, i) => (
+                                                        <div
+                                                            key={i}
+                                                            onClick={() => {
+                                                                setMusicName(result.name);
+                                                                setMusicArtist(result.artist);
+                                                                setShowTools(false);
+                                                            }}
+                                                            className="flex items-center gap-2 p-2 rounded hover:bg-white/10 cursor-pointer transition-colors"
+                                                        >
+                                                            <div className="w-8 h-8 bg-white/10 rounded overflow-hidden flex-shrink-0">
+                                                                <img src={result.image} className="w-full h-full object-cover" />
+                                                            </div>
+                                                            <div className="min-w-0">
+                                                                <p className="text-xs font-bold text-white truncate">{result.name}</p>
+                                                                <p className="text-[10px] text-white/60 truncate">{result.artist}</p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-white/50 mb-1 block">Canción</label>
+                                <input
+                                    type="text"
+                                    value={musicName}
+                                    placeholder="Nombre de la canción"
+                                    onChange={(e) => setMusicName(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF9800]"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-white/50 mb-1 block">Artista</label>
+                                <input
+                                    type="text"
+                                    value={musicArtist}
+                                    placeholder="Nombre del artista"
+                                    onChange={(e) => setMusicArtist(e.target.value)}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FF9800]"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

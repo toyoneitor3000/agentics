@@ -55,6 +55,9 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
     const lastTapTime = useRef(0);
     const tapTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const playPromiseRef = useRef<Promise<void> | null>(null);
+    const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isLongPressRef = useRef(false);
+    const touchStartTimeRef = useRef(0);
 
     // === DERIVED ===
     const cloudflareId = getCloudflareId(post.videoUrl || '');
@@ -219,9 +222,34 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
     }, [isMuted]);
 
     // ----------------------------------------------------------------------
-    // 6. INTERACTION HANDLERS (Tap, Double Tap)
+    // 6. INTERACTION HANDLERS (Tap, Double Tap, Long Press)
     // ----------------------------------------------------------------------
+    const handleTouchStart = () => {
+        isLongPressRef.current = false;
+        touchStartTimeRef.current = Date.now();
+        longPressTimerRef.current = setTimeout(() => {
+            // LONG PRESS DETECTED
+            isLongPressRef.current = true;
+            toggleUiVisibility();
+            // Provide haptic feedback if possible
+            if (navigator.vibrate) navigator.vibrate(50);
+        }, 600); // 600ms threshold
+    };
+
+    const handleTouchEnd = () => {
+        if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+        }
+    };
+
     const handleTap = (e: any) => {
+        // Prevent action if it was a long press
+        if (isLongPressRef.current) {
+            isLongPressRef.current = false;
+            return;
+        }
+
         e.stopPropagation();
 
         // If blocked, the manual play button handles interaction
@@ -242,10 +270,12 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                     managePlayback(true);
                     isUserPaused.current = false;
                     setShowActionIcon('play');
+                    setTimeout(() => setShowActionIcon(null), 600);
                 } else {
                     managePlayback(false);
                     isUserPaused.current = true;
                     setShowActionIcon('pause');
+                    setTimeout(() => setShowActionIcon(null), 600);
                 }
             }
             return;
@@ -253,10 +283,20 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
 
         lastTapTime.current = now;
 
-        // === SINGLE TAP -> Toggle UI Visibility ===
+        // === SINGLE TAP ===
+        // User requested that single tap does NOT exit fullscreen (show UI).
+        // It stays immersive. Only Long Press brings UI back.
+        // We can use single tap for Mute toggle if preferred, OR just do nothing to keep it "clean".
+        // Given previous instruction "Tap or click desmutes and disappears", we keep that logic ONLY if muted?
+        // Let's implement Mute Toggle on single tap for consistency with "Tap desmutes".
+
         tapTimeoutRef.current = setTimeout(() => {
-            toggleUiVisibility();
-            resetIdleTimer();
+            // Only toggle mute if we want interaction. 
+            // If the user wants "Meter el video", arguably just watching is fine.
+            // But let's allow Mute toggle since the button disappears.
+            toggleMute();
+            setShowActionIcon(isMuted ? 'unmute' : 'mute');
+            setTimeout(() => setShowActionIcon(null), 600);
         }, doubleTapThreshold);
     };
 
@@ -361,6 +401,10 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
             ref={containerRef}
             className="w-full h-full bg-black relative overflow-hidden group select-none"
             onClick={handleTap}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleTouchStart}
+            onMouseUp={handleTouchEnd}
             onContextMenu={(e) => e.preventDefault()}
         >
             {/* === VIDEO LAYER === */}
@@ -439,11 +483,17 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                     className="absolute inset-0 flex items-center justify-center z-20 cursor-pointer"
                     onClick={handleManualPlay}
                 >
-                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/20 shadow-2xl hover:scale-110 active:scale-95 transition-transform animate-in zoom-in-75 duration-300">
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-3xl flex items-center justify-center border border-white/20 shadow-2xl hover:scale-110 active:scale-95 transition-transform animate-in zoom-in-75 duration-300">
                         <Play className="w-8 h-8 text-white fill-white ml-1" />
                     </div>
-                    <div className="absolute bottom-[30%] text-white/60 text-xs font-medium">
-                        Toca para reproducir
+                    <div className="absolute bottom-[28%] opacity-60 animate-pulse">
+                        <Image
+                            src="/logonavbar.png"
+                            alt="Speedlight"
+                            width={120}
+                            height={40}
+                            className="object-contain"
+                        />
                     </div>
                 </div>
             )}
@@ -460,7 +510,7 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                         setTimeout(() => setShowActionIcon(null), 600);
                     }}
                 >
-                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-full flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:scale-110 active:scale-95 transition-all">
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-3xl flex items-center justify-center border border-white/10 shadow-[0_0_30px_rgba(0,0,0,0.5)] hover:scale-110 active:scale-95 transition-all">
                         <VolumeX className="w-8 h-8 text-white" />
                     </div>
                 </div>
@@ -469,17 +519,17 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
             {/* === FEEDBACK ICONS === */}
             {showActionIcon && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none animate-in zoom-in-50 fade-out duration-500">
-                    <div className="bg-black/40 backdrop-blur-md p-4 rounded-full text-white">
+                    <div className="w-20 h-20 bg-black/40 backdrop-blur-xl rounded-3xl flex items-center justify-center text-white border border-white/10 shadow-2xl">
                         {showActionIcon === 'pause' && (
-                            <div className="flex gap-1">
-                                <div className="w-2 h-6 bg-white rounded-full" />
-                                <div className="w-2 h-6 bg-white rounded-full" />
+                            <div className="flex gap-1.5">
+                                <div className="w-2.5 h-8 bg-white rounded-full shadow-sm" />
+                                <div className="w-2.5 h-8 bg-white rounded-full shadow-sm" />
                             </div>
                         )}
                         {showActionIcon === 'mute' && <VolumeX className="w-8 h-8" />}
                         {showActionIcon === 'unmute' && <Volume2 className="w-8 h-8" />}
                         {showActionIcon === 'play' && (
-                            <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[20px] border-l-white border-b-[10px] border-b-transparent ml-1" />
+                            <Play className="w-8 h-8 fill-white ml-1" />
                         )}
                     </div>
                 </div>
