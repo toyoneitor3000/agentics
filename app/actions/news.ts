@@ -103,6 +103,10 @@ export async function publishNews(item: { title: string, content: string, catego
             await query(insertQuery, params);
         }
 
+
+        // 3. Notify WhatsApp (Free API)
+        await sendWhatsAppNotification(item.title);
+
         return { success: true, newsId };
 
     } catch (e: any) {
@@ -140,5 +144,20 @@ export async function deleteNews(id: string) {
     } catch (e: any) {
         console.error("Error deleting news:", e);
         return { success: false, error: e.message || "Failed to delete" };
+    }
+}
+
+async function sendWhatsAppNotification(title: string) {
+    const phone = process.env.WHATSAPP_PHONE;
+    const apiKey = process.env.WHATSAPP_API_KEY;
+
+    if (phone && apiKey) {
+        try {
+            const message = `🚨 *Speedlight News* 🚨\n\n${title}\n\nLee más en: https://speedlight_culture.com/news`;
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+            await fetch(url);
+        } catch (error) {
+            console.error("WhatsApp notification failed:", error);
+        }
     }
 }

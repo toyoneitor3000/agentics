@@ -2,6 +2,8 @@ import { getNews } from "@/app/actions/news";
 import { Zap, Calendar, ArrowRight, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import CopyNewsButton from "./ShareNewsButton";
+import ShareWeeklySummary from "./ShareWeeklySummary";
 
 function formatDate(dateString: string) {
     return new Date(dateString).toLocaleDateString('es-ES', {
@@ -27,9 +29,12 @@ export default async function SpeedlightNewsPage() {
                     <h1 className="text-4xl md:text-6xl font-black font-oswald italic uppercase tracking-tighter text-white mb-4">
                         SPEEDLIGHT <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF9800] to-yellow-500">NEWS</span>
                     </h1>
-                    <p className="text-white/40 max-w-xl mx-auto text-lg">
+                    <p className="text-white/40 max-w-xl mx-auto text-lg mb-8">
                         Mantente al día con las últimas mejoras, despliegues y noticias del ecosistema.
                     </p>
+                    {news.length > 0 && (
+                        <ShareWeeklySummary news={news} />
+                    )}
                 </header>
 
                 <div className="space-y-8 relative">
@@ -68,7 +73,7 @@ export default async function SpeedlightNewsPage() {
                                             <p>{item.content}</p>
                                         </div>
 
-                                        <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between">
+                                        <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between flex-wrap gap-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-6 h-6 flex items-center justify-center">
                                                     <Image
@@ -81,15 +86,22 @@ export default async function SpeedlightNewsPage() {
                                                 </div>
                                                 <span className="text-xs font-bold text-white/50 uppercase tracking-wider">Speedlight Team</span>
                                             </div>
-                                            <a
-                                                href="https://chat.whatsapp.com/LXTAuLFydyUBCrvKpgJf03"
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-[#25D366]/20 border border-white/10 hover:border-[#25D366]/50 rounded-lg transition-all group/btn text-xs font-bold uppercase tracking-wider text-white"
-                                            >
-                                                <span>Consultar más</span>
-                                                <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                                            </a>
+                                            <div className="flex items-center gap-2">
+                                                <CopyNewsButton
+                                                    title={item.title}
+                                                    content={item.content}
+                                                    date={item.published_at}
+                                                />
+                                                <a
+                                                    href="https://chat.whatsapp.com/LXTAuLFydyUBCrvKpgJf03"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-[#25D366]/20 border border-white/10 hover:border-[#25D366]/50 rounded-lg transition-all group/btn text-xs font-bold uppercase tracking-wider text-white"
+                                                >
+                                                    <span>Consultar más</span>
+                                                    <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
