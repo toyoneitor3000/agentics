@@ -111,7 +111,10 @@ export default function EventsPage() {
                     <>
                         {/* Map Preview Placeholder - Only in list view or move to separate section? Keeping here for now */}
                         <div className="w-full h-64 bg-[#111] rounded-2xl border border-white/5 mb-12 flex items-center justify-center relative overflow-hidden group cursor-pointer animate-in fade-in duration-500">
-                            <div className="absolute inset-0 bg-[url('https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif')] opacity-20 bg-cover bg-center"></div>
+                            <div
+                                className="absolute inset-0 opacity-20 bg-cover bg-center"
+                                style={{ backgroundImage: "url('https://docs.mapbox.com/mapbox-gl-js/assets/radar.gif')" }}
+                            ></div>
                             <div className="z-10 text-center">
                                 <MapIcon className="w-12 h-12 text-[#FF9800] mx-auto mb-3" />
                                 <h3 className="text-xl font-bold text-white">Explorar Mapa de Eventos</h3>
