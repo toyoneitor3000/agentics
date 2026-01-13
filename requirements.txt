@@ -1,9 +1,2 @@
-groq
-anthropic
+psycopg2-binary
 python-dotenv
-requests
-fastapi
-uvicorn[standard]
-google-adk
-beautifulsoup4
-psutil

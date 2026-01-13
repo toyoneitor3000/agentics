@@ -1,0 +1,123 @@
+Vercel CLI 50.3.0
+> [debug] [2026-01-13T15:10:27.086Z] user supplied a possible target for deployment or an extension
+> [debug] [2026-01-13T15:10:27.098Z] failed to find extension command with name "vercel---prod"
+> [debug] [2026-01-13T15:10:27.141Z] Setting target to production
+> [debug] [2026-01-13T15:10:27.191Z] Found ".git/config" - detected "/Users/camilotoloza/Documents/agentics-1" as repo root
+> [debug] [2026-01-13T15:10:27.251Z] Spinner invoked (Retrieving project…) with a 1000ms delay
+> [debug] [2026-01-13T15:10:27.253Z] Valid access token, skipping token refresh.
+> [debug] [2026-01-13T15:10:27.254Z] Valid access token, skipping token refresh.
+> [debug] [2026-01-13T15:10:27.267Z] #1 → GET https://api.vercel.com/teams/team_udjOsS1HnA40aIQhroWHvuC1?teamId=team_udjOsS1HnA40aIQhroWHvuC1
+> [debug] [2026-01-13T15:10:27.270Z] #2 → GET https://api.vercel.com/v9/projects/prj_oOF9elYQBcAxbgxgbOLpIbH8M3FD?teamId=team_udjOsS1HnA40aIQhroWHvuC1
+> [debug] [2026-01-13T15:10:27.782Z] #1 ← 200 OK: sfo1::v72dj-1768317027875-f8bea2a7f7ae [515ms]
+> [debug] [2026-01-13T15:10:27.796Z] #2 ← 200 OK: sfo1::d82p6-1768317027877-ab4430668c5d [526ms]
+> [debug] [2026-01-13T15:10:27.799Z] Error while parsing repo data: ENOENT: no such file or directory, open '/Users/camilotoloza/Documents/agentics-1/workspace/speedlight_culture/.git/config'
+> [debug] [2026-01-13T15:10:27.944Z] Spinner invoked (Deploying cts-projects-02159da9/speedlight_culture) with a 0ms delay
+[client-debug] 2026-01-13T15:10:27.945Z Creating deployment...
+[client-debug] 2026-01-13T15:10:27.945Z Provided 'path' is a directory.
+[client-debug] 2026-01-13T15:10:27.948Z Found 26 rules in .vercelignore
+[client-debug] 2026-01-13T15:10:27.948Z Building file tree...
+[client-debug] 2026-01-13T15:10:27.998Z Found 672 files in the specified directory
+[client-debug] 2026-01-13T15:10:28.154Z Yielding a 'hashes-calculated' event with 614 hashes
+> [debug] [2026-01-13T15:10:28.156Z] Valid access token, skipping token refresh.
+> [debug] [2026-01-13T15:10:28.157Z] #3 → GET https://api.vercel.com/v9/projects/speedlight_culture?teamId=team_udjOsS1HnA40aIQhroWHvuC1
+> [debug] [2026-01-13T15:10:28.358Z] #3 ← 200 OK: sfo1::d82p6-1768317028432-b95dcb11dda0 [201ms]
+[client-debug] 2026-01-13T15:10:28.359Z Using provided API URL: https://api.vercel.com
+[client-debug] 2026-01-13T15:10:28.359Z Using provided user agent: vercel 50.3.0 node-v20.19.6 darwin (x64)
+[client-debug] 2026-01-13T15:10:28.359Z Setting platform version to harcoded value 2
+[client-debug] 2026-01-13T15:10:28.359Z Creating the deployment and starting upload...
+[client-debug] 2026-01-13T15:10:28.360Z Determining necessary files for upload...
+[client-debug] 2026-01-13T15:10:28.360Z Creating deployment
+[client-debug] 2026-01-13T15:10:28.364Z Sending deployment creation API request
+[client-debug] 2026-01-13T15:10:28.888Z Deployment response: {"error":{"code":"missing_files","message":"Missing files","missing":["58518df20d5bbcecc71996ac1821b6adaea9553e"]}}
+[client-debug] 2026-01-13T15:10:28.888Z Error: Deployment request status is 400
+[client-debug] 2026-01-13T15:10:28.888Z 1 files are required to upload
+[client-debug] 2026-01-13T15:10:28.888Z Yielding a 'file-count' event
+> [debug] [2026-01-13T15:10:28.888Z] Total files 614, 1 changed
+> [debug] [2026-01-13T15:10:28.888Z] Spinner invoked (Uploading [--------------------] (0.0B/1.8KB)) with a 0ms delay
+[client-debug] 2026-01-13T15:10:28.889Z Building an upload list...
+[client-debug] 2026-01-13T15:10:28.889Z Starting upload
+[client-debug] 2026-01-13T15:10:28.890Z POST https://api.vercel.com/v2/files?teamId=team_udjOsS1HnA40aIQhroWHvuC1
+> [debug] [2026-01-13T15:10:28.892Z] Spinner invoked (Uploading [====================] (1.8KB/1.8KB)) with a 0ms delay
+[client-debug] 2026-01-13T15:10:29.169Z DONE in 279ms: POST https://api.vercel.com/v2/files?teamId=team_udjOsS1HnA40aIQhroWHvuC1
+[client-debug] 2026-01-13T15:10:29.169Z File 58518df20d5bbcecc71996ac1821b6adaea9553e (/Users/camilotoloza/Documents/agentics-1/workspace/speedlight_culture/vercel_debug.log) uploaded
+[client-debug] 2026-01-13T15:10:29.169Z Yielding a 'file-uploaded' event
+> [debug] [2026-01-13T15:10:29.170Z] Uploaded: /Users/camilotoloza/Documents/agentics-1/workspace/speedlight_culture/vercel_debug.log (1.78KB)
+[client-debug] 2026-01-13T15:10:29.170Z All files uploaded
+[client-debug] 2026-01-13T15:10:29.170Z Yielding a 'all-files-uploaded' event
+[client-debug] 2026-01-13T15:10:29.170Z Starting deployment creation
+[client-debug] 2026-01-13T15:10:29.170Z Creating deployment
+[client-debug] 2026-01-13T15:10:29.173Z Sending deployment creation API request
+[client-debug] 2026-01-13T15:10:30.479Z Deployment response: {"alias":["speedlightculture-cts-projects-02159da9.vercel.app","speedlightculture-purrpurr-cts-projects-02159da9.vercel.app"],"aliasAssigned":false,"automaticAliases":["speedlightculture-cts-projects-02159da9.vercel.app","speedlightculture-purrpurr-cts-projects-02159da9.vercel.app"],"bootedAt":1768317029955,"buildingAt":1768317029955,"buildSkipped":false,"createdAt":1768317029955,"creator":{"uid":"8HCgFj5ZLmOuBpfPCZ4igT6R","username":"purrpurr"},"id":"dpl_DsuGyQCmHGkYC2Ztm5qmFG6cxtSr","name":"speedlight_culture","meta":{"gitCommitAuthorName":"Toyoneitor","gitCommitAuthorEmail":"camiloa.tolosap@utadeo.edu.co","gitCommitMessage":"Enforce Node 20+ in engines","gitCommitRef":"main","gitCommitSha":"cf10c94cdcc89115352f48521fdeee2400727fed"},"originCacheRegion":"iad1","project":{"id":"prj_oOF9elYQBcAxbgxgbOLpIbH8M3FD","name":"speedlight_culture","framework":"nextjs"},"public":false,"readyState":"QUEUED","regions":["iad1"],"source":"cli","status":"QUEUED","target":"production","team":{"id":"team_udjOsS1HnA40aIQhroWHvuC1","name":"ct's projects","slug":"cts-projects-02159da9"},"type":"LAMBDAS","url":"speedlightculture-3oajeco40-cts-projects-02159da9.vercel.app","version":2,"previewCommentsEnabled":true,"oidcTokenClaims":{"sub":"owner:cts-projects-02159da9:project:speedlight_culture:environment:production","iss":"https://oidc.vercel.com/cts-projects-02159da9","scope":"owner:cts-projects-02159da9:project:speedlight_culture:environment:production","aud":"https://vercel.com/cts-projects-02159da9","owner":"cts-projects-02159da9","owner_id":"team_udjOsS1HnA40aIQhroWHvuC1","project":"speedlight_culture","project_id":"prj_oOF9elYQBcAxbgxgbOLpIbH8M3FD","environment":"production","plan":"hobby"},"nodeVersion":"24.x","lambdas":[{"id":"bld_pl26il2fb","createdAt":1768317030244,"entrypoint":".","readyState":"READY","readyStateAt":1768317030244,"output":[]}],"aliasAssignedAt":null,"build":{"env":[]},"builds":[],"createdIn":"sfo1","env":[],"functions":null,"inspectorUrl":"https://vercel.com/cts-projects-02159da9/speedlight_culture/DsuGyQCmHGkYC2Ztm5qmFG6cxtSr","isInConcurrentBuildsQueue":false,"isInSystemBuildsQueue":true,"ownerId":"team_udjOsS1HnA40aIQhroWHvuC1","plan":"hobby","projectId":"prj_oOF9elYQBcAxbgxgbOLpIbH8M3FD","projectSettings":{"buildCommand":null,"devCommand":null,"framework":"nextjs","commandForIgnoringBuildStep":null,"installCommand":null,"outputDirectory":null,"speedInsights":{"id":"suIroFUDTA68XTzPg7OblT5Pf6l","hasData":false},"webAnalytics":{"id":"8AY9jsUawebtmlsOJfkTAgtVK"},"nodeVersion":"24.x"},"routes":null,"config":{"version":1,"secureComputePrimaryRegion":null,"secureComputeFallbackRegion":null,"functionTimeout":300,"functionType":"fluid","functionMemoryType":"standard","isUsingActiveCPU":true}}
+[client-debug] 2026-01-13T15:10:30.479Z Deployment created
+[client-debug] 2026-01-13T15:10:30.480Z Yielding a 'created' event
+Inspect: https://vercel.com/cts-projects-02159da9/speedlight_culture/DsuGyQCmHGkYC2Ztm5qmFG6cxtSr [3s]
+Production: https://speedlightculture-3oajeco40-cts-projects-02159da9.vercel.app [3s]
+https://speedlightculture-3oajeco40-cts-projects-02159da9.vercel.app> [debug] [2026-01-13T15:10:30.480Z] Valid access token, skipping token refresh.
+> [debug] [2026-01-13T15:10:30.480Z] Spinner invoked (Queued...) with a 0ms delay
+> [debug] [2026-01-13T15:10:30.482Z] #4 → GET https://api.vercel.com/v2/user
+[client-debug] 2026-01-13T15:10:30.482Z Waiting for deployment to be ready...
+[client-debug] 2026-01-13T15:10:30.482Z Waiting for builds and the deployment to complete...
+> [debug] [2026-01-13T15:10:30.774Z] #4 ← 200 OK: sfo1::d82p6-1768317030766-6a149e85ffd9 [292ms]
+> [debug] [2026-01-13T15:10:30.775Z] Valid access token, skipping token refresh.
+> [debug] [2026-01-13T15:10:30.776Z] #5 → GET https://api.vercel.com/v3/now/deployments/dpl_DsuGyQCmHGkYC2Ztm5qmFG6cxtSr/events?direction=forward&follow=1&format=lines&teamId=team_udjOsS1HnA40aIQhroWHvuC1
+[client-debug] 2026-01-13T15:10:32.228Z Deployment state changed to BUILDING
+[client-debug] 2026-01-13T15:10:32.228Z Yielding a 'building' event
+> [debug] [2026-01-13T15:10:32.228Z] Spinner invoked (Queued...) with a 0ms delay
+> [debug] [2026-01-13T15:10:33.568Z] #5 ← 200 OK: sfo1::d82p6-1768317031057-7e296d419a1a [2.79s]
+> [debug] [2026-01-13T15:10:33.570Z] Spinner invoked (Building: Running build in Portland, USA (West) – pdx1) with a 0ms delay
+> [debug] [2026-01-13T15:10:33.570Z] Spinner invoked (Building: Build machine configuration: 2 cores, 8 GB) with a 0ms delay
+> [debug] [2026-01-13T15:10:33.570Z] Spinner invoked (Building: Retrieving list of deployment files...) with a 0ms delay
+> [debug] [2026-01-13T15:10:33.570Z] Spinner invoked (Building: Previous build caches not available.) with a 0ms delay
+> [debug] [2026-01-13T15:10:33.570Z] Spinner invoked (Building: Downloading 672 deployment files...) with a 0ms delay
+> [debug] [2026-01-13T15:10:39.353Z] Spinner invoked (Building: Warning: Detected "engines": { "node": ">=20.0.0" } in your `package.json` that will automatically upgrade when a new major Node.js Version is released. Learn More: http://vercel.link/node-version) with a 0ms delay
+> [debug] [2026-01-13T15:10:39.354Z] Spinner invoked (Building: Running "vercel build") with a 0ms delay
+> [debug] [2026-01-13T15:10:39.354Z] Spinner invoked (Building: Vercel CLI 50.1.6) with a 0ms delay
+> [debug] [2026-01-13T15:10:39.354Z] Spinner invoked (Building: Warning: Detected "engines": { "node": ">=20.0.0" } in your `package.json` that will automatically upgrade when a new major Node.js Version is released. Learn More: http://vercel.link/node-version) with a 0ms delay
+> [debug] [2026-01-13T15:10:39.354Z] Spinner invoked (Building: Installing dependencies...) with a 0ms delay
+> [debug] [2026-01-13T15:10:43.625Z] Spinner invoked (Building: npm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser) with a 0ms delay
+> [debug] [2026-01-13T15:10:43.625Z] Spinner invoked (Building: npm warn deprecated rimraf@2.7.1: Rimraf versions prior to v4 are no longer supported) with a 0ms delay
+> [debug] [2026-01-13T15:10:43.625Z] Spinner invoked (Building: npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead) with a 0ms delay
+> [debug] [2026-01-13T15:10:43.625Z] Spinner invoked (Building: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.) with a 0ms delay
+> [debug] [2026-01-13T15:10:43.626Z] Spinner invoked (Building: npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported) with a 0ms delay
+> [debug] [2026-01-13T15:10:44.684Z] Spinner invoked (Building: npm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0) with a 0ms delay
+> [debug] [2026-01-13T15:10:44.684Z] Spinner invoked (Building: npm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained) with a 0ms delay
+> [debug] [2026-01-13T15:10:46.773Z] Spinner invoked (Building: npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: added 695 packages in 17s) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: 171 packages are looking for funding) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: run `npm fund` for details) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: Detected Next.js version: 16.0.8) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: Running "npm run build") with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: > speedlight-culture@0.1.0 build) with a 0ms delay
+> [debug] [2026-01-13T15:10:57.402Z] Spinner invoked (Building: > next build) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.746Z] Spinner invoked (Building: Attention: Next.js now collects completely anonymous telemetry regarding usage.) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.746Z] Spinner invoked (Building: This information is used to shape Next.js' roadmap and prioritize features.) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.746Z] Spinner invoked (Building: You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.746Z] Spinner invoked (Building: https://nextjs.org/telemetry) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.747Z] Spinner invoked (Building: ▲ Next.js 16.0.8 (Turbopack)) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.747Z] Spinner invoked (Building: ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy) with a 0ms delay
+> [debug] [2026-01-13T15:10:59.747Z] Spinner invoked (Building: Creating an optimized production build ...) with a 0ms delay
+> [debug] [2026-01-13T15:11:27.446Z] Spinner invoked (Building: > Build error occurred) with a 0ms delay
+> [debug] [2026-01-13T15:11:28.466Z] Spinner invoked (Building: Error: Command "npm run build" exited with 1) with a 0ms delay
+[client-debug] 2026-01-13T15:11:29.556Z Yielding a 'error' event
+> [debug] [2026-01-13T15:11:29.558Z] Error: Error: Command "npm run build" exited with 1
+Error: Command "npm run build" exited with 1
+    at Now.handleDeploymentError (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153728:16)
+    at processDeployment (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153466:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Now.create (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153623:28)
+    at async createDeploy (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153874:12)
+    at async deploy_default (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:154789:22)
+    at async main18 (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:192468:19)
+> [debug] [2026-01-13T15:11:29.558Z] handling error: Error: Command "npm run build" exited with 1
+    at Now.handleDeploymentError (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153728:16)
+    at processDeployment (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153466:34)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Now.create (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153623:28)
+    at async createDeploy (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:153874:12)
+    at async deploy_default (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:154789:22)
+    at async main18 (file:///Users/camilotoloza/.npm/_npx/69f9afb961c37556/node_modules/vercel/dist/index.js:192468:19)
+Error: Command "npm run build" exited with 1
+> [debug] [2026-01-13T15:11:30.750Z] Vercel CLI 50.3.0
+
+> [debug] [2026-01-13T15:11:31.562Z] Telemetry subprocess killed due to timeout
+> [debug] [2026-01-13T15:11:31.574Z] Telemetry subprocess exited with code null
