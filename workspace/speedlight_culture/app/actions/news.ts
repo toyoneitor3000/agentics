@@ -18,13 +18,18 @@ export type Commit = {
 export async function getCommits(): Promise<Commit[]> {
     // 1. Try to fetch from local git log
     try {
-        const { stdout } = await execAsync('git log -n 20 --pretty=format:\'%h|%an|%ad|%s\' --date=iso');
+        const { stdout } = await execAsync('git log -n 3 --pretty=format:\'%h|%an|%ad|%s\' --date=iso', { cwd: process.cwd() });
         // Format: hash|author|date|message
         const lines = stdout.trim().split('\n');
         return lines.map(line => {
-            const [hash, author, date, message] = line.split('|');
+            const parts = line.split('|');
+            if (parts.length < 4) return null;
+            const hash = parts[0];
+            const author = parts[1];
+            const date = parts[2];
+            const message = parts.slice(3).join('|'); // Rejoin message in case it contained pipes
             return { hash, author, date, message };
-        });
+        }).filter((c): c is Commit => c !== null);
     } catch (error) {
         console.error("Error fetching git log:", error);
         // Fallback or empty if no git
@@ -98,6 +103,10 @@ export async function publishNews(item: { title: string, content: string, catego
             await query(insertQuery, params);
         }
 
+
+        // 3. Notify WhatsApp (Free API)
+        await sendWhatsAppNotification(item.title);
+
         return { success: true, newsId };
 
     } catch (e: any) {
@@ -135,5 +144,20 @@ export async function deleteNews(id: string) {
     } catch (e: any) {
         console.error("Error deleting news:", e);
         return { success: false, error: e.message || "Failed to delete" };
+    }
+}
+
+async function sendWhatsAppNotification(title: string) {
+    const phone = process.env.WHATSAPP_PHONE;
+    const apiKey = process.env.WHATSAPP_API_KEY;
+
+    if (phone && apiKey) {
+        try {
+            const message = `🚨 *Speedlight News* 🚨\n\n${title}\n\nLee más en: https://speedlight_culture.com/news`;
+            const url = `https://api.callmebot.com/whatsapp.php?phone=${phone}&text=${encodeURIComponent(message)}&apikey=${apiKey}`;
+            await fetch(url);
+        } catch (error) {
+            console.error("WhatsApp notification failed:", error);
+        }
     }
 }

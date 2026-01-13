@@ -189,8 +189,8 @@ export default function AppHeader() {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
                 {/* Left: Back Button (Deep Nav) OR Notifications (Main Nav) */}
-                <div className="flex items-center gap-4 z-10 pointer-events-auto">
-                    {showBackButton ? (
+                <div className="flex items-center gap-2 z-10 pointer-events-auto">
+                    {showBackButton && (
                         <button
                             onClick={() => router.back()}
                             className="text-white hover:text-[#FF9800] transition-colors p-2 -ml-2 flex items-center justify-center bg-transparent"
@@ -198,31 +198,31 @@ export default function AppHeader() {
                         >
                             <ChevronLeft className="w-8 h-8 md:w-6 md:h-6" />
                         </button>
-                    ) : (
-                        /* Mobile: Message/Notification Icon on Main Pages (ONLY IF LOGGED IN) */
-                        user && (
-                            <>
-                                <Link
-                                    href="/messages"
-                                    onClick={handleMessageClick}
-                                    className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
-                                >
-                                    <MessageCircle className="w-6 h-6" />
-                                    {hasUnreadMessages && (
-                                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
-                                    )}
-                                </Link>
-                                <button
-                                    onClick={handleNotificationClick}
-                                    className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
-                                >
-                                    <Bell className="w-6 h-6" />
-                                    {hasUnreadNotifications && (
-                                        <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
-                                    )}
-                                </button>
-                            </>
-                        )
+                    )}
+
+                    {/* Mobile: Message/Notification Icon on Main Pages OR News (ONLY IF LOGGED IN) */}
+                    {user && (!showBackButton || pathname === '/news') && (
+                        <>
+                            <Link
+                                href="/messages"
+                                onClick={handleMessageClick}
+                                className={`text-white/80 hover:text-[#FF9800] transition-colors p-2 relative md:hidden ${showBackButton ? '' : '-ml-2'}`}
+                            >
+                                <MessageCircle className={`${pathname === '/news' ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                                {hasUnreadMessages && (
+                                    <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
+                                )}
+                            </Link>
+                            <button
+                                onClick={handleNotificationClick}
+                                className={`text-white/80 hover:text-[#FF9800] transition-colors p-2 relative md:hidden ${showBackButton ? '' : '-ml-2'}`}
+                            >
+                                <Bell className={`${pathname === '/news' ? 'w-5 h-5' : 'w-6 h-6'}`} />
+                                {hasUnreadNotifications && (
+                                    <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
+                                )}
+                            </button>
+                        </>
                     )}
 
                     {/* Desktop: Brand Logo */}
@@ -253,15 +253,15 @@ export default function AppHeader() {
                 </div>
 
                 {/* Right: Profile / Auth */}
-                <div className="flex items-center gap-4 z-10 pointer-events-auto">
+                <div className="flex items-center gap-2 z-10 pointer-events-auto">
                     {/* Search Icon (Moved from Bottom Nav) */}
                     <Link href="/search" className="text-white hover:text-[#FF9800] transition-colors p-1">
-                        <Search className="w-6 h-6" />
+                        <Search className="w-5 h-5" />
                     </Link>
 
                     {/* Desktop: Extra Actions (e.g. Notifications) */}
                     <div className="hidden md:flex items-center gap-2 mr-2">
-                        {!showBackButton && user && (
+                        {(!showBackButton || pathname === '/news') && user && (
                             <>
                                 <Link
                                     href="/messages"
@@ -301,12 +301,12 @@ export default function AppHeader() {
                                     <UserBadge role={userRole || 'user'} size="sm" />
                                 </div>
                                 {user.image ? (
-                                    <div className="w-9 h-9 rounded-xl border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">
-                                        <Image src={user.image} alt={user.name || "User"} width={36} height={36} className="object-cover w-full h-full" />
+                                    <div className="w-8 h-8 rounded-xl border border-[#FF9800]/50 group-hover:border-[#FF9800] overflow-hidden transition-colors shadow-[0_0_10px_rgba(255,152,0,0.1)]">
+                                        <Image src={user.image} alt={user.name || "User"} width={32} height={32} className="object-cover w-full h-full" />
                                     </div>
                                 ) : (
-                                    <div className="w-9 h-9 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center">
-                                        <User className="w-5 h-5" />
+                                    <div className="w-8 h-8 rounded-xl border border-white/20 bg-white/5 flex items-center justify-center">
+                                        <User className="w-4 h-4" />
                                     </div>
                                 )}
                             </button>

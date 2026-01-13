@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Menu, X } from 'lucide-react';
@@ -12,41 +12,9 @@ const navLinks = [
 ];
 
 const Header = () => {
-  const [isNavbarVisible, setIsNavbarVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
 
-      // LÓGICA: Navbar oculto al inicio
-      // Aparece al hacer scroll hacia abajo (más de 80px)
-      // Desaparece SOLO cuando vuelves al top (menos de 50px)
-      if (currentScrollY > 80) {
-        setIsNavbarVisible(true);
-      } else if (currentScrollY < 50) {
-        setIsNavbarVisible(false);
-      }
-    };
-
-    // Optimización con requestAnimationFrame
-    let ticking = false;
-    const scrollHandler = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', scrollHandler, { passive: true });
-
-    return () => {
-      window.removeEventListener('scroll', scrollHandler);
-    };
-  }, []);
 
   // Cerrar menú móvil al hacer clic en un enlace
   const handleNavLinkClick = () => {
@@ -57,10 +25,7 @@ const Header = () => {
     <>
       {/* ===== NAVBAR PRINCIPAL (Oculto al inicio, aparece con scroll) ===== */}
       <header
-        className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-out ${isNavbarVisible
-          ? 'translate-y-0 opacity-100'
-          : '-translate-y-full opacity-0'
-          }`}
+        className="fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-out translate-y-0 opacity-100"
       >
         {/* Contenedor con gradiente y desenfoque */}
         <div className="relative">

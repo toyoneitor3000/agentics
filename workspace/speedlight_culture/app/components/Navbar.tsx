@@ -32,6 +32,7 @@ export default function Navbar() {
         { name: "Academy", path: "/academy" },
         { name: "Marketplace", path: "/marketplace" },
         { name: "Foro", path: "/forum" },
+        { name: "Blog", path: "/blog" },
         { name: "Galería", path: "/gallery" },
         { name: "Eventos", path: "/events" },
         { name: "Planes", path: "/pricing" },

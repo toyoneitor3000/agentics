@@ -109,7 +109,7 @@ const HeroSection: React.FC = () => {
           </span>
         </h1>
         <p className="text-lg md:text-2xl lg:text-3xl text-brand-slate mb-8 md:mb-10 max-w-3xl mx-auto font-light leading-relaxed px-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          El centro de detallado automotriz más exclusivo de Bogotá.
+          El centro de detallado automotriz más avanzado de Bogotá.
           <span className="block mt-3 md:mt-4 text-brand-cyan font-medium font-orbitron text-base md:text-lg tracking-normal md:tracking-[0.2em]">
             CERÁMICOS 9H • PPF • RESTAURACIÓN PREMIUM
           </span>

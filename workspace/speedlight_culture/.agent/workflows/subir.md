@@ -10,16 +10,18 @@ description: Realiza un commit detallado, hace push a GitHub y despliega a produ
    ```bash
    git add .
    ```
-3. Genera un mensaje de commit en **español** que sea **exhaustivo y detallado**.
-   - El título debe ser claro y conciso.
-   - El cuerpo del mensaje debe listar los cambios técnicos específicos.
-   - Explica el propósito de los cambios (el "por qué").
-   - Utiliza formato de lista `*` para múltiples cambios.
+3. Genera un mensaje de commit en **ESPAÑOL** que sea **extremadamente detallado y explicativo para el usuario**.
+   - **IMPORTANTE**: Todo el texto debe estar en español.
+   - El título debe ser descriptivo pero conciso.
+   - El cuerpo del mensaje debe explicar **exactamente qué se hizo** y **por qué**, pensando en comunicar el valor al usuario final o al desarrollador.
+   - No seas genérico. En lugar de "ajustes de UI", di "se cambió el color de fondo a negro (#000) para mejorar el contraste".
+   - Lista los cambios técnicos específicos usando viñetas `*`.
    
-   Ejemplo del comando final que deberías generar (pero con el mensaje real):
+   Ejemplo del comando final que deberías generar (pero con el contenido real de TUS cambios):
    ```bash
-   git commit -m "Título del cambio: Refactorización de X" -m "* Se actualizó el archivo Y para mejorar el rendimiento.
-   * Se corrigió el bug en Z que causaba un crash."
+   git commit -m "Implementación de la nueva vista de galería en el dashboard" -m "* Se creó el componente GalleryView para visualizar imágenes en cuadrícula.
+   * Se añadió lógica de paginación para manejar grandes volúmenes de datos.
+   * Se corrigió un error de estilo en el botón de 'Cargar más' que impedía hacer clic en dispositivos móviles."
    ```
 4. Sube los cambios a GitHub (asegúrate de estar en la rama correcta, por defecto `main`):
    ```bash
