@@ -13,6 +13,8 @@ const eslintConfig = defineConfig([
     "build/**",
     ".vercel/**",
     ".netlify/**",
+    "speedlightacademy/**",
+    "supabase/**",
     "next-env.d.ts",
   ]),
 ]);
