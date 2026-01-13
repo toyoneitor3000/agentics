@@ -245,7 +245,7 @@ export default function PricingPage() {
     ];
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-[#050302]">
+        <div className="min-h-screen pt-24 pb-12 bg-[#0D0805]">
             {/* Banner Operation Cold Start */}
             <div className="container mx-auto px-4 mb-8">
                 <div className="bg-gradient-to-r from-[#D32F2F]/20 to-[#FF9800]/20 border border-[#D32F2F] rounded-lg p-4 flex flex-col md:flex-row items-center justify-between gap-4">

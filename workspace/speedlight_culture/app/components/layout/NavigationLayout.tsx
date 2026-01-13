@@ -53,7 +53,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col min-h-screen bg-transparent relative">
             {/* Universal Top Header (Fixed Top) */}
             {/* User Request: Header should NEVER hide, even in Immersive Mode */}
-            <div className="opacity-100 z-[60]">
+            <div className="opacity-100 z-[250]">
                 <AppHeader />
             </div>
 

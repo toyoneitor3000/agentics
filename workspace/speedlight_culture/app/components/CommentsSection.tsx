@@ -238,7 +238,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
 
                                     {/* MINI POPUP MENU */}
                                     {activeGiftMenu === comment.id && (
-                                        <div className="absolute bottom-full left-0 mb-2 bg-[#1A0F08] border border-[#FF9800]/30 rounded-xl shadow-xl p-2 flex gap-2 z-50 animate-in zoom-in-50 slide-in-from-bottom-2">
+                                        <div className="absolute bottom-full left-0 mb-2 bg-[#0D0805] border border-[#FF9800]/30 rounded-xl shadow-xl p-2 flex gap-2 z-50 animate-in zoom-in-50 slide-in-from-bottom-2">
                                             {MINI_GIFTS.map(gift => (
                                                 <button
                                                     key={gift.id}
@@ -253,7 +253,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
                                                     <span className="text-[9px] font-bold text-[#FF9800]">{gift.price}</span>
                                                 </button>
                                             ))}
-                                            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-[#1A0F08] border-b border-r border-[#FF9800]/30 rotate-45 transform"></div>
+                                            <div className="absolute -bottom-1.5 left-4 w-3 h-3 bg-[#0D0805] border-b border-r border-[#FF9800]/30 rotate-45 transform"></div>
                                         </div>
                                     )}
                                 </div>
@@ -282,7 +282,7 @@ export const CommentsSection = ({ targetId, targetType, onCommentAdded }: { targ
 
                         {/* Mention Suggestions Dropdown */}
                         {showMentions && mentionCandidates.length > 0 && (
-                            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#1A0F08] border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2">
+                            <div className="absolute bottom-full left-0 mb-2 w-64 bg-[#0D0805] border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-bottom-2">
                                 <div className="px-3 py-2 text-[10px] text-[#FF9800] font-bold uppercase tracking-wider bg-[#FF9800]/10 border-b border-[#FF9800]/10">
                                     Sugerencias
                                 </div>

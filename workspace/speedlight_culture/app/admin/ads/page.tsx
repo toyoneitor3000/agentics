@@ -50,7 +50,7 @@ export default function AdminAdsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-[#F5E6D3] p-8 font-sans">
+        <div className="min-h-screen bg-[#0D0805] text-[#F5E6D3] p-8 font-sans">
             <div className="max-w-7xl mx-auto">
 
                 <header className="flex justify-between items-center mb-12 border-b border-white/10 pb-6">
@@ -87,8 +87,8 @@ export default function AdminAdsPage() {
                                         key={type.id}
                                         onClick={() => setActiveTab(type.id as AdType)}
                                         className={`px-4 py-2 rounded text-xs font-bold uppercase tracking-wider border transition-all ${activeTab === type.id
-                                                ? 'bg-[#FF9800] text-black border-[#FF9800]'
-                                                : 'bg-transparent text-white border-white/20 hover:border-white/50'
+                                            ? 'bg-[#FF9800] text-black border-[#FF9800]'
+                                            : 'bg-transparent text-white border-white/20 hover:border-white/50'
                                             }`}
                                     >
                                         {type.label}

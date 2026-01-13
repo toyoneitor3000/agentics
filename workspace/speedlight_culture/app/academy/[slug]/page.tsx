@@ -34,7 +34,7 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
     };
 
     return (
-        <main className="min-h-screen bg-[#050302] pt-32 pb-20">
+        <main className="min-h-screen bg-[#0D0805] pt-32 pb-20">
             <div className="container mx-auto px-6">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content (Video Player area) */}
@@ -62,7 +62,7 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
                         </div>
 
                         {/* Instructor Bio */}
-                        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#1A0F08] border border-[#2C1810]">
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-[#0D0805] border border-[#2C1810]">
                             <div className="w-12 h-12 rounded-full bg-gray-700"></div>
                             <div>
                                 <h4 className="font-bold text-[#F5E6D3]">{COURSE.instructor}</h4>
@@ -73,7 +73,7 @@ export default function CoursePage({ params }: { params: Promise<{ slug: string 
 
                     {/* Sidebar (Curriculum) */}
                     <div className="lg:col-span-1">
-                        <div className="bg-[#1A0F08] border border-[#2C1810] rounded-2xl p-6 sticky top-32">
+                        <div className="bg-[#0D0805] border border-[#2C1810] rounded-2xl p-6 sticky top-32">
                             <h3 className="text-xl font-bold text-[#F5E6D3] mb-4">Contenido del Curso</h3>
 
                             <div className="space-y-3">

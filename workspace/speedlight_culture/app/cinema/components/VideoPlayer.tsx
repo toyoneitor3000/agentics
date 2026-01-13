@@ -433,8 +433,6 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                         <video
                             ref={nativeVideoRef}
                             src={post.videoUrl}
-                            // Keep native poster as backup, but our custom layer does the real job
-                            poster={posterUrl}
                             className={`w-full h-full pointer-events-none ${post.format === 'vertical' ? 'object-cover md:object-contain' : 'object-contain'}`}
                             autoPlay
                             loop={isFeedMode && !autoScrollEnabled}
@@ -475,6 +473,31 @@ export function VideoPlayer({ post, isFeedMode, isActive, isMuted, toggleMute, o
                         />
                     )}
                 </>
+            )}
+
+            {/* === CINEMA LOADING OVERLAY (Premium Experience) === */}
+            {!hasActuallyPlayed && !isBlocked && isInView && (
+                <div className="absolute inset-0 z-15 bg-black flex flex-col items-center justify-center pointer-events-none">
+                    {/* Ambient Background Glow */}
+                    <div className="absolute inset-0 bg-gradient-radial from-[#1a0f08]/30 via-black to-black opacity-80" />
+
+                    {/* Logo */}
+                    <div className="relative z-10 flex flex-col items-center gap-6">
+                        <Image
+                            src="/logonavbar.png"
+                            alt="Speedlight"
+                            width={140}
+                            height={50}
+                            className="object-contain opacity-70 animate-pulse"
+                        />
+
+                        {/* Elegant Loading Spinner */}
+                        <div className="w-8 h-8 relative">
+                            <div className="absolute inset-0 border-2 border-white/10 rounded-full" />
+                            <div className="absolute inset-0 border-2 border-transparent border-t-[#FF9800]/60 rounded-full animate-spin" />
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* === BLOCKED/MANUAL PLAY BUTTON (iOS Low Power Mode) === */}

@@ -115,13 +115,13 @@ export default function EditProfilePage() {
         }
     };
 
-    if (loading) return <div className="min-h-screen bg-[#050505] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" /></div>;
+    if (loading) return <div className="min-h-screen bg-[#0D0805] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#FF9800] animate-spin" /></div>;
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-[70px]">
+        <div className="min-h-screen bg-[#0D0805] text-white pt-[70px]">
             <div className="max-w-xl mx-auto pb-20">
                 {/* Header */}
-                <header className="sticky top-[70px] z-40 bg-[#050505]/80 backdrop-blur-md border-b border-[#222] px-4 py-4 flex items-center justify-between">
+                <header className="sticky top-[70px] z-40 bg-[#0D0805]/80 backdrop-blur-md border-b border-[#222] px-4 py-4 flex items-center justify-between">
                     <Link href="/profile" className="p-2 -ml-2 text-white/60 hover:text-white">
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
@@ -154,7 +154,7 @@ export default function EditProfilePage() {
 
                     {/* Avatar Edit - Overlapping slightly up */}
                     <div className="flex justify-center -mt-16 relative z-10">
-                        <div className="relative w-32 h-32 rounded-full border-4 border-[#050505] bg-[#1a1a1a] overflow-hidden group">
+                        <div className="relative w-32 h-32 rounded-full border-4 border-[#0D0805] bg-[#1a1a1a] overflow-hidden group">
                             {formData.avatar_url ? (
                                 <Image src={formData.avatar_url} alt="Avatar" fill className="object-cover opacity-80 group-hover:opacity-50 transition-opacity" />
                             ) : (

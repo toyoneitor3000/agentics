@@ -81,7 +81,7 @@ export default function Navbar() {
     return (
         <header
             className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-500 border-b ${scrolled
-                ? "py-2 bg-[#1A0F08]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
+                ? "py-2 bg-[#0D0805]/80 backdrop-blur-2xl border-[#FF9800]/10 shadow-[0_4px_30px_rgba(0,0,0,0.5)]"
                 : "py-6 bg-transparent border-transparent"
                 }`}
         >
@@ -143,7 +143,7 @@ export default function Navbar() {
                                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                                     className="flex items-center gap-2 group p-1 rounded-full border border-transparent hover:border-[#FF9800]/50 transition-all duration-300"
                                 >
-                                    <div className="w-9 h-9 rounded-full border border-[#FF9800]/30 overflow-hidden bg-[#1A0F08] flex items-center justify-center shadow-[0_0_15px_rgba(255,152,0,0.1)] group-hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] transition-all">
+                                    <div className="w-9 h-9 rounded-full border border-[#FF9800]/30 overflow-hidden bg-[#0D0805] flex items-center justify-center shadow-[0_0_15px_rgba(255,152,0,0.1)] group-hover:shadow-[0_0_20px_rgba(255,152,0,0.4)] transition-all">
                                         {user.image ? (
                                             <Image src={user.image} alt="Avatar" width={40} height={40} className="w-full h-full object-cover" />
                                         ) : (
@@ -153,7 +153,7 @@ export default function Navbar() {
                                 </button>
                                 {/* Dropdown */}
                                 {isMenuOpen && (
-                                    <div className="absolute right-0 top-12 w-64 bg-[#1A0F08]/95 backdrop-blur-xl border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="absolute right-0 top-12 w-64 bg-[#0D0805]/95 backdrop-blur-xl border border-[#FF9800]/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
                                         <div className="p-4 border-b border-white/5 bg-white/5">
                                             <p className="text-xs text-[#8D6E63] uppercase tracking-wider mb-1 flex items-center justify-between">
                                                 Conectado como
@@ -201,7 +201,7 @@ export default function Navbar() {
             </div>
 
             {/* 4. Immersive Mobile Menu (Glass Overlay) */}
-            <div className={`fixed inset-0 z-[60] bg-[#1A0F08]/95 backdrop-blur-3xl transition-transform duration-500 lg:hidden ${isMobileNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed inset-0 z-[60] bg-[#0D0805]/95 backdrop-blur-3xl transition-transform duration-500 lg:hidden ${isMobileNavOpen ? 'translate-x-0' : 'translate-x-full'}`}>
                 {/* Header */}
                 <div className="flex justify-between items-center p-6 border-b border-white/5">
                     <Link href="/" onClick={() => setIsMobileNavOpen(false)}>

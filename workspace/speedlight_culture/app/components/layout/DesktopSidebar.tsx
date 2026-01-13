@@ -71,7 +71,7 @@ export default function DesktopSidebar({ isCollapsed, toggleSidebar }: DesktopSi
 
     return (
         <div
-            className={`hidden md:flex flex-col fixed left-0 top-[70px] h-[calc(100vh-70px)] bg-[#050302] border-r border-[#FF9800]/10 py-4 z-40 transition-all duration-300 ${isCollapsed ? 'w-[80px]' : 'w-[244px]'}`}
+            className={`hidden md:flex flex-col fixed left-0 top-[70px] h-[calc(100vh-70px)] bg-[#0D0805] border-r border-[#FF9800]/10 py-4 z-40 transition-all duration-300 ${isCollapsed ? 'w-[80px]' : 'w-[244px]'}`}
         >
             {/* Logo Section Removed (Moved to Header) */}
 

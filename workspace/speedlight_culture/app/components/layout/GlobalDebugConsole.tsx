@@ -138,7 +138,7 @@ export default function GlobalDebugConsole() {
                 initial={{ x: 20, y: window.innerHeight - 320 }}
                 className={`pointer-events-auto absolute flex flex-col transition-all duration-300 shadow-2xl overflow-hidden border border-white/10 ${isMinimized
                     ? 'bg-[#0A0A0A] rounded-full w-auto items-center justify-center'
-                    : 'bg-[#050505]/95 backdrop-blur-md rounded-xl w-[90vw] max-w-[400px] h-[300px]'
+                    : 'bg-[#0D0805]/95 backdrop-blur-md rounded-xl w-[90vw] max-w-[400px] h-[300px]'
                     }`}
             >
                 {/* HEADER */}

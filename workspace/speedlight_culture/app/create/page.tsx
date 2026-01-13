@@ -53,7 +53,7 @@ export default function CreatePage() {
     const content = t[language];
 
     return (
-        <div className="min-h-screen bg-black text-white p-6 pb-24 md:pl-[244px] md:pt-20">
+        <div className="min-h-screen bg-[#0D0805] text-white p-6 pb-24 md:pl-[244px] md:pt-20">
             <div className="max-w-5xl mx-auto">
                 <div className="mb-12 text-center md:text-left animate-fade-in">
                     <div className="inline-block bg-[#FF9800] text-black px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-sm mb-4">

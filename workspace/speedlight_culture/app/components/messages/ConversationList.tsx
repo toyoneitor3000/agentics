@@ -136,7 +136,7 @@ export default function ConversationList({ activeId, onSelect }: { activeId: str
     };
 
     return (
-        <div className="h-full flex flex-col bg-[#050505] border-r border-white/5">
+        <div className="h-full flex flex-col bg-[#0D0805] border-r border-white/5">
             <div className="p-4 border-b border-white/5">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold text-white font-oswald uppercase">Mensajes</h2>

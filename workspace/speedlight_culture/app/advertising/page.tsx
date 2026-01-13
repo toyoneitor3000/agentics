@@ -299,7 +299,7 @@ function CampaignSimulator() {
 
 export default function AdvertisingPage() {
     return (
-        <main className="min-h-screen bg-[#050302] selection:bg-[#FF9800] selection:text-black pb-20">
+        <main className="min-h-screen bg-[#0D0805] selection:bg-[#FF9800] selection:text-black pb-20">
             {/* HERO SECTION - CAMPAIGN MANAGER STYLE */}
             <header className="relative pt-32 pb-20 overflow-hidden">
                 <div className="container mx-auto px-6 relative z-10">

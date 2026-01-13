@@ -28,7 +28,7 @@ export default function MessagesPage() {
             </div>
 
             {/* Chat Area - Hidden on mobile if no chat active */}
-            <div className={`flex-1 flex flex-col bg-[#050505] relative ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
+            <div className={`flex-1 flex flex-col bg-[#0D0805] relative ${!activeConversationId ? 'hidden md:flex' : 'flex'}`}>
                 {activeConversationId ? (
                     <>
                         {/* Mobile Back Button Overlay (Inside Header usually, but here for structure) */}

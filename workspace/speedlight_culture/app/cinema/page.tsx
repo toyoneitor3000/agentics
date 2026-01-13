@@ -167,7 +167,7 @@ function CinemaSocialContent() {
 
 
     return (
-        <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
+        <div className="bg-[#0D0805] min-h-screen w-full relative font-sans text-white overflow-hidden selection:bg-[#FF9800] selection:text-black">
 
             {/* HEADER TOGGLE */}
             <div className={`fixed top-[65px] left-0 right-0 z-[140] transition-all duration-500 ${viewMode === 'cinema' ? 'bg-gradient-to-b from-black/90' : ''} ${isUiVisible ? 'opacity-100' : 'opacity-0'}`}>
@@ -204,7 +204,7 @@ function CinemaSocialContent() {
                         )}
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 opacity-40 animate-pulse"><ChevronDown className="w-6 h-6 text-white" /></div>
                     </div>
-                    <div className="relative z-10 bg-[#050505] pb-20 pt-12 min-h-screen px-4 md:px-12 space-y-12">
+                    <div className="relative z-10 bg-[#0D0805] pb-20 pt-12 min-h-screen px-4 md:px-12 space-y-12">
                         <CategoryRow title="Tendencias Globales" posts={categories.trending} onPostClick={setActiveMovie} />
                         <CategoryRow title="Speedlight Originals" posts={categories.originals} onPostClick={setActiveMovie} />
                         <CategoryRow title="Build Documentaries" posts={categories.builds} onPostClick={setActiveMovie} />

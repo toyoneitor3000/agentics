@@ -81,7 +81,7 @@ export async function publishNews(item: { title: string, content: string, catego
                 values.push(`($${pIndex}, $${pIndex + 1}, $${pIndex + 2}, $${pIndex + 3}, $${pIndex + 4}, $${pIndex + 5})`);
                 params.push(
                     p.id, // recipient
-                    user.id, // actor
+                    null, // actor: NULL for anonymous "Speedlight Team" attribution
                     'system', // type: using 'system' or new 'news' type? existing types: like, comment, mention, follow, system. 'system' fits.
                     item.title, // message
                     newsId, // target_id

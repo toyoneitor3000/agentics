@@ -141,7 +141,7 @@ export default function ChatWindow({ conversationId, otherUser }: { conversation
     if (loading) return <div className="h-full flex items-center justify-center text-white/40">Cargando chat...</div>;
 
     return (
-        <div className="flex flex-col h-full bg-[#050505] relative">
+        <div className="flex flex-col h-full bg-[#0D0805] relative">
             {/* Header */}
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-[#111]/50 backdrop-blur-md sticky top-0 z-10">
                 <div className="flex items-center gap-3">

@@ -39,7 +39,7 @@ const EVENTS = [
 
 export default function EventsPage() {
     return (
-        <main className="min-h-screen bg-[#1A0F08] text-[#FFF8F0]">
+        <main className="min-h-screen bg-[#0D0805] text-[#FFF8F0]">
             <Navbar />
 
             <div className="pt-32 pb-20 px-6 container mx-auto">

@@ -91,7 +91,7 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
     const selectedGiftData = GIFTS.find(g => g.id === selectedGift);
 
     return (
-        <div className="bg-[#1A0F08] border border-[#FF9800]/20 rounded-2xl p-6 md:p-8">
+        <div className="bg-[#0D0805] border border-[#FF9800]/20 rounded-2xl p-6 md:p-8">
             <h3 className="text-2xl font-bold text-[#F5E6D3] mb-2 flex items-center gap-2">
                 <span className="text-[#FF9800]">⚡</span> Potencia este Proyecto
             </h3>
@@ -180,7 +180,7 @@ export function GiftingSystem({ projectTitle }: { projectTitle: string }) {
             {/* Success Modal / Overlay */}
             {showSuccess && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
-                    <div className="bg-[#1A0F08] border border-[#FF9800] p-8 rounded-2xl max-w-sm w-full text-center relative overflow-hidden">
+                    <div className="bg-[#0D0805] border border-[#FF9800] p-8 rounded-2xl max-w-sm w-full text-center relative overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-t from-[#FF9800]/20 to-transparent"></div>
                         <div className="relative z-10">
                             <div className="text-6xl mb-4 animate-bounce">⚡</div>

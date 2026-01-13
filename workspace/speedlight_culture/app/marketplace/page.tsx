@@ -13,7 +13,7 @@ export default async function MarketplacePage() {
         .order('created_at', { ascending: false });
 
     return (
-        <div className="min-h-screen bg-black text-white pb-12">
+        <div className="min-h-screen bg-[#0D0805] text-white pb-12">
             <PageHero
                 title="Marketplace"
                 subtitle="Compra & Venta"

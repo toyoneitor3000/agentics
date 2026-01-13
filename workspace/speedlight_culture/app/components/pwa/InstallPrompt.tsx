@@ -72,7 +72,7 @@ export default function InstallPrompt() {
 
     return (
         <div className="fixed bottom-[90px] left-4 right-4 z-50 md:bottom-8 md:right-8 md:left-auto md:w-96 animate-in slide-in-from-bottom-10 fade-in duration-500">
-            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#050302]/90 p-4 backdrop-blur-xl shadow-2xl ring-1 ring-white/10">
+            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-[#0D0805]/90 p-4 backdrop-blur-xl shadow-2xl ring-1 ring-white/10">
 
                 {/* Background Gradient */}
                 <div className="absolute -top-10 -right-10 w-24 h-24 bg-[#FF9800]/20 rounded-full blur-2xl" />

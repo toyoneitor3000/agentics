@@ -22,7 +22,7 @@ export default function BackgroundsPage() {
         : WALLPAPERS.filter(w => w.category === activeCategory);
 
     return (
-        <main className="min-h-screen bg-[#1A0F08] text-[#FFF8F0]">
+        <main className="min-h-screen bg-[#0D0805] text-[#FFF8F0]">
             <Navbar />
 
             <div className="pt-32 pb-20 px-6 container mx-auto">
@@ -40,7 +40,7 @@ export default function BackgroundsPage() {
                             key={cat}
                             onClick={() => setActiveCategory(cat)}
                             className={`px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300 border ${activeCategory === cat
-                                    ? "bg-[#FF9800] text-[#1A0F08] border-[#FF9800]"
+                                    ? "bg-[#FF9800] text-[#0D0805] border-[#FF9800]"
                                     : "bg-transparent text-[#BCAAA4] border-[#4A2C1A] hover:border-[#FF9800]/50 hover:text-[#FFF8F0]"
                                 }`}
                         >
@@ -58,7 +58,7 @@ export default function BackgroundsPage() {
                                 style={{ backgroundImage: `url(${wallpaper.url})` }}
                             />
                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-sm">
-                                <button className="px-8 py-3 bg-[#FF9800] text-[#1A0F08] font-bold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#FFB74D]">
+                                <button className="px-8 py-3 bg-[#FF9800] text-[#0D0805] font-bold rounded-full transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#FFB74D]">
                                     DESCARGAR
                                 </button>
                             </div>

@@ -42,7 +42,7 @@ const COURSES = [
 
 export default function AcademyPage() {
     return (
-        <main className="min-h-screen bg-[#050302] pb-24">
+        <main className="min-h-screen bg-[#0D0805] pb-24">
             <PageHero
                 title="Speedlight Academy"
                 subtitle="Aprende. Construye. Corre."
@@ -71,7 +71,7 @@ export default function AcademyPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {COURSES.map((course) => (
                         <Link href={`/academy/${course.id}`} key={course.id} className="group">
-                            <div className="bg-[#1A0F08] border border-[#2C1810] rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-300 h-full flex flex-col">
+                            <div className="bg-[#0D0805] border border-[#2C1810] rounded-2xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-300 h-full flex flex-col">
                                 {/* Thumbnail */}
                                 <div className="relative h-56 overflow-hidden">
                                     <Image

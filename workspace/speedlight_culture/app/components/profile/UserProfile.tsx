@@ -290,7 +290,7 @@ export default function UserProfile({ profile, stats, content, isOwnProfile, act
     };
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pb-24">
+        <div className="min-h-screen bg-[#0D0805] text-white pb-24">
             {/* 1. COVER IMAGE (Full Bleed Mobile) */}
             <div className="relative h-80 md:h-[420px] w-full bg-[#111] overflow-hidden">
                 {profile?.cover_url ? (

@@ -133,11 +133,11 @@ export default function EditEventPage() {
     };
 
     if (fetching) {
-        return <div className="min-h-screen bg-[#050302] flex items-center justify-center text-white">Cargando evento...</div>;
+        return <div className="min-h-screen bg-[#0D0805] flex items-center justify-center text-white">Cargando evento...</div>;
     }
 
     return (
-        <div className="min-h-screen pt-24 pb-12 bg-[#050302]">
+        <div className="min-h-screen pt-24 pb-12 bg-[#0D0805]">
             <div className="container mx-auto px-4 max-w-3xl">
                 <div className="mb-8">
                     <Link href="/profile" className="flex items-center gap-2 text-gray-400 hover:text-[#FF9800] transition-colors mb-4">

@@ -142,7 +142,7 @@ export default function NewAlbumPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#141414] text-white pt-[100px] pb-20">
+        <div className="min-h-screen bg-[#0D0805] text-white pt-[100px] pb-20">
             <div className="container mx-auto px-6 max-w-4xl">
 
                 <Link href="/gallery" className="inline-flex items-center gap-2 text-white/50 hover:text-white mb-8 transition-colors">

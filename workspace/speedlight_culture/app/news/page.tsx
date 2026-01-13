@@ -17,7 +17,7 @@ export default async function SpeedlightNewsPage() {
     const news = await getNews();
 
     return (
-        <div className="min-h-screen bg-[#050505] text-[#F5E6D3] pt-24 pb-20 px-4 md:px-0">
+        <div className="min-h-screen bg-[#0D0805] text-[#F5E6D3] pt-24 pb-20 px-4 md:px-0">
             <div className="max-w-4xl mx-auto">
                 <header className="mb-12 text-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FF9800]/10 border border-[#FF9800]/20 text-[#FF9800] text-xs font-bold uppercase tracking-wider mb-4">
@@ -45,7 +45,7 @@ export default async function SpeedlightNewsPage() {
                             <div key={item.id} className={`flex flex-col md:flex-row gap-8 relative items-start ${index % 2 === 0 ? 'md:flex-row-reverse' : ''}`}>
 
                                 {/* Timeline Dot */}
-                                <div className="absolute left-4 md:left-1/2 w-4 h-4 bg-[#050505] border-2 border-[#FF9800] rounded-full transform -translate-x-1/2 mt-6 hidden md:block z-10 shadow-[0_0_10px_#FF9800]"></div>
+                                <div className="absolute left-4 md:left-1/2 w-4 h-4 bg-[#0D0805] border-2 border-[#FF9800] rounded-full transform -translate-x-1/2 mt-6 hidden md:block z-10 shadow-[0_0_10px_#FF9800]"></div>
 
                                 {/* Content Card */}
                                 <div className="flex-1 md:w-1/2 group">

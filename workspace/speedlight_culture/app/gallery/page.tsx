@@ -205,7 +205,7 @@ export default function GalleryPage() {
     const currentHero = heroItems[currentIndex];
 
     return (
-        <div className="min-h-screen bg-[#141414] text-white">
+        <div className="min-h-screen bg-[#0D0805] text-white">
 
             {/* IMMERSIVE HERO SLIDESHOW */}
             <div className="relative w-full h-[85vh] group overflow-hidden">

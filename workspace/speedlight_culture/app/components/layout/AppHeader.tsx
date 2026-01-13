@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/app/utils/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
 import { UserBadge } from "../UserBadge";
+import NotificationsModal from "../NotificationsModal";
 
 export default function AppHeader() {
     const { data: session, isPending } = useSession();
@@ -44,6 +45,7 @@ export default function AppHeader() {
     const [hasUnreadNotifications, setHasUnreadNotifications] = useState(false);
     const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
     const [showIgWarning, setShowIgWarning] = useState(false);
+    const [showNotificationsModal, setShowNotificationsModal] = useState(false);
 
     // --- INTELLIGENCE AT THE EDGE: NOTIFICATIONS & ENVIRONMENT ---
     // --- REALTIME NOTIFICATIONS & MESSAGES CHECK ---
@@ -138,6 +140,7 @@ export default function AppHeader() {
 
     const handleNotificationClick = () => {
         setHasUnreadNotifications(false);
+        setShowNotificationsModal(true);
         localStorage.setItem('last_notification_check', Date.now().toString());
     };
 
@@ -169,7 +172,7 @@ export default function AppHeader() {
                         }
                         setShowIgWarning(false);
                     }}
-                    className="fixed top-0 left-0 right-0 z-[100] bg-[#FF9800]/20 hover:bg-[#FF9800]/30 backdrop-blur-xl border-b border-[#FF9800]/50 text-[#FF9800] h-14 flex items-center justify-center px-4 shadow-[0_0_30px_rgba(255,152,0,0.2)] animate-in slide-in-from-top duration-700 cursor-pointer group"
+                    className="fixed top-0 left-0 right-0 z-[170] bg-[#FF9800]/20 hover:bg-[#FF9800]/30 backdrop-blur-xl border-b border-[#FF9800]/50 text-[#FF9800] h-14 flex items-center justify-center px-4 shadow-[0_0_30px_rgba(255,152,0,0.2)] animate-in slide-in-from-top duration-700 cursor-pointer group"
                 >
                     <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 font-oswald font-bold uppercase tracking-widest text-[10px] md:text-sm drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] text-center">
                         <span className="animate-pulse hidden md:inline">⚠️</span>
@@ -181,7 +184,7 @@ export default function AppHeader() {
                 </button>
             )}
 
-            <header className={`fixed top-0 left-0 right-0 z-[60] flex justify-between items-center px-2 md:px-4 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-14' : ''}`}>
+            <header className={`fixed top-0 left-0 right-0 z-[210] flex justify-between items-center px-2 md:px-4 py-3 w-full bg-transparent h-[70px] pointer-events-none ${showIgWarning ? 'mt-14' : ''}`}>
                 {/* Cinematic Deep Fade Gradient (Background) */}
                 <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-transparent z-[-1]" />
 
@@ -209,8 +212,7 @@ export default function AppHeader() {
                                         <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
                                 </Link>
-                                <Link
-                                    href="/notifications"
+                                <button
                                     onClick={handleNotificationClick}
                                     className="text-white/80 hover:text-[#FF9800] transition-colors p-2 -ml-2 relative md:hidden"
                                 >
@@ -218,7 +220,7 @@ export default function AppHeader() {
                                     {hasUnreadNotifications && (
                                         <span className="absolute top-1.5 right-2 w-2.5 h-2.5 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
-                                </Link>
+                                </button>
                             </>
                         )
                     )}
@@ -271,8 +273,7 @@ export default function AppHeader() {
                                         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
                                 </Link>
-                                <Link
-                                    href="/notifications"
+                                <button
                                     onClick={handleNotificationClick}
                                     className="text-white/60 hover:text-[#FF9800] p-2 transition-colors relative"
                                 >
@@ -280,7 +281,7 @@ export default function AppHeader() {
                                     {hasUnreadNotifications && (
                                         <span className="absolute top-1.5 right-2 w-2 h-2 bg-[#FF9800] rounded-full animate-pulse border border-black shadow-[0_0_8px_#FF9800]" />
                                     )}
-                                </Link>
+                                </button>
                             </>
                         )}
                     </div>
@@ -386,6 +387,13 @@ export default function AppHeader() {
                     )}
                 </div>
             </header>
+
+            {/* Notifications Modal */}
+            <NotificationsModal
+                isOpen={showNotificationsModal}
+                onClose={() => setShowNotificationsModal(false)}
+                userId={user?.id}
+            />
         </>
     );
 }

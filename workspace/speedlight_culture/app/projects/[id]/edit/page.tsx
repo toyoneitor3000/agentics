@@ -38,7 +38,7 @@ export default async function EditProjectPage(props: { params: Promise<{ id: str
     }
 
     return (
-        <div className="min-h-screen bg-black text-white py-24 pb-12">
+        <div className="min-h-screen bg-[#0D0805] text-white py-24 pb-12">
             <div className="max-w-3xl mx-auto px-4">
                 <Link href="/profile" className="text-white/40 hover:text-white flex items-center gap-2 mb-6 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Cancelar y volver

@@ -68,7 +68,7 @@ export default function EventsPage() {
     }, []);
 
     return (
-        <div className="min-h-screen pb-12 bg-[#050302]">
+        <div className="min-h-screen pb-12 bg-[#0D0805]">
             <PageHero
                 title="Calendario Global"
                 subtitle="Eventos & Meets"

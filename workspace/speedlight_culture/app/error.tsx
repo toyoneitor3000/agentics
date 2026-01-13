@@ -20,7 +20,7 @@ export default function Error({
     }, [error]);
 
     return (
-        <div className="min-h-screen bg-[#1A0F08] text-[#FFF8F0] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0D0805] text-[#FFF8F0] flex flex-col items-center justify-center p-4 relative overflow-hidden">
             {/* Background Gradients */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute -top-[20%] -left-[10%] w-[60%] h-[60%] bg-[#FF9800] rounded-full blur-[150px] opacity-10"></div>

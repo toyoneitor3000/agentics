@@ -208,9 +208,9 @@ export function SocialInterface({ post, isMuted, toggleMute, onOpenFull, duratio
                         <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm max-w-[200px]">
                             <span className="animate-pulse flex-shrink-0">♫</span>
                             <div className="overflow-hidden min-w-0">
-                                <span className={`whitespace-nowrap ${post.music_metadata ? 'animate-marquee' : ''} inline-block`}>
-                                    {post.music_metadata
-                                        ? `${post.music_metadata.name} - ${post.music_metadata.artist} `
+                                <span className={`whitespace-nowrap ${post.music_metadata?.name ? 'animate-marquee' : ''} inline-block`}>
+                                    {post.music_metadata?.name
+                                        ? `${post.music_metadata.name} ${post.music_metadata.artist ? `- ${post.music_metadata.artist}` : ''}`
                                         : `Sonido Original - ${post.creator || 'Speedlight'}`
                                     }
                                 </span>

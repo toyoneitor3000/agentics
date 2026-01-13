@@ -7,7 +7,7 @@
 
 
 
-        
+
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/app/utils/supabase/client';
@@ -200,7 +200,7 @@ export default function SearchPage() {
     }, [debouncedQuery, activeTab]);
 
     return (
-        <div className="min-h-screen bg-[#050505] text-white pt-24 pb-24 px-4">
+        <div className="min-h-screen bg-[#0D0805] text-white pt-24 pb-24 px-4">
             <div className="max-w-2xl mx-auto">
                 <h1 className="text-3xl font-oswald font-bold uppercase mb-6">Explorar</h1>
 

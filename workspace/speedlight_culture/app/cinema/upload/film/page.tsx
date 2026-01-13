@@ -275,7 +275,7 @@ export default function UploadFilmPage() {
     };
 
     return (
-        <div className="bg-[#050505] min-h-screen w-full relative font-sans text-white overflow-hidden flex flex-col items-center justify-center p-6">
+        <div className="bg-[#0D0805] min-h-screen w-full relative font-sans text-white overflow-hidden flex flex-col items-center justify-center p-6">
 
             {/* BACKGROUND AMBIENCE - BLUE/ORANGE FOR CINEMA */}
             <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#FF9800]/10 to-transparent pointer-events-none blur-3xl" />

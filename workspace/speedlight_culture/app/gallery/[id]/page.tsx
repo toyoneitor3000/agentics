@@ -101,10 +101,10 @@ export default function AlbumDetailPage({ params }: { params: Promise<{ id: stri
         fetchData();
     }, [albumId]);
 
-    if (!album) return <div className="min-h-screen bg-black pt-[140px] text-white text-center">Cargando...</div>;
+    if (!album) return <div className="min-h-screen bg-[#0D0805] pt-[140px] text-white text-center">Cargando...</div>;
 
     return (
-        <div className="min-h-screen bg-black text-white pt-[140px] pb-12">
+        <div className="min-h-screen bg-[#0D0805] text-white pt-[140px] pb-12">
             <div className="container mx-auto px-6">
 
                 <Link href="/gallery" className="inline-flex items-center gap-2 text-white/50 hover:text-white mb-8 transition-colors">

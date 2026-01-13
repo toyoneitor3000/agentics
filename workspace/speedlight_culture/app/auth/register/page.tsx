@@ -24,7 +24,7 @@ export default function RegisterPage() {
     const text = t_register[language];
 
     return (
-        <div className="min-h-screen w-full bg-[#050302] lg:grid lg:grid-cols-2 relative">
+        <div className="min-h-screen w-full bg-[#0D0805] lg:grid lg:grid-cols-2 relative">
 
             {/* Left Panel: Immersive Image (Desktop Only) - TRACK THEME */}
             <div className="hidden lg:block relative overflow-hidden h-full">
@@ -35,8 +35,8 @@ export default function RegisterPage() {
                     className="object-cover"
                     priority
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-[#050302] mix-blend-multiply"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050302] via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-[#0D0805] mix-blend-multiply"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0D0805] via-transparent to-transparent"></div>
 
                 {/* Branding Text */}
                 <div className="absolute bottom-20 left-12 z-20 max-w-lg">
@@ -60,7 +60,7 @@ export default function RegisterPage() {
                         fill
                         className="object-cover opacity-20"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#050302] via-[#050302]/90 to-[#050302]"></div>
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#0D0805] via-[#0D0805]/90 to-[#0D0805]"></div>
                 </div>
 
                 {/* Navbar Placeholder / Logo Link */}

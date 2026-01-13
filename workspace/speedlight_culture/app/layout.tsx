@@ -101,7 +101,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#1A0F08" />
+        <meta name="theme-color" content="#0D0805" />
       </head>
       <body
         className={`${fontBody.variable} ${fontTech.variable} ${fontDisplay.variable} font-sans antialiased text-[#FFF8F0] selection:bg-[#FF9800]/30 min-h-screen relative`}

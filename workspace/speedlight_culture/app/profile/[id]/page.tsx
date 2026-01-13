@@ -36,7 +36,7 @@ export default async function PublicProfilePage({ params }: PublicProfilePagePro
     const { data: profile } = await query.single();
 
     if (!profile) {
-        return <div className="min-h-screen bg-black text-white flex items-center justify-center">Usuario no encontrado</div>;
+        return <div className="min-h-screen bg-[#0D0805] text-white flex items-center justify-center">Usuario no encontrado</div>;
     }
 
     // 2. Fetch Content (Projects, Albums, Events, Followers, Videos)

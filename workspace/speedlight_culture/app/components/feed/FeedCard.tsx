@@ -32,9 +32,9 @@ const FeedPostHeader = ({ user, time, action, type, entityId }: { user: any, tim
     };
 
     return (
-        <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#1A0F08]/95 via-[#1A0F08]/50 to-transparent flex items-center justify-between pointer-events-none">
+        <div className="absolute top-0 inset-x-0 z-20 p-4 bg-gradient-to-b from-[#0D0805]/95 via-[#0D0805]/50 to-transparent flex items-center justify-between pointer-events-none">
             <div className="flex items-center gap-3 pointer-events-auto">
-                <div className="w-10 h-10 rounded-2xl bg-[#1A0F08] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
+                <div className="w-10 h-10 rounded-2xl bg-[#0D0805] border border-[#F5E6D3]/10 relative overflow-hidden shadow-[0_0_15px_rgba(255,152,0,0.15)] ring-1 ring-white/5">
                     {user.avatar ? (
                         <Image src={user.avatar} alt={user.name} fill sizes="40px" className="object-cover" />
                     ) : (
@@ -55,7 +55,7 @@ const FeedPostHeader = ({ user, time, action, type, entityId }: { user: any, tim
             <div className="relative pointer-events-auto">
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="text-[#F5E6D3]/60 hover:text-white transition-colors bg-[#1A0F08]/40 backdrop-blur-md p-2 rounded-full border border-white/5 hover:border-[#FF9800]/30 hover:shadow-[0_0_15px_rgba(255,152,0,0.1)] relative z-30"
+                    className="text-[#F5E6D3]/60 hover:text-white transition-colors bg-[#0D0805]/40 backdrop-blur-md p-2 rounded-full border border-white/5 hover:border-[#FF9800]/30 hover:shadow-[0_0_15px_rgba(255,152,0,0.1)] relative z-30"
                 >
                     <MoreHorizontal className="w-5 h-5" />
                 </button>
@@ -63,7 +63,7 @@ const FeedPostHeader = ({ user, time, action, type, entityId }: { user: any, tim
                 {isMenuOpen && (
                     <>
                         <div className="fixed inset-0 z-20" onClick={() => setIsMenuOpen(false)} />
-                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#1A0F08]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-2">
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-[#0D0805]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl z-30 overflow-hidden animate-in fade-in slide-in-from-top-2">
                             <button onClick={handleShare} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 text-left transition-colors text-white/80 hover:text-white group">
                                 <Share2 className="w-4 h-4 group-hover:text-[#FF9800] transition-colors" />
                                 <span className="text-sm font-light">Compartir</span>
@@ -214,7 +214,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
                 )}
 
                 {/* Info Overlay (Standard for Project/Gallery/Market) */}
-                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#1A0F08] via-[#1A0F08]/60 to-transparent flex flex-col justify-end p-6 pb-24">
+                <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-[#0D0805] via-[#0D0805]/60 to-transparent flex flex-col justify-end p-6 pb-24">
                     <h3 className="font-oswald font-bold text-3xl md:text-4xl text-white leading-[0.9] mb-3 drop-shadow-lg uppercase tracking-tight">
                         {item.content.title}
                     </h3>
@@ -228,7 +228,7 @@ export default function FeedCard({ item, labels, currentUserId, timeAgo, onRequi
             </div>
 
             {/* Actions */}
-            <div className="absolute bottom-0 inset-x-0 bg-[#1A0F08]/80 backdrop-blur-xl border-t border-white/5">
+            <div className="absolute bottom-0 inset-x-0 bg-[#0D0805]/80 backdrop-blur-xl border-t border-white/5">
                 {/* Note: We cast entityType because SocialActions only knew about 3 types, but usually strings are compatible if DB allows */}
                 <SocialActions
                     entityId={item.id}

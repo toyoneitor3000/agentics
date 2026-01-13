@@ -10,7 +10,7 @@ export default function GlobalBackground() {
 
     // Theme Colors
     const colors = {
-        coffee: '#1A0F08', // Default Dark Coffee
+        coffee: '#0D0805', // Default Dark Coffee
         amber: '#1A1400',  // Dark Amber/Ochre
         emerald: '#001A08', // Dark Racing Green
 

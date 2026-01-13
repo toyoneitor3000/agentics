@@ -31,8 +31,8 @@ export default function AdminDashboard() {
         setPublishing(commit.hash);
         try {
             const res = await publishNews({
-                title: commit.message, // Title is the commit message
-                content: `Update details: ${commit.message}. Author: ${commit.author}. Commit: ${commit.hash}`,
+                title: commit.message,
+                content: `${commit.message}`, // Clean content without author or hash
                 category: 'update',
                 commit_hash: commit.hash
             });

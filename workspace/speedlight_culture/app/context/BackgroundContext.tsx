@@ -41,15 +41,28 @@ export function BackgroundProvider({ children }: { children: React.ReactNode }) 
         if (saved) {
             try {
                 const parsed = JSON.parse(saved);
-                // MIGRATION: Force static mode and clear generic slideshows to fix "horrible background"
-                // This ensures we respect the user's theme color preference but kill the old images.
+                // MIGRATION: Force static mode with NO images to show only solid color
+                // This cleans up any old saved background images (F1, etc)
                 setSettings({
                     ...defaultSettings,
-                    ...parsed,
+                    mode: "static",
+                    staticImage: null, // FORCE: No background image
+                    slideshowImages: [], // FORCE: No slideshow images
+                    themeColor: (parsed.themeColor === 'cobalt') ? 'coffee' : (parsed.themeColor || 'coffee'),
+                    brightness: (parsed.brightness && typeof parsed.brightness === 'number') ? parsed.brightness : 1,
+                    saturation: (parsed.saturation && typeof parsed.saturation === 'number') ? parsed.saturation : 1,
+                    overlayOpacity: parsed.overlayOpacity || 0.95
+                });
+                // Also update localStorage to remove the old images
+                localStorage.setItem("speedlight_bg_settings", JSON.stringify({
+                    ...defaultSettings,
+                    mode: "static",
+                    staticImage: null,
+                    slideshowImages: [],
                     themeColor: (parsed.themeColor === 'cobalt') ? 'coffee' : (parsed.themeColor || 'coffee'),
                     brightness: (parsed.brightness && typeof parsed.brightness === 'number') ? parsed.brightness : 1,
                     saturation: (parsed.saturation && typeof parsed.saturation === 'number') ? parsed.saturation : 1
-                });
+                }));
             } catch (e) {
                 console.error("Failed to parse background settings", e);
             }

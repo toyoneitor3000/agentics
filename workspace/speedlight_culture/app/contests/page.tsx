@@ -35,7 +35,7 @@ const CONTESTS = [
 
 export default function ContestsPage() {
     return (
-        <main className="min-h-screen bg-[#050302]">
+        <main className="min-h-screen bg-[#0D0805]">
             <div className="pt-48 pb-20 px-6 container mx-auto">
                 <div className="text-center mb-16 animate-fade-in">
                     <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tighter">
@@ -50,7 +50,7 @@ export default function ContestsPage() {
 
                 <div className="grid grid-cols-1 gap-8 max-w-4xl mx-auto">
                     {CONTESTS.map((contest) => (
-                        <div key={contest.id} className="group relative bg-[#1A0F08] border border-[#2C1810] rounded-3xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-500">
+                        <div key={contest.id} className="group relative bg-[#0D0805] border border-[#2C1810] rounded-3xl overflow-hidden hover:border-[#FF9800]/50 transition-all duration-500">
                             <div className="grid md:grid-cols-2 h-full">
                                 {/* Image Info */}
                                 <div className="relative h-64 md:h-auto overflow-hidden">

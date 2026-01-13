@@ -89,3 +89,19 @@ export async function markAllNotificationsRead() {
         return { success: false };
     }
 }
+
+export async function deleteAllNotifications() {
+    const user = await getSessionUser();
+    if (!user) return { success: false };
+
+    try {
+        await query(
+            `DELETE FROM notifications WHERE recipient_id = $1`,
+            [user.id]
+        );
+        return { success: true };
+    } catch (e) {
+        console.error("Error deleting all notifications:", e);
+        return { success: false };
+    }
+}

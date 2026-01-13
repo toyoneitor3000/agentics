@@ -34,7 +34,7 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-[#050505] text-[#F5E6D3] font-sans flex">
+        <div className="min-h-screen bg-[#0D0805] text-[#F5E6D3] font-sans flex">
 
             {/* Sidebar */}
             <aside className="w-64 border-r border-white/10 bg-[#0F0A08] hidden md:flex flex-col h-screen fixed top-0 left-0 pt-20">

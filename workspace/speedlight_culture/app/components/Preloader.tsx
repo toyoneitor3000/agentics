@@ -45,7 +45,7 @@ export default function Preloader() {
     if (!loading) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#050302] overflow-hidden transition-opacity duration-1000">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#0D0805] overflow-hidden transition-opacity duration-1000">
             {/* Starfield / Warp Effect - Removed per user request to avoid lines crossing logo */}
             {/* <div className="absolute inset-0 flex items-center justify-center"> ... </div> */}
 

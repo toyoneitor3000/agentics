@@ -209,7 +209,11 @@ export default function NotificationsPage() {
                             {/* Content */}
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm text-white/90 leading-relaxed break-words">
-                                    {notif.actor?.username && (
+                                    {notif.target_type === 'news' || !notif.actor?.username ? (
+                                        <span className="font-bold mr-1 text-[#FF9800]">
+                                            Speedlight Team
+                                        </span>
+                                    ) : notif.actor?.username && (
                                         <span className="font-bold mr-1 hover:text-[#FF9800] transition-colors">
                                             {notif.actor.username}
                                         </span>

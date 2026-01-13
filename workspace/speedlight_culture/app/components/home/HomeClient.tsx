@@ -392,7 +392,7 @@ export default function HomeClient({ initialUser }: HomeClientProps) {
                                             )}
 
                                             {/* Hard Vignette for Cinematic Feel */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-[#1A0F08] via-transparent to-transparent opacity-90"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0D0805] via-transparent to-transparent opacity-90"></div>
                                             <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-transparent opacity-60"></div>
 
                                             <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-md border border-white/10 rounded-full px-3 py-1 flex items-center gap-2 hover:bg-[#FF9800] hover:text-black hover:border-[#FF9800] transition-all group-hover:scale-105 shadow-lg">

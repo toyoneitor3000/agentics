@@ -3,7 +3,7 @@ import PageHero from '@/app/components/PageHero';
 
 export default function ExplorePage() {
     return (
-        <div className="min-h-screen bg-[#050302] pb-12">
+        <div className="min-h-screen bg-[#0D0805] pb-12">
             <PageHero
                 title="Explorar"
                 subtitle="Descubre el Ecosistema"
