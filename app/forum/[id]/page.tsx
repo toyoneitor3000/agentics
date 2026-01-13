@@ -13,7 +13,8 @@ import {
     Flag,
     MoreHorizontal
 } from "lucide-react";
-import { getForumPost, getPostReplies, FORUM_CATEGORIES } from "@/app/actions/forum";
+import { getForumPost, getPostReplies } from "@/app/actions/forum";
+import { FORUM_CATEGORIES } from "@/app/lib/forum-constants";
 import ReplySection from "./ReplySection";
 
 function formatDate(dateString: string): string {

@@ -14,7 +14,8 @@ import {
     ShoppingBag,
     HelpCircle
 } from "lucide-react";
-import { createForumPost, FORUM_CATEGORIES } from "@/app/actions/forum";
+import { createForumPost } from "@/app/actions/forum";
+import { FORUM_CATEGORIES } from "@/app/lib/forum-constants";
 
 const CATEGORY_ICONS: Record<string, any> = {
     general: MessageSquare,
@@ -98,8 +99,8 @@ export default function NewForumPostPage() {
                                         type="button"
                                         onClick={() => setCategory(cat.id)}
                                         className={`p-4 rounded-xl border transition-all text-left ${isSelected
-                                                ? 'border-[#FF9800]/50 bg-[#FF9800]/10 shadow-[0_0_20px_rgba(255,152,0,0.1)]'
-                                                : 'border-white/10 bg-[#0A0604] hover:border-white/20'
+                                            ? 'border-[#FF9800]/50 bg-[#FF9800]/10 shadow-[0_0_20px_rgba(255,152,0,0.1)]'
+                                            : 'border-white/10 bg-[#0A0604] hover:border-white/20'
                                             }`}
                                     >
                                         <div className="flex items-center gap-3">

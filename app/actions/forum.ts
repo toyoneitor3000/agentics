@@ -1,6 +1,6 @@
 "use server";
 
-import { createServerClient } from "@/app/utils/supabase/server";
+import { createClient } from "@/app/utils/supabase/server";
 import { revalidatePath } from "next/cache";
 
 // ============================================
@@ -38,21 +38,6 @@ export interface ForumReply {
         avatar_url: string | null;
         role: string | null;
     };
-}
-
-// Categorías disponibles (como constante interna)
-const FORUM_CATEGORIES_DATA = [
-    { id: "general", name: "General", color: "#FF9800", description: "Conversaciones generales de la comunidad" },
-    { id: "mecanica", name: "Mecánica", color: "#4CAF50", description: "Consejos técnicos, reparaciones y tutoriales" },
-    { id: "proyectos", name: "Proyectos", color: "#2196F3", description: "Comparte tu build y sigue otros proyectos" },
-    { id: "eventos", name: "Eventos", color: "#E91E63", description: "Meetups, competencias y encuentros" },
-    { id: "marketplace", name: "Marketplace", color: "#9C27B0", description: "Compra, venta e intercambio de partes" },
-    { id: "ayuda", name: "Ayuda", color: "#00BCD4", description: "Preguntas y respuestas de la comunidad" },
-];
-
-// Función async para obtener categorías (requerido por "use server")
-export async function getForumCategories() {
-    return FORUM_CATEGORIES_DATA;
 }
 
 // ============================================

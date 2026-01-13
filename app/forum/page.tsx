@@ -23,7 +23,8 @@ import {
     Loader2
 } from "lucide-react";
 import { AdSidebarSpec } from "../components/AdBanners";
-import { getForumPosts, getForumStats, FORUM_CATEGORIES } from "../actions/forum";
+import { getForumPosts, getForumStats } from "../actions/forum";
+import { FORUM_CATEGORIES } from "../lib/forum-constants";
 import ForumSearch from "./ForumSearch";
 import NewPostButton from "./NewPostButton";
 
@@ -170,8 +171,8 @@ function PostCard({ post, isPinned, index }: { post: any; isPinned?: boolean; in
         <Link
             href={`/forum/${post.id}`}
             className={`group block p-4 md:p-5 rounded-xl border transition-all duration-300 cursor-pointer animate-fade-in ${isPinned
-                    ? "bg-gradient-to-r from-[#FF9800]/5 to-transparent border-[#FF9800]/20 hover:border-[#FF9800]/40"
-                    : "bg-[#0A0604] border-white/10 hover:border-[#FF9800]/30"
+                ? "bg-gradient-to-r from-[#FF9800]/5 to-transparent border-[#FF9800]/20 hover:border-[#FF9800]/40"
+                : "bg-[#0A0604] border-white/10 hover:border-[#FF9800]/30"
                 }`}
             style={{ animationDelay: `${(index || 0) * 50}ms` }}
         >
@@ -281,8 +282,8 @@ function CategoriesGrid({ selectedCategory, onSelect }: { selectedCategory?: str
                         key={cat.id}
                         href={`/forum?category=${cat.id}`}
                         className={`group text-left p-5 bg-[#0A0604] border rounded-2xl transition-all duration-300 ${isSelected
-                                ? 'border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.1)]'
-                                : 'border-white/10 hover:border-white/20'
+                            ? 'border-[#FF9800]/50 shadow-[0_0_30px_rgba(255,152,0,0.1)]'
+                            : 'border-white/10 hover:border-white/20'
                             }`}
                     >
                         <div className="flex items-start gap-3">
