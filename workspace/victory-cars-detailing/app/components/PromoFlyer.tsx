@@ -63,26 +63,42 @@ const PromoFlyer = () => {
                 <div className="mt-4 md:mt-8 mb-4 md:mb-6 space-y-4 md:space-y-6 relative">
                     <div className="space-y-1 relative">
                         <div className="absolute -left-6 top-0 w-1 md:w-1.5 h-full bg-brand-cyan shadow-[0_0_20px_rgba(6,182,212,0.8)]" />
-                        <h2 className="text-brand-cyan font-orbitron text-xl md:text-2xl tracking-[0.2em] md:tracking-[0.3em] uppercase opacity-70 mb-1 md:mb-2 font-bold">
+                        <h2 className="text-brand-cyan font-orbitron text-base md:text-xl tracking-[0.2em] md:tracking-[0.4em] uppercase opacity-70 mb-1 md:mb-2 font-bold">
                             Bono de Regalo
                         </h2>
-                        <div className="flex items-center gap-4 md:gap-6">
+                        <div className="flex items-center gap-4 md:gap-8">
                             <h1 className="text-7xl md:text-9xl font-orbitron font-black text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.2)] tracking-tighter leading-none">
                                 20%
                             </h1>
                             <div className="flex flex-col">
-                                <span className="text-4xl md:text-6xl font-orbitron font-bold text-brand-cyan leading-none">OFF</span>
-                                <div className="h-1 md:h-1.5 w-full bg-brand-cyan mt-1 md:mt-2 shadow-[0_0_10px_rgba(6,182,212,0.5)]" />
+                                <span className="text-4xl md:text-7xl font-orbitron font-black text-brand-cyan leading-none">OFF</span>
+                                <div className="h-1 md:h-2 w-full bg-brand-cyan mt-1 md:mt-2 shadow-[0_0_15px_rgba(6,182,212,0.6)]" />
                             </div>
                         </div>
                     </div>
 
-                    <p className="text-base md:text-xl font-light text-slate-300 leading-tight max-w-[95%]">
-                        En servicios de PDR, Cerámicos, <br />
-                        <span className="text-white font-bold tracking-tight bg-white/5 px-2 py-1.5 rounded inline-block mt-2 border border-white/10 uppercase text-xs md:text-base">
-                            Detailing Interior y Piezas de Pintura (3 piezas)
-                        </span>
-                    </p>
+                    <div className="space-y-3 pt-2">
+                        <p className="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-[0.3em] flex items-center gap-2">
+                            <span className="w-6 h-[1px] bg-brand-cyan/40" />
+                            Servicios Seleccionados
+                        </p>
+                        <div className="space-y-2 md:space-y-3">
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rotate-45 bg-brand-cyan shadow-[0_0_10px_rgba(6,182,212,1)]" />
+                                <span className="text-base md:text-xl font-bold text-white tracking-widest uppercase italic">PDR & Cerámicos</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rotate-45 bg-brand-cyan shadow-[0_0_10px_rgba(6,182,212,1)]" />
+                                <span className="text-base md:text-xl font-bold text-white tracking-widest uppercase italic">Detailing Interior</span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-1.5 h-1.5 rotate-45 bg-brand-cyan shadow-[0_0_10px_rgba(6,182,212,1)]" />
+                                <span className="text-base md:text-xl font-bold text-brand-cyan tracking-widest uppercase italic shadow-brand-cyan/20">
+                                    Piezas de Pintura <span className="text-[10px] md:text-xs font-light text-white/50 tracking-normal normal-case not-italic ml-2">(Máximo 3 piezas)</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Footer Info */}
