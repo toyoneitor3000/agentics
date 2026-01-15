@@ -3,6 +3,7 @@ import React from 'react';
 import Image from 'next/image';
 import { FaInstagram, FaWhatsapp, FaGlobe } from 'react-icons/fa';
 import { QRCodeSVG } from 'qrcode.react';
+import { ASSETS } from './PromoAssets';
 
 const PromoFlyer = () => {
     return (
@@ -10,7 +11,7 @@ const PromoFlyer = () => {
             {/* Background Image */}
             <div className="absolute inset-0">
                 <Image
-                    src="/promo-car.png"
+                    src={ASSETS.promoCar}
                     alt="Premium Detailing"
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
@@ -40,7 +41,7 @@ const PromoFlyer = () => {
                 <div className="flex justify-between items-start">
                     <div className="relative h-16 w-36 md:h-24 md:w-52 -mt-2 md:-mt-4 -ml-1 md:-ml-2">
                         <Image
-                            src="/logo.png"
+                            src={ASSETS.logo}
                             alt="Victory Cars Logo"
                             fill
                             className="object-contain filter brightness-0 invert drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
@@ -150,7 +151,7 @@ const PromoFlyer = () => {
                                     <div className="w-[18px] h-[18px] md:w-[34px] md:h-[34px] bg-[#020617] rounded-sm md:rounded-lg shadow-xl flex items-center justify-center p-0.5 md:p-1.5 border border-brand-cyan/30">
                                         <div className="relative w-full h-full">
                                             <Image
-                                                src="/logo.png"
+                                                src={ASSETS.logo}
                                                 alt="QR Mini Logo"
                                                 fill
                                                 className="object-contain filter brightness-0 invert"
