@@ -106,7 +106,7 @@ const PromoFlyer = () => {
                             <div className="p-2 bg-brand-cyan/10 rounded-lg border border-brand-cyan/20 group-hover:bg-brand-cyan/20 transition-all">
                                 <FaGlobe className="text-brand-cyan" size={16} />
                             </div>
-                            <span className="font-semibold tracking-wide lowercase opacity-80">www.victorycarsdetailing.com</span>
+                            <span className="font-semibold tracking-wide lowercase opacity-80">victorycarsdetailing.com</span>
                         </div>
 
                         <div className="flex items-center gap-4 mt-6 opacity-20">

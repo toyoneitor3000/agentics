@@ -1,1 +1,1 @@
-self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{},\"appUsingSizeAdjust\":false,\"pagesUsingSizeAdjust\":false}"
+self.__NEXT_FONT_MANIFEST="{\"pages\":{},\"app\":{\"/Users/camilotoloza/Documents/agentics-1/workspace/victory-cars-detailing/app/layout\":[\"static/media/e4af272ccee01ff0-s.p.woff2\",\"static/media/9a4ee768fed045da-s.p.woff2\",\"static/media/e5a5a1070536f166-s.p.woff2\"]},\"appUsingSizeAdjust\":true,\"pagesUsingSizeAdjust\":false}"

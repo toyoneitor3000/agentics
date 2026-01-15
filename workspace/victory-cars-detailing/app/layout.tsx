@@ -15,6 +15,7 @@ const styleScript = Style_Script({ subsets: ['latin'], weight: ['400'], variable
 export const metadata: Metadata = {
   title: 'Victory Cars S.A.S. | Detailing & Paint Protection',
   description: 'El Aliado Profesional que Lleva tu Vehículo a su Máxima Expresión de Brillo y Detalle.',
+  metadataBase: new URL('https://victorycarsdetailing.com'),
 };
 
 export default function RootLayout({
