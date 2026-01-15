@@ -13,13 +13,14 @@ export default function PromocionesPage() {
         if (!element) return;
 
         try {
-            // Small delay to ensure all assets are rendered
-            await new Promise(r => setTimeout(r, 100));
+            // Delay to ensure all assets (images/fonts) are rendered
+            await new Promise(r => setTimeout(r, 500));
 
             const dataUrl = await toPng(element, {
                 quality: 1,
                 pixelRatio: 2,
                 skipFonts: false,
+                cacheBust: true,
             });
 
             const pdf = new jsPDF({
