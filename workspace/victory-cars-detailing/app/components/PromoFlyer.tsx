@@ -139,7 +139,7 @@ const PromoFlyer = () => {
                         <div className="bg-white p-1.5 md:p-2.5 rounded-lg md:rounded-2xl shadow-[0_0_40px_rgba(6,182,212,0.3)] border border-brand-cyan/20">
                             <div className="relative">
                                 <QRCodeSVG
-                                    value="https://victorycarsdetailing.com/promociones"
+                                    value="https://victorycarsdetailing.com/promociones?source=qr"
                                     size={60}
                                     level="H"
                                     includeMargin={false}
