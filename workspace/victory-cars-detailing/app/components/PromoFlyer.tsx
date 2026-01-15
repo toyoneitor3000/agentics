@@ -10,7 +10,7 @@ const PromoFlyer = () => {
             {/* Background Image */}
             <div className="absolute inset-0">
                 <img
-                    src="/promo-car.png"
+                    src="https://victorycarsdetailing.com/promo-car.png"
                     alt="Premium Detailing"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     crossOrigin="anonymous"
@@ -39,7 +39,7 @@ const PromoFlyer = () => {
                 <div className="flex justify-between items-start">
                     <div className="relative h-16 w-36 md:h-24 md:w-52 -mt-2 md:-mt-4 -ml-1 md:-ml-2">
                         <img
-                            src="/logo.png"
+                            src="https://victorycarsdetailing.com/logo.png"
                             alt="Victory Cars Logo"
                             className="w-full h-full object-contain filter brightness-0 invert drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                             crossOrigin="anonymous"
@@ -150,7 +150,7 @@ const PromoFlyer = () => {
                                     <div className="w-[18px] h-[18px] md:w-[34px] md:h-[34px] bg-[#020617] rounded-sm md:rounded-lg shadow-xl flex items-center justify-center p-0.5 md:p-1.5 border border-brand-cyan/30">
                                         <div className="relative w-full h-full">
                                             <img
-                                                src="/logo.png"
+                                                src="https://victorycarsdetailing.com/logo.png"
                                                 alt="QR Mini Logo"
                                                 className="w-full h-full object-contain filter brightness-0 invert"
                                                 crossOrigin="anonymous"
