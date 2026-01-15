@@ -2,9 +2,14 @@
 
 import React, { useState } from 'react';
 import { MessageCircle, Share2, X, Calendar, Shield, MapPin, Star, Hammer, Palette } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 const WhatsAppFloatingButton: React.FC = () => {
+  const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+
+  // No mostrar el botón en la página de promociones para evitar solapamiento con el flyer
+  if (pathname === '/promociones') return null;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
