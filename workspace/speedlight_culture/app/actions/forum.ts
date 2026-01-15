@@ -48,7 +48,7 @@ export async function getForumPosts(options?: {
     limit?: number;
     search?: string;
 }): Promise<ForumPost[]> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
     const limit = options?.limit || 50;
 
     let query = supabase
@@ -125,7 +125,7 @@ export async function getForumPosts(options?: {
 // OBTENER UN POST ESPECÍFICO
 // ============================================
 export async function getForumPost(postId: string): Promise<ForumPost | null> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
         .from("forum_posts")
@@ -181,7 +181,7 @@ export async function createForumPost(formData: {
     content: string;
     category: string;
 }): Promise<{ success: boolean; postId?: string; error?: string }> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     // Obtener usuario actual
     const { data: { user } } = await supabase.auth.getUser();
@@ -226,7 +226,7 @@ export async function createForumPost(formData: {
 // OBTENER RESPUESTAS DE UN POST
 // ============================================
 export async function getPostReplies(postId: string): Promise<ForumReply[]> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
         .from("comments")
@@ -266,7 +266,7 @@ export async function createReply(
     postId: string,
     content: string
 ): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     // Obtener usuario actual
     const { data: { user } } = await supabase.auth.getUser();
@@ -306,7 +306,7 @@ export async function getForumStats(): Promise<{
     totalMembers: number;
     onlineNow: number;
 }> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     // Contar posts
     const { count: postsCount } = await supabase
@@ -343,7 +343,7 @@ export async function getForumStats(): Promise<{
 // ESTADÍSTICAS POR CATEGORÍA
 // ============================================
 export async function getCategoryStats(): Promise<{ category: string; count: number }[]> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase
         .from("forum_posts")
@@ -364,7 +364,7 @@ export async function getCategoryStats(): Promise<{ category: string; count: num
 // PIN/UNPIN POST (Solo admins)
 // ============================================
 export async function togglePinPost(postId: string): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     // Verificar que el usuario es admin
     const { data: { user } } = await supabase.auth.getUser();
@@ -412,7 +412,7 @@ export async function togglePinPost(postId: string): Promise<{ success: boolean;
 // ELIMINAR POST (Solo admins o autor)
 // ============================================
 export async function deleteForumPost(postId: string): Promise<{ success: boolean; error?: string }> {
-    const supabase = await createServerClient();
+    const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
