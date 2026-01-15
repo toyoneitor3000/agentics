@@ -2,6 +2,9 @@
 description: Automatización de despliegue a producción (GitHub + Vercel handling)
 ---
 
+
+// turbo-all
+
 1. Agregar todos los cambios
 git add .
 
