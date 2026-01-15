@@ -139,7 +139,7 @@ function PromotionsContent() {
                                     <div className="flex items-start gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
                                         <FaInfoCircle className="text-brand-cyan mt-1 shrink-0" />
                                         <p className="text-xs text-slate-400 leading-relaxed">
-                                            Presenta este código al momento de tu peritaje o úsalo en el checkout para redimir tu 20% de descuento.
+                                            Presenta este código al momento de tu peritaje en nuestras instalaciones para redimir tu 20% de descuento.
                                         </p>
                                     </div>
                                 </div>
