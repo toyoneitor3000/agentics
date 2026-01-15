@@ -77,10 +77,10 @@ const PromoFlyer = () => {
                         </div>
                     </div>
 
-                    <p className="text-xl md:text-2xl font-light text-slate-300 leading-tight max-w-[85%]">
-                        En cualquier servicio de <br />
-                        <span className="text-white font-bold tracking-tight bg-white/5 px-2 py-1 rounded inline-block mt-2 border border-white/10">
-                            PDR, Cerámicos y Paint Detailing
+                    <p className="text-lg md:text-xl font-light text-slate-300 leading-tight max-w-[90%]">
+                        En servicios de PDR, Cerámicos, <br />
+                        <span className="text-white font-bold tracking-tight bg-white/5 px-2 py-1 rounded inline-block mt-2 border border-white/10 uppercase text-sm md:text-base">
+                            Detailing Interior y Piezas de Pintura (3 piezas)
                         </span>
                     </p>
                 </div>
