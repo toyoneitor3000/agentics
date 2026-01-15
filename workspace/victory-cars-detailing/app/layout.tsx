@@ -13,9 +13,54 @@ const orbitron = Orbitron({ subsets: ['latin'], weight: ['400', '700', '900'], v
 const styleScript = Style_Script({ subsets: ['latin'], weight: ['400'], variable: '--font-style-script' });
 
 export const metadata: Metadata = {
-  title: 'Victory Cars S.A.S. | Detailing & Paint Protection',
-  description: 'El Aliado Profesional que Lleva tu Vehículo a su Máxima Expresión de Brillo y Detalle.',
+  title: {
+    default: 'Victory Cars S.A.S. | Detailing & Paint Protection',
+    template: '%s | Victory Cars Detailing',
+  },
+  description: 'El Aliado Profesional que Lleva tu Vehículo a su Máxima Expresión de Brillo y Detalle. Protección Cerámica, PPF, y Detailing de Alta Gama.',
+  keywords: ['Detailing', 'Bogotá', 'Carros', 'Cerámico', 'PPF', 'Restauración', 'Limpieza', 'Victory Cars'],
+  authors: [{ name: 'Victory Cars Detailing' }],
+  creator: 'Victory Cars S.A.S.',
+  publisher: 'Victory Cars S.A.S.',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   metadataBase: new URL('https://victorycarsdetailing.com'),
+  openGraph: {
+    title: 'Victory Cars S.A.S. | Detailing & Paint Protection',
+    description: 'Transformamos tu vehículo con la mejor tecnología en protección y estética automotriz.',
+    url: 'https://victorycarsdetailing.com',
+    siteName: 'Victory Cars Detailing',
+    locale: 'es_CO',
+    type: 'website',
+    images: [
+      {
+        url: '/logo.png', // Fallback image (better to replace with a large generated one later)
+        width: 800,
+        height: 600,
+        alt: 'Victory Cars Logo',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Victory Cars S.A.S.',
+    description: 'Expertos en Detailing y Protección Automotriz en Bogotá.',
+    images: ['/logo.png'], // Fallback
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 };
 
 export default function RootLayout({
