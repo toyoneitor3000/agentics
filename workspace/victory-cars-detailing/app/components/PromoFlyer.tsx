@@ -9,12 +9,13 @@ const PromoFlyer = () => {
         <div id="flyer-content" className="relative w-full max-w-[600px] aspect-[4/5] mx-auto overflow-hidden rounded-2xl shadow-2xl border border-white/10 group bg-[#020617]">
             {/* Background Image */}
             <div className="absolute inset-0">
-                <img
-                    src="https://victorycarsdetailing.com/promo-car.png"
+                <Image
+                    src="/promo-car.png"
                     alt="Premium Detailing"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    crossOrigin="anonymous"
-                    loading="eager"
+                    fill
+                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    priority
+                    unoptimized
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-[#020617]/85 to-[#020617]/30" />
             </div>
@@ -38,12 +39,11 @@ const PromoFlyer = () => {
                 {/* Top Header */}
                 <div className="flex justify-between items-start">
                     <div className="relative h-16 w-36 md:h-24 md:w-52 -mt-2 md:-mt-4 -ml-1 md:-ml-2">
-                        <img
-                            src="https://victorycarsdetailing.com/logo.png"
+                        <Image
+                            src="/logo.png"
                             alt="Victory Cars Logo"
-                            className="w-full h-full object-contain filter brightness-0 invert drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
-                            crossOrigin="anonymous"
-                            loading="eager"
+                            fill
+                            className="object-contain filter brightness-0 invert drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]"
                         />
                     </div>
                     <div className="flex flex-col items-end pt-1 md:pt-2">
@@ -149,12 +149,11 @@ const PromoFlyer = () => {
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     <div className="w-[18px] h-[18px] md:w-[34px] md:h-[34px] bg-[#020617] rounded-sm md:rounded-lg shadow-xl flex items-center justify-center p-0.5 md:p-1.5 border border-brand-cyan/30">
                                         <div className="relative w-full h-full">
-                                            <img
-                                                src="https://victorycarsdetailing.com/logo.png"
+                                            <Image
+                                                src="/logo.png"
                                                 alt="QR Mini Logo"
-                                                className="w-full h-full object-contain filter brightness-0 invert"
-                                                crossOrigin="anonymous"
-                                                loading="eager"
+                                                fill
+                                                className="object-contain filter brightness-0 invert"
                                             />
                                         </div>
                                     </div>
